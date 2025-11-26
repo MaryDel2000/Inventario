@@ -1,0 +1,7 @@
+version: "3.8"
+# Configuración efímera de Authentik (modularizada)
+
+include:
+  - postgres.yml
+  - redis.yml
+  - authentik.yml

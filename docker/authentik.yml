@@ -1,0 +1,49 @@
+services:
+  server:
+    image: ghcr.io/goauthentik/server:latest
+    container_name: authentik-server-ephemeral
+    restart: unless-stopped
+    command: server
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env.ephemeral
+    environment:
+      AUTHENTIK_POSTGRESQL__HOST: db
+      AUTHENTIK_POSTGRESQL__PORT: 5432
+      AUTHENTIK_POSTGRESQL__NAME: ${POSTGRES_DB}
+      AUTHENTIK_POSTGRESQL__USER: ${POSTGRES_USER}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${POSTGRES_PASSWORD}
+      AUTHENTIK_REDIS__HOST: redis
+      AUTHENTIK_REDIS__PORT: 6379
+      AUTHENTIK_LISTEN__HTTP: 0.0.0.0:9000
+      AUTHENTIK_LISTEN__HTTPS: 0.0.0.0:9443
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9443:9443"
+    volumes:
+      - /media
+      - /certs
+
+  worker:
+    image: ghcr.io/goauthentik/server:latest
+    container_name: authentik-worker-ephemeral
+    restart: unless-stopped
+    command: worker
+    depends_on:
+      - db
+      - redis
+    env_file:
+      - .env.ephemeral
+    environment:
+      AUTHENTIK_POSTGRESQL__HOST: db
+      AUTHENTIK_POSTGRESQL__PORT: 5432
+      AUTHENTIK_POSTGRESQL__NAME: ${POSTGRES_DB}
+      AUTHENTIK_POSTGRESQL__USER: ${POSTGRES_USER}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${POSTGRES_PASSWORD}
+      AUTHENTIK_REDIS__HOST: redis
+      AUTHENTIK_REDIS__PORT: 6379
+    volumes:
+      - /media
+      - /certs

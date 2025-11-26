@@ -1,0 +1,8 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: authentik-redis-ephemeral
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--loglevel", "warning"]
+    tmpfs:
+      - /data
