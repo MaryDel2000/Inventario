@@ -22,7 +22,7 @@ services:
     volumes:
       - /media
       - /certs
-      - ./dist:/web/dist/custom
+      - ./assets:/web/dist/custom
 
   worker:
     image: ghcr.io/goauthentik/server:2025.10
