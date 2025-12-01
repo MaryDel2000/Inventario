@@ -35,3 +35,25 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Node.js ###
+node_modules/
+npm-debug.log
+yarn-error.log
+
+### Vaadin ###
+# Frontend build artifacts
+/src/main/resources/META-INF/VAADIN/
+/src/main/resources/META-INF/resources/frontend/
+/src/main/resources/META-INF/resources/VAADIN/
+
+# Generated frontend files
+/src/main/frontend/generated/
+/vite.config.ts
+/vite.generated.ts
+/types.d.ts
+tsconfig.json*.bak
+
+# pnpm
+pnpm-lock.yaml
+pnpm-debug.log

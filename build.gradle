@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.3.1'
 	id 'io.spring.dependency-management' version '1.1.5'
+	id 'com.vaadin' version '24.5.8'
 }
 
 group = 'com.mariastaff'
@@ -18,12 +19,44 @@ repositories {
 	mavenCentral()
 }
 
+// Excluir Hilla del classpath para evitar que el Hilla engine se inicie
+// (causando "Failed to configure Hilla engine: no runner succeeded")
+configurations.all {
+	// Dependencias principales de Hilla
+	exclude group: 'com.vaadin', module: 'hilla'
+	exclude group: 'com.vaadin', module: 'hilla-dev'
+	exclude group: 'com.vaadin', module: 'hilla-endpoint'
+	// Runtime y parser del engine
+	exclude group: 'com.vaadin', module: 'hilla-engine-runtime'
+	exclude group: 'com.vaadin', module: 'hilla-engine-core'
+	exclude group: 'com.vaadin', module: 'hilla-parser-jvm-core'
+	exclude group: 'com.vaadin', module: 'hilla-parser-jvm-utils'
+	exclude group: 'com.vaadin', module: 'hilla-parser-jvm-plugin-backbone'
+	exclude group: 'com.vaadin', module: 'hilla-parser-jvm-plugin-model'
+	exclude group: 'com.vaadin', module: 'hilla-parser-jvm-plugin-subtypes'
+	exclude group: 'com.vaadin', module: 'hilla-parser-jvm-plugin-nonnull'
+	exclude group: 'com.vaadin', module: 'hilla-parser-jvm-plugin-transfertypes'
+	exclude group: 'com.vaadin', module: 'hilla-runtime-plugin-transfertypes'
+}
+
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter'
-	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+	// Vaadin UI (alineado con 24.5.8 como en runtime)
+	implementation('com.vaadin:vaadin-spring-boot-starter:24.5.8') {
+		exclude group: 'com.vaadin', module: 'copilot'
+		// Evitar que el starter traiga Hilla transitivamente
+		exclude group: 'com.vaadin', module: 'hilla'
+		exclude group: 'com.vaadin', module: 'hilla-dev'
+		exclude group: 'com.vaadin', module: 'hilla-endpoint'
+		exclude group: 'com.vaadin', module: 'hilla-engine-runtime'
+	}
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 }
 
 tasks.named('test') {
