@@ -14,15 +14,28 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 public class AppHeader extends HorizontalLayout {
 
     public AppHeader() {
+        setWidthFull();
         addClassNames("w-full", "bg-[var(--color-bg-primary)]", "border-b", "border-[var(--color-border)]", "px-6", "py-3");
         setAlignItems(FlexComponent.Alignment.CENTER);
         setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
         setSpacing(false);
 
-        // Left side: Title (or Breadcrumbs later)
-        AppLabel title = new AppLabel("app.title"); // Could be dynamic
+        // Left side: Toggle & Title
+        HorizontalLayout leftSection = new HorizontalLayout();
+        leftSection.setAlignItems(FlexComponent.Alignment.CENTER);
+        leftSection.setSpacing(true);
+        
+        // Add DrawerToggle for sidebar
+        com.vaadin.flow.component.applayout.DrawerToggle toggle = new com.vaadin.flow.component.applayout.DrawerToggle();
+        toggle.addClassNames("text-[var(--color-text-secondary)]");
+        
+        AppLabel title = new AppLabel("app.title");
         title.addClassNames("text-lg", "font-semibold");
-        add(title);
+        
+        leftSection.add(toggle, title);
+        add(leftSection);
+        
+ 
 
         // Right side: Theme Switch & Profile
         HorizontalLayout rightSection = new HorizontalLayout();
@@ -34,14 +47,21 @@ public class AppHeader extends HorizontalLayout {
         themeToggle.addClassNames("text-[var(--color-text-secondary)]", "hover:text-[var(--color-primary)]");
         
         themeToggle.addClickListener(e -> {
-            String currentTheme = UI.getCurrent().getElement().getAttribute("data-theme");
-            if ("dark".equals(currentTheme)) {
-                UI.getCurrent().getElement().removeAttribute("data-theme");
-                themeToggle.setIcon(VaadinIcon.MOON_O.create());
-            } else {
-                UI.getCurrent().getElement().setAttribute("data-theme", "dark");
-                themeToggle.setIcon(VaadinIcon.SUN_O.create());
-            }
+            UI.getCurrent().getPage().executeJs(
+                "if (document.documentElement.getAttribute('theme') === 'dark') {" +
+                "  document.documentElement.removeAttribute('theme');" +
+                "  return 'light';" +
+                "} else {" +
+                "  document.documentElement.setAttribute('theme', 'dark');" +
+                "  return 'dark';" +
+                "}"
+            ).then(response -> {
+                if ("dark".equals(response.asString())) {
+                    themeToggle.setIcon(VaadinIcon.SUN_O.create());
+                } else {
+                    themeToggle.setIcon(VaadinIcon.MOON_O.create());
+                }
+            });
         });
 
         Avatar avatar = new Avatar("Maria Staff");
