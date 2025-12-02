@@ -12,7 +12,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.PermitAll;
 
-@Route(value = "", layout = MainLayout.class)
+@Route(value = "home-old", layout = MainLayout.class)
 @PermitAll
 public class HomeView extends VerticalLayout {
 

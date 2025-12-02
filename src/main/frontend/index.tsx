@@ -1,5 +1,7 @@
 // Estilos globales (Tailwind procesado por PostCSS/Vite)
 import './styles/tailwind.src.css';
+import './styles/theme-light.css';
+import './styles/theme-dark.css';
 
 // Punto de entrada React para Vaadin Flow-React bridge.
 // Vaadin incluirá este index desde generated/vaadin.ts como efecto secundario.

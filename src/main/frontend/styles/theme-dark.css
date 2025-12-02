@@ -1,0 +1,28 @@
+[data-theme="dark"] {
+    /* Backgrounds */
+    --color-bg-primary: #111827;
+    /* gray-900 */
+    --color-bg-secondary: #1f2937;
+    /* gray-800 */
+    --color-bg-surface: #1f2937;
+    /* gray-800 */
+
+    /* Text */
+    --color-text-main: #f9fafb;
+    /* gray-50 */
+    --color-text-secondary: #d1d5db;
+    /* gray-300 */
+    --color-text-muted: #6b7280;
+    /* gray-500 */
+    --color-text-inverted: #000000;
+
+    /* Primary Brand */
+    --color-primary: #3b82f6;
+    /* blue-500 */
+    --color-primary-hover: #60a5fa;
+    /* blue-400 */
+
+    /* Borders */
+    --color-border: #374151;
+    /* gray-700 */
+}

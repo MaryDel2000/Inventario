@@ -1,0 +1,26 @@
+:root {
+    /* Backgrounds */
+    --color-bg-primary: #ffffff;
+    --color-bg-secondary: #f3f4f6;
+    /* gray-100 */
+    --color-bg-surface: #ffffff;
+
+    /* Text */
+    --color-text-main: #111827;
+    /* gray-900 */
+    --color-text-secondary: #4b5563;
+    /* gray-600 */
+    --color-text-muted: #9ca3af;
+    /* gray-400 */
+    --color-text-inverted: #ffffff;
+
+    /* Primary Brand */
+    --color-primary: #2563eb;
+    /* blue-600 */
+    --color-primary-hover: #1d4ed8;
+    /* blue-700 */
+
+    /* Borders */
+    --color-border: #e5e7eb;
+    /* gray-200 */
+}
