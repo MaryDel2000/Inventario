@@ -1,2 +1,2 @@
 #!/bin/bash
-./gradlew bootRun --args='--spring.profiles.active=dev'
+./gradlew bootRun -Dvaadin.ignoreVersionChecks=true --args='--spring.profiles.active=dev'
