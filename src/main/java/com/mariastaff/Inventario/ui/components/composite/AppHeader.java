@@ -1,43 +1,33 @@
-package com.mariastaff.Inventario.ui.components;
+package com.mariastaff.Inventario.ui.components.composite;
 
+import com.mariastaff.Inventario.ui.components.base.AppIcon;
+import com.mariastaff.Inventario.ui.components.base.AppLabel;
+import com.mariastaff.Inventario.ui.components.base.VaadinAppIcon;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.vaadin.flow.component.html.Header;
-import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
-import com.vaadin.flow.component.tabs.Tab;
-import com.vaadin.flow.component.tabs.Tabs;
 
-public class MainHeader extends HorizontalLayout {
+public class AppHeader extends HorizontalLayout {
 
-    public MainHeader() {
-        // Tailwind classes: width full, background, border bottom, padding, flex alignment
+    public AppHeader() {
         addClassNames("w-full", "bg-[var(--color-bg-primary)]", "border-b", "border-[var(--color-border)]", "px-6", "py-3");
         setAlignItems(FlexComponent.Alignment.CENTER);
         setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
         setSpacing(false);
 
-        // Tabs
-        Tabs tabs = new Tabs();
-        tabs.addClassNames("border-none"); // Remove default Vaadin border
-        HeaderItem[] items = {
-            new HeaderItem("Inventario", VaadinIcon.HOME),
-            new HeaderItem("Punto de Venta", VaadinIcon.SHOP),
-            new HeaderItem("Contabilidad", VaadinIcon.CHART)
-        };
+        // Left side: Title (or Breadcrumbs later)
+        AppLabel title = new AppLabel("app.title"); // Could be dynamic
+        title.addClassNames("text-lg", "font-semibold");
+        add(title);
 
-        for (HeaderItem item : items) {
-            tabs.add(new Tab(item.icon().create(), new Span(" " + item.label())));
-        }
-        
         // Right side: Theme Switch & Profile
         HorizontalLayout rightSection = new HorizontalLayout();
         rightSection.addClassNames("flex", "items-center", "gap-4");
-        rightSection.setSpacing(false); // Use gap-4
+        rightSection.setSpacing(false);
 
         Button themeToggle = new Button(VaadinIcon.MOON_O.create());
         themeToggle.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
@@ -60,8 +50,6 @@ public class MainHeader extends HorizontalLayout {
 
         rightSection.add(themeToggle, avatar);
 
-        add(tabs, rightSection);
+        add(rightSection);
     }
-
-    private record HeaderItem(String label, VaadinIcon icon) {}
 }

@@ -1,7 +1,6 @@
 package com.mariastaff.Inventario.ui.views;
 
-import com.mariastaff.Inventario.ui.components.DashboardWidgets;
-import com.mariastaff.Inventario.ui.components.UIElements;
+import com.mariastaff.Inventario.ui.components.base.AppLabel;
 import com.mariastaff.Inventario.ui.layouts.MainLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
@@ -20,7 +19,6 @@ public class DashboardView extends VerticalLayout {
         setSpacing(false);
         setPadding(false);
 
-        add(new DashboardWidgets());
-        add(new UIElements());
+        add(new AppLabel("dashboard.content"));
     }
 }
