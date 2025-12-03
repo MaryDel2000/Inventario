@@ -28,12 +28,12 @@ public class MainLayout extends AppLayout {
 
     private void setupSidebar() {
         // Main Modules - Linking to the default view of each module
-        sidebar.addNavItem(new AppNavItem("Inventario", new VaadinAppIcon(VaadinIcon.STORAGE), InventoryDashboardView.class));
-        sidebar.addNavItem(new AppNavItem("Compras", new VaadinAppIcon(VaadinIcon.CART), NewPurchaseView.class));
-        sidebar.addNavItem(new AppNavItem("Ventas (POS)", new VaadinAppIcon(VaadinIcon.CASH), POSView.class));
-        sidebar.addNavItem(new AppNavItem("Contabilidad", new VaadinAppIcon(VaadinIcon.CHART), FinancialDashboardView.class));
-        sidebar.addNavItem(new AppNavItem("Reportes", new VaadinAppIcon(VaadinIcon.FILE_TEXT), ReportSalesUserView.class));
-        sidebar.addNavItem(new AppNavItem("Configuración", new VaadinAppIcon(VaadinIcon.COG), BranchesView.class));
+        sidebar.addNavItem(new AppNavItem("nav.module.inventory", new VaadinAppIcon(VaadinIcon.STORAGE), InventoryDashboardView.class));
+        sidebar.addNavItem(new AppNavItem("nav.module.purchases", new VaadinAppIcon(VaadinIcon.CART), NewPurchaseView.class));
+        sidebar.addNavItem(new AppNavItem("nav.module.sales", new VaadinAppIcon(VaadinIcon.CASH), POSView.class));
+        sidebar.addNavItem(new AppNavItem("nav.module.accounting", new VaadinAppIcon(VaadinIcon.CHART), FinancialDashboardView.class));
+        sidebar.addNavItem(new AppNavItem("nav.module.reports", new VaadinAppIcon(VaadinIcon.FILE_TEXT), ReportSalesUserView.class));
+        sidebar.addNavItem(new AppNavItem("nav.module.settings", new VaadinAppIcon(VaadinIcon.COG), BranchesView.class));
     }
 
     @Override
@@ -69,14 +69,14 @@ public class MainLayout extends AppLayout {
     }
 
     private void addInventoryHeaderItems() {
-        header.addNavigationItem(new AppNavItem("Dashboard", new VaadinAppIcon(VaadinIcon.DASHBOARD), InventoryDashboardView.class));
-        header.addNavigationItem(new AppNavItem("Productos", new VaadinAppIcon(VaadinIcon.PACKAGE), ProductsView.class));
-        header.addNavigationItem(new AppNavItem("Categorías", new VaadinAppIcon(VaadinIcon.TAGS), CategoriesView.class));
-        header.addNavigationItem(new AppNavItem("Unidades", new VaadinAppIcon(VaadinIcon.SLIDERS), UOMView.class));
-        header.addNavigationItem(new AppNavItem("Movimientos", new VaadinAppIcon(VaadinIcon.EXCHANGE), MovementsView.class));
-        header.addNavigationItem(new AppNavItem("Almacenes", new VaadinAppIcon(VaadinIcon.BUILDING), WarehousesView.class));
-        header.addNavigationItem(new AppNavItem("Ubicaciones", new VaadinAppIcon(VaadinIcon.MAP_MARKER), LocationsView.class));
-        header.addNavigationItem(new AppNavItem("Lotes", new VaadinAppIcon(VaadinIcon.BARCODE), BatchesView.class));
+        header.addNavigationItem(new AppNavItem("nav.inventory.dashboard", new VaadinAppIcon(VaadinIcon.DASHBOARD), InventoryDashboardView.class));
+        header.addNavigationItem(new AppNavItem("nav.inventory.products", new VaadinAppIcon(VaadinIcon.PACKAGE), ProductsView.class));
+        header.addNavigationItem(new AppNavItem("nav.inventory.categories", new VaadinAppIcon(VaadinIcon.TAGS), CategoriesView.class));
+        header.addNavigationItem(new AppNavItem("nav.inventory.uom", new VaadinAppIcon(VaadinIcon.SLIDERS), UOMView.class));
+        header.addNavigationItem(new AppNavItem("nav.inventory.movements", new VaadinAppIcon(VaadinIcon.EXCHANGE), MovementsView.class));
+        header.addNavigationItem(new AppNavItem("nav.inventory.warehouses", new VaadinAppIcon(VaadinIcon.BUILDING), WarehousesView.class));
+        header.addNavigationItem(new AppNavItem("nav.inventory.locations", new VaadinAppIcon(VaadinIcon.MAP_MARKER), LocationsView.class));
+        header.addNavigationItem(new AppNavItem("nav.inventory.batches", new VaadinAppIcon(VaadinIcon.BARCODE), BatchesView.class));
     }
 
     private boolean isPurchaseView(Class<?> view) {
@@ -85,9 +85,9 @@ public class MainLayout extends AppLayout {
     }
 
     private void addPurchaseHeaderItems() {
-        header.addNavigationItem(new AppNavItem("Nueva Compra", new VaadinAppIcon(VaadinIcon.PLUS_CIRCLE), NewPurchaseView.class));
-        header.addNavigationItem(new AppNavItem("Historial", new VaadinAppIcon(VaadinIcon.CLOCK), PurchasesHistoryView.class));
-        header.addNavigationItem(new AppNavItem("Proveedores", new VaadinAppIcon(VaadinIcon.TRUCK), ProvidersView.class));
+        header.addNavigationItem(new AppNavItem("nav.purchases.new", new VaadinAppIcon(VaadinIcon.PLUS_CIRCLE), NewPurchaseView.class));
+        header.addNavigationItem(new AppNavItem("nav.purchases.history", new VaadinAppIcon(VaadinIcon.CLOCK), PurchasesHistoryView.class));
+        header.addNavigationItem(new AppNavItem("nav.purchases.providers", new VaadinAppIcon(VaadinIcon.TRUCK), ProvidersView.class));
     }
 
     private boolean isSalesView(Class<?> view) {
@@ -97,12 +97,12 @@ public class MainLayout extends AppLayout {
     }
 
     private void addSalesHeaderItems() {
-        header.addNavigationItem(new AppNavItem("POS", new VaadinAppIcon(VaadinIcon.CASH), POSView.class));
-        header.addNavigationItem(new AppNavItem("Turno", new VaadinAppIcon(VaadinIcon.CLOCK), ShiftView.class));
-        header.addNavigationItem(new AppNavItem("Cierres", new VaadinAppIcon(VaadinIcon.LOCK), ClosuresView.class));
-        header.addNavigationItem(new AppNavItem("Clientes", new VaadinAppIcon(VaadinIcon.USER), CustomersView.class));
-        header.addNavigationItem(new AppNavItem("Cobros", new VaadinAppIcon(VaadinIcon.MONEY), ReceivablesView.class));
-        header.addNavigationItem(new AppNavItem("Historial", new VaadinAppIcon(VaadinIcon.FILE_TEXT), SalesHistoryView.class));
+        header.addNavigationItem(new AppNavItem("nav.sales.pos", new VaadinAppIcon(VaadinIcon.CASH), POSView.class));
+        header.addNavigationItem(new AppNavItem("nav.sales.shift", new VaadinAppIcon(VaadinIcon.CLOCK), ShiftView.class));
+        header.addNavigationItem(new AppNavItem("nav.sales.closures", new VaadinAppIcon(VaadinIcon.LOCK), ClosuresView.class));
+        header.addNavigationItem(new AppNavItem("nav.sales.customers", new VaadinAppIcon(VaadinIcon.USER), CustomersView.class));
+        header.addNavigationItem(new AppNavItem("nav.sales.receivables", new VaadinAppIcon(VaadinIcon.MONEY), ReceivablesView.class));
+        header.addNavigationItem(new AppNavItem("nav.sales.history", new VaadinAppIcon(VaadinIcon.FILE_TEXT), SalesHistoryView.class));
     }
 
     private boolean isAccountingView(Class<?> view) {
@@ -112,11 +112,11 @@ public class MainLayout extends AppLayout {
     }
 
     private void addAccountingHeaderItems() {
-        header.addNavigationItem(new AppNavItem("Dashboard", new VaadinAppIcon(VaadinIcon.CHART), FinancialDashboardView.class));
-        header.addNavigationItem(new AppNavItem("Libro Diario", new VaadinAppIcon(VaadinIcon.BOOK), JournalView.class));
-        header.addNavigationItem(new AppNavItem("Cuentas", new VaadinAppIcon(VaadinIcon.LIST), ChartOfAccountsView.class));
-        header.addNavigationItem(new AppNavItem("Periodos", new VaadinAppIcon(VaadinIcon.CALENDAR), FiscalPeriodsView.class));
-        header.addNavigationItem(new AppNavItem("Asientos", new VaadinAppIcon(VaadinIcon.EDIT), ManualEntriesView.class));
+        header.addNavigationItem(new AppNavItem("nav.accounting.dashboard", new VaadinAppIcon(VaadinIcon.CHART), FinancialDashboardView.class));
+        header.addNavigationItem(new AppNavItem("nav.accounting.journal", new VaadinAppIcon(VaadinIcon.BOOK), JournalView.class));
+        header.addNavigationItem(new AppNavItem("nav.accounting.chart", new VaadinAppIcon(VaadinIcon.LIST), ChartOfAccountsView.class));
+        header.addNavigationItem(new AppNavItem("nav.accounting.periods", new VaadinAppIcon(VaadinIcon.CALENDAR), FiscalPeriodsView.class));
+        header.addNavigationItem(new AppNavItem("nav.accounting.manual", new VaadinAppIcon(VaadinIcon.EDIT), ManualEntriesView.class));
     }
 
     private boolean isReportsView(Class<?> view) {
@@ -127,13 +127,13 @@ public class MainLayout extends AppLayout {
     }
 
     private void addReportsHeaderItems() {
-        header.addNavigationItem(new AppNavItem("Ventas/Usuario", new VaadinAppIcon(VaadinIcon.USER), ReportSalesUserView.class));
-        header.addNavigationItem(new AppNavItem("Top Productos", new VaadinAppIcon(VaadinIcon.STAR), ReportTopProductsView.class));
-        header.addNavigationItem(new AppNavItem("Márgenes", new VaadinAppIcon(VaadinIcon.TRENDING_UP), ReportMarginsView.class));
-        header.addNavigationItem(new AppNavItem("Kardex", new VaadinAppIcon(VaadinIcon.FILE_TEXT_O), ReportKardexView.class));
-        header.addNavigationItem(new AppNavItem("Valor Inv.", new VaadinAppIcon(VaadinIcon.MONEY), ReportInventoryValueView.class));
-        header.addNavigationItem(new AppNavItem("Resultados", new VaadinAppIcon(VaadinIcon.PIE_CHART), ReportIncomeStatementView.class));
-        header.addNavigationItem(new AppNavItem("Balance", new VaadinAppIcon(VaadinIcon.SCALE), ReportTrialBalanceView.class));
+        header.addNavigationItem(new AppNavItem("nav.reports.sales_user", new VaadinAppIcon(VaadinIcon.USER), ReportSalesUserView.class));
+        header.addNavigationItem(new AppNavItem("nav.reports.top_products", new VaadinAppIcon(VaadinIcon.STAR), ReportTopProductsView.class));
+        header.addNavigationItem(new AppNavItem("nav.reports.margins", new VaadinAppIcon(VaadinIcon.TRENDING_UP), ReportMarginsView.class));
+        header.addNavigationItem(new AppNavItem("nav.reports.kardex", new VaadinAppIcon(VaadinIcon.FILE_TEXT_O), ReportKardexView.class));
+        header.addNavigationItem(new AppNavItem("nav.reports.inventory_value", new VaadinAppIcon(VaadinIcon.MONEY), ReportInventoryValueView.class));
+        header.addNavigationItem(new AppNavItem("nav.reports.income_statement", new VaadinAppIcon(VaadinIcon.PIE_CHART), ReportIncomeStatementView.class));
+        header.addNavigationItem(new AppNavItem("nav.reports.trial_balance", new VaadinAppIcon(VaadinIcon.SCALE), ReportTrialBalanceView.class));
     }
 
     private boolean isSettingsView(Class<?> view) {
@@ -143,10 +143,10 @@ public class MainLayout extends AppLayout {
     }
 
     private void addSettingsHeaderItems() {
-        header.addNavigationItem(new AppNavItem("Sucursales", new VaadinAppIcon(VaadinIcon.BUILDING_O), BranchesView.class));
-        header.addNavigationItem(new AppNavItem("Usuarios", new VaadinAppIcon(VaadinIcon.USERS), UsersView.class));
-        header.addNavigationItem(new AppNavItem("Monedas", new VaadinAppIcon(VaadinIcon.DOLLAR), CurrenciesView.class));
-        header.addNavigationItem(new AppNavItem("Impuestos", new VaadinAppIcon(VaadinIcon.FILE_ADD), TaxesView.class));
-        header.addNavigationItem(new AppNavItem("General", new VaadinAppIcon(VaadinIcon.COG), GeneralSettingsView.class));
+        header.addNavigationItem(new AppNavItem("nav.settings.branches", new VaadinAppIcon(VaadinIcon.BUILDING_O), BranchesView.class));
+        header.addNavigationItem(new AppNavItem("nav.settings.users", new VaadinAppIcon(VaadinIcon.USERS), UsersView.class));
+        header.addNavigationItem(new AppNavItem("nav.settings.currencies", new VaadinAppIcon(VaadinIcon.DOLLAR), CurrenciesView.class));
+        header.addNavigationItem(new AppNavItem("nav.settings.taxes", new VaadinAppIcon(VaadinIcon.FILE_ADD), TaxesView.class));
+        header.addNavigationItem(new AppNavItem("nav.settings.general", new VaadinAppIcon(VaadinIcon.COG), GeneralSettingsView.class));
     }
 }
