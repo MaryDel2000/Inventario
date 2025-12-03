@@ -70,6 +70,19 @@ public class AppHeader extends HorizontalLayout {
 
         rightSection.add(themeToggle, avatar);
 
-        add(rightSection);
+        // Center side: Navigation
+        HorizontalLayout centerSection = new HorizontalLayout();
+        centerSection.setAlignItems(FlexComponent.Alignment.CENTER);
+        centerSection.setSpacing(true);
+        centerSection.addClassNames("hidden", "md:flex", "flex-1", "justify-center"); // Hide on small screens, center on large
+        
+        add(leftSection, centerSection, rightSection);
+    }
+
+    public void addNavigationItem(com.vaadin.flow.component.Component item) {
+        // We assume the second component is the centerSection
+        if (getComponentCount() >= 2 && getComponentAt(1) instanceof HorizontalLayout) {
+            ((HorizontalLayout) getComponentAt(1)).add(item);
+        }
     }
 }
