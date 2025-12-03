@@ -13,6 +13,8 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 
 public class AppHeader extends HorizontalLayout {
 
+    private final Button menuButton;
+
     public AppHeader() {
         setWidthFull();
         addClassNames("w-full", "bg-[var(--color-bg-primary)]", "border-b", "border-[var(--color-border)]", "px-6", "py-3");
@@ -25,15 +27,18 @@ public class AppHeader extends HorizontalLayout {
         leftSection.setAlignItems(FlexComponent.Alignment.CENTER);
         leftSection.setSpacing(true);
         
-        // Add DrawerToggle for sidebar
-        com.vaadin.flow.component.applayout.DrawerToggle toggle = new com.vaadin.flow.component.applayout.DrawerToggle();
-        toggle.addClassNames("text-[var(--color-text-secondary)]");
+        // Add Menu Button for sidebar toggle
+        menuButton = new Button(VaadinIcon.MENU.create());
+        menuButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        menuButton.addClassNames("text-[var(--color-text-secondary)]");
         
         AppLabel title = new AppLabel("app.title");
         title.addClassNames("text-lg", "font-semibold");
         
-        leftSection.add(toggle, title);
+        leftSection.add(menuButton, title);
         add(leftSection);
+        
+        
         
  
 
@@ -90,5 +95,9 @@ public class AppHeader extends HorizontalLayout {
         if (getComponentCount() >= 2 && getComponentAt(1) instanceof HorizontalLayout) {
             ((HorizontalLayout) getComponentAt(1)).removeAll();
         }
+    }
+
+    public void addMenuListener(com.vaadin.flow.component.ComponentEventListener<com.vaadin.flow.component.ClickEvent<Button>> listener) {
+        menuButton.addClickListener(listener);
     }
 }

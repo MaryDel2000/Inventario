@@ -5,10 +5,14 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.HighlightConditions;
 import com.vaadin.flow.router.RouterLink;
 
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+
 public class AppNavItem extends Composite<RouterLink> {
 
     private final AppLabel label;
     private final AppIcon icon;
+    private final HorizontalLayout layout;
 
     public AppNavItem(String labelText, AppIcon icon, Class<? extends com.vaadin.flow.component.Component> navigationTarget) {
         this.label = new AppLabel(labelText);
@@ -25,8 +29,8 @@ public class AppNavItem extends Composite<RouterLink> {
         iconDiv.addClassNames("text-xl", "text-[var(--color-text-muted)]", "flex", "items-center");
 
         // Use HorizontalLayout to ensure flex behavior works reliably inside RouterLink
-        com.vaadin.flow.component.orderedlayout.HorizontalLayout layout = new com.vaadin.flow.component.orderedlayout.HorizontalLayout(iconDiv, label);
-        layout.setAlignItems(com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment.CENTER);
+        layout = new HorizontalLayout(iconDiv, label);
+        layout.setAlignItems(FlexComponent.Alignment.CENTER);
         layout.setSpacing(true);
         layout.setPadding(false);
         layout.setMargin(false);
@@ -53,5 +57,16 @@ public class AppNavItem extends Composite<RouterLink> {
                 iconDiv.removeClassNames("text-white");
             }
         });
+    }
+
+    public void setExpanded(boolean expanded) {
+        label.setVisible(expanded);
+        if (expanded) {
+            getContent().removeClassName("justify-center");
+            layout.setJustifyContentMode(FlexComponent.JustifyContentMode.START);
+        } else {
+            getContent().addClassName("justify-center");
+            layout.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+        }
     }
 }

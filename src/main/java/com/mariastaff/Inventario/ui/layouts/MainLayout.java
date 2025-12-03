@@ -18,9 +18,20 @@ public class MainLayout extends AppLayout {
         getElement().getThemeList().clear();
 
         header = new AppHeader();
+        header.addMenuListener(e -> sidebar.toggleSidebar());
         addToNavbar(header);
 
         sidebar = new AppSidebar(new VaadinAppIcon(VaadinIcon.PACKAGE), "app.title");
+        sidebar.setStateChangeHandler(expanded -> {
+            String width = expanded ? "16rem" : "2.5rem";
+            getElement().getStyle().set("--vaadin-app-layout-drawer-width", width);
+            // Force update internal variable to fix gap
+            getElement().getStyle().set("--_vaadin-app-layout-drawer-offset-size", width);
+        });
+        // Initialize state
+        getElement().getStyle().set("--vaadin-app-layout-drawer-width", "16rem");
+        getElement().getStyle().set("--_vaadin-app-layout-drawer-offset-size", "16rem");
+        
         addToDrawer(sidebar);
 
         setupSidebar();
