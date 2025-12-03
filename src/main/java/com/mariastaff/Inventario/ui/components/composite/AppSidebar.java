@@ -37,7 +37,9 @@ public class AppSidebar extends VerticalLayout {
         
         logoLabel = new AppLabel(logoText);
         logoLabel.addClassNames("text-xl", "font-bold", "mt-2", "whitespace-nowrap", "overflow-hidden");
-        logoLayout.add(logoLabel);
+        if (logoText != null && !logoText.isEmpty()) {
+            logoLayout.add(logoLabel);
+        }
         
         add(logoLayout);
 

@@ -1,6 +1,7 @@
 package com.mariastaff.Inventario.ui.layouts;
 
 import com.mariastaff.Inventario.ui.components.base.AppNavItem;
+import com.mariastaff.Inventario.ui.components.base.ImageAppIcon;
 import com.mariastaff.Inventario.ui.components.base.VaadinAppIcon;
 import com.mariastaff.Inventario.ui.components.composite.AppHeader;
 import com.mariastaff.Inventario.ui.components.composite.AppSidebar;
@@ -21,7 +22,7 @@ public class MainLayout extends AppLayout {
         header.addMenuListener(e -> sidebar.toggleSidebar());
         addToNavbar(header);
 
-        sidebar = new AppSidebar(new VaadinAppIcon(VaadinIcon.PACKAGE), "app.title");
+        sidebar = new AppSidebar(new ImageAppIcon("/images/logo-MariaStaff.png"), "");
         sidebar.setStateChangeHandler(expanded -> {
             String width = expanded ? "16rem" : "2.5rem";
             getElement().getStyle().set("--vaadin-app-layout-drawer-width", width);

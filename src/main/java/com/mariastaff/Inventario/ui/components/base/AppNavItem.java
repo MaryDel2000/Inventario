@@ -16,6 +16,8 @@ public class AppNavItem extends Composite<RouterLink> {
 
     public AppNavItem(String labelText, AppIcon icon, Class<? extends com.vaadin.flow.component.Component> navigationTarget) {
         this.label = new AppLabel(labelText);
+        this.label.removeClassNames("text-[var(--color-text-main)]");
+        this.label.addClassNames("text-[#607d8b]");
         this.icon = icon;
         
         RouterLink link = getContent();
@@ -26,7 +28,7 @@ public class AppNavItem extends Composite<RouterLink> {
         
         // Icon wrapper
         Div iconDiv = new Div(icon.create());
-        iconDiv.addClassNames("text-xl", "text-[var(--color-text-muted)]", "flex", "items-center");
+        iconDiv.addClassNames("text-xl", "text-[#607d8b]", "flex", "items-center");
 
         // Use HorizontalLayout to ensure flex behavior works reliably inside RouterLink
         layout = new HorizontalLayout(iconDiv, label);
@@ -43,17 +45,17 @@ public class AppNavItem extends Composite<RouterLink> {
         link.setHighlightAction((r, active) -> {
             if (active) {
                 r.addClassNames("bg-[var(--color-primary)]", "text-white");
-                r.removeClassNames("hover:bg-[var(--color-bg-secondary)]", "text-[var(--color-text-main)]");
+                r.removeClassNames("hover:bg-[var(--color-bg-secondary)]", "text-[#607d8b]");
                 label.addClassNames("text-white");
-                label.removeClassNames("text-[var(--color-text-main)]");
-                iconDiv.removeClassNames("text-[var(--color-text-muted)]");
+                label.removeClassNames("text-[#607d8b]");
+                iconDiv.removeClassNames("text-[#607d8b]");
                 iconDiv.addClassNames("text-white");
             } else {
                 r.removeClassNames("bg-[var(--color-primary)]", "text-white");
-                r.addClassNames("hover:bg-[var(--color-bg-secondary)]", "text-[var(--color-text-main)]");
+                r.addClassNames("hover:bg-[var(--color-bg-secondary)]", "text-[#607d8b]");
                 label.removeClassNames("text-white");
-                label.addClassNames("text-[var(--color-text-main)]");
-                iconDiv.addClassNames("text-[var(--color-text-muted)]");
+                label.addClassNames("text-[#607d8b]");
+                iconDiv.addClassNames("text-[#607d8b]");
                 iconDiv.removeClassNames("text-white");
             }
         });
