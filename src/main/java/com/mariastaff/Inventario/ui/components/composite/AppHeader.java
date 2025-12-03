@@ -85,4 +85,10 @@ public class AppHeader extends HorizontalLayout {
             ((HorizontalLayout) getComponentAt(1)).add(item);
         }
     }
+
+    public void clearNavigationItems() {
+        if (getComponentCount() >= 2 && getComponentAt(1) instanceof HorizontalLayout) {
+            ((HorizontalLayout) getComponentAt(1)).removeAll();
+        }
+    }
 }

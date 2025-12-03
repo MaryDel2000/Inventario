@@ -7,16 +7,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.PermitAll;
 
-@PageTitle("Contabilidad | Inventario")
-@Route(value = "accounting", layout = MainLayout.class)
+@PageTitle("Balance de Comprobación | Reportes")
+@Route(value = "reports/trial-balance", layout = MainLayout.class)
 @PermitAll
-public class AccountingView extends VerticalLayout {
-
-    public AccountingView() {
+public class ReportTrialBalanceView extends VerticalLayout {
+    public ReportTrialBalanceView() {
         addClassNames("w-full", "h-full", "bg-[var(--color-bg-secondary)]", "p-6");
-        setSpacing(false);
-        setPadding(false);
-
-        add(new AppLabel("Próximamente Contabilidad"));
+        add(new AppLabel("Próximamente Balance de Comprobación"));
     }
 }

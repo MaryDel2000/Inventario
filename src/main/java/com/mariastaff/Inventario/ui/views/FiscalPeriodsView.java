@@ -7,16 +7,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.PermitAll;
 
-@PageTitle("Inventario | Inventario")
-@Route(value = "inventory", layout = MainLayout.class)
+@PageTitle("Periodos | Contabilidad")
+@Route(value = "accounting/periods", layout = MainLayout.class)
 @PermitAll
-public class InventoryView extends VerticalLayout {
-
-    public InventoryView() {
+public class FiscalPeriodsView extends VerticalLayout {
+    public FiscalPeriodsView() {
         addClassNames("w-full", "h-full", "bg-[var(--color-bg-secondary)]", "p-6");
-        setSpacing(false);
-        setPadding(false);
-
-        add(new AppLabel("Próximamente Inventario"));
+        add(new AppLabel("Próximamente Periodos"));
     }
 }

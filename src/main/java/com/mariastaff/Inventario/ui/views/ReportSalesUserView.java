@@ -7,12 +7,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.PermitAll;
 
-@PageTitle("Productos | Inventario")
-@Route(value = "inventory/products", layout = MainLayout.class)
+@PageTitle("Ventas por Usuario | Reportes")
+@Route(value = "reports/sales-user", layout = MainLayout.class)
 @PermitAll
-public class ProductsView extends VerticalLayout {
-    public ProductsView() {
+public class ReportSalesUserView extends VerticalLayout {
+    public ReportSalesUserView() {
         addClassNames("w-full", "h-full", "bg-[var(--color-bg-secondary)]", "p-6");
-        add(new AppLabel("Próximamente Productos"));
+        add(new AppLabel("Próximamente Ventas por Usuario"));
     }
 }

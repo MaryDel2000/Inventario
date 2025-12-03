@@ -7,16 +7,12 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.PermitAll;
 
-@PageTitle("Punto de Venta | Inventario")
-@Route(value = "pos", layout = MainLayout.class)
+@PageTitle("Terminal Punto de Venta | Ventas")
+@Route(value = "sales/pos", layout = MainLayout.class)
 @PermitAll
 public class POSView extends VerticalLayout {
-
     public POSView() {
         addClassNames("w-full", "h-full", "bg-[var(--color-bg-secondary)]", "p-6");
-        setSpacing(false);
-        setPadding(false);
-
-        add(new AppLabel("Próximamente Punto de Venta"));
+        add(new AppLabel("Próximamente Terminal Punto de Venta"));
     }
 }
