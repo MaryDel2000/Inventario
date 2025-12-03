@@ -5,20 +5,18 @@ import com.mariastaff.Inventario.ui.layouts.MainLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.router.RouteAlias;
 import jakarta.annotation.security.PermitAll;
 
-@PageTitle("Dashboard | Inventario")
-@Route(value = "dashboard", layout = MainLayout.class)
-@RouteAlias(value = "", layout = MainLayout.class)
+@PageTitle("Productos | Inventario")
+@Route(value = "products", layout = MainLayout.class)
 @PermitAll
-public class DashboardView extends VerticalLayout {
+public class ProductsView extends VerticalLayout {
 
-    public DashboardView() {
-        addClassNames("w-full", "h-full", "bg-[var(--color-bg-secondary)]", "p-6", "space-y-6");
+    public ProductsView() {
+        addClassNames("w-full", "h-full", "bg-[var(--color-bg-secondary)]", "p-6");
         setSpacing(false);
         setPadding(false);
 
-        add(new AppLabel("Próximamente Dashboard"));
+        add(new AppLabel("Próximamente Productos"));
     }
 }
