@@ -1,11 +1,20 @@
 [theme~="dark"] {
     /* Backgrounds */
-    --color-bg-primary: #111827;
-    /* gray-900 */
-    --color-bg-secondary: #1f2937;
-    /* gray-800 */
-    --color-bg-surface: #1f2937;
-    /* gray-800 */
+    --color-bg-primary: #212121;
+    /* Neutral Dark */
+    --color-bg-secondary: #2c2c2c;
+    /* Neutral Lighter */
+    --color-bg-surface: #2c2c2c;
+    /* Neutral Lighter */
+
+    /* Lumo Overrides */
+    --lumo-base-color: #212121;
+    --lumo-body-text-color: var(--color-text-main);
+    --lumo-header-text-color: var(--color-text-main);
+    --lumo-secondary-text-color: var(--color-text-secondary);
+    --lumo-tertiary-text-color: var(--color-text-muted);
+    --lumo-shade-5pct: rgba(255, 255, 255, 0.05);
+    --lumo-shade-10pct: rgba(255, 255, 255, 0.1);
 
     /* Text */
     --color-text-main: #f9fafb;
@@ -23,6 +32,6 @@
     /* blue-400 */
 
     /* Borders */
-    --color-border: #374151;
-    /* gray-700 */
+    --color-border: #424242;
+    /* Neutral Gray */
 }
