@@ -40,9 +40,10 @@ public class AppSidebar extends VerticalLayout {
         collapsedLogoComponent = collapsedLogoIcon.create();
         collapsedLogoComponent.setVisible(false);
         
-        // Apply styles to collapsed logo to ensure it fits well
-        collapsedLogoComponent.getElement().getStyle().set("max-height", "100%");
-        collapsedLogoComponent.getElement().getStyle().set("max-width", "100%");
+        // Apply styles to collapsed logo: 24x24px with 10px margin
+        collapsedLogoComponent.getElement().getStyle().set("width", "40px");
+        collapsedLogoComponent.getElement().getStyle().set("height", "40px");
+        collapsedLogoComponent.getElement().getStyle().set("margin", "10px");
         
         logoLayout.add(logoComponent, collapsedLogoComponent);
         

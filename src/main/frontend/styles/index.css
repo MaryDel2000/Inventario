@@ -31,11 +31,10 @@ body {
 
 /* Override Lumo's default link color to allow Tailwind classes to work */
 a:where(:any-link):not(.text-white) {
-    color: #607d8b !important;
+    color: var(--color-link) !important;
 }
 
 /* Custom class for header action buttons to force color */
 .header-action-btn {
-    /* Fallback */
-    color: #607d8b !important;
+    color: var(--color-link) !important;
 }
