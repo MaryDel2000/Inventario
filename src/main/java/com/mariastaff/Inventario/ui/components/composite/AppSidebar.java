@@ -80,13 +80,14 @@ public class AppSidebar extends VerticalLayout {
     private void updateSidebarState(boolean showExpanded) {
         if (showExpanded) {
             addClassName("w-64");
-            removeClassName("w-10");
+            removeClassName("w-[45px]");
             logoComponent.setVisible(true);
             logoLabel.setVisible(true);
             logoLayout.setAlignItems(FlexComponent.Alignment.CENTER);
         } else {
             removeClassName("w-64");
-            addClassName("w-10");
+            removeClassName("w-10"); // Ensure old class is removed if present
+            addClassName("w-[45px]");
             logoComponent.setVisible(false);
             logoLabel.setVisible(false);
             logoLayout.setAlignItems(FlexComponent.Alignment.CENTER);
