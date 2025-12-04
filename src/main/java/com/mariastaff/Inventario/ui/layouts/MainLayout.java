@@ -15,29 +15,88 @@ public class MainLayout extends AppLayout {
 
     private AppHeader header;
     private AppSidebar sidebar;
+    private boolean isMobileMode = false;
 
     public MainLayout() {
         setPrimarySection(Section.DRAWER);
         getElement().getThemeList().clear();
 
         header = new AppHeader();
-        header.addMenuListener(e -> sidebar.toggleSidebar());
+        header.addMenuListener(e -> {
+            if (isMobileMode) {
+                // On mobile, toggle drawer visibility
+                setDrawerOpened(!isDrawerOpened());
+            } else {
+                // On desktop, toggle sidebar expansion
+                sidebar.toggleSidebar();
+            }
+        });
         addToNavbar(header);
 
         sidebar = new AppSidebar(new ImageAppIcon("/images/logo-MariaStaff.png"), new ImageAppIcon("/images/icon-MariaStaff.png"), "");
         sidebar.setStateChangeHandler(expanded -> {
-            String width = expanded ? "16rem" : "45px";
-            getElement().getStyle().set("--vaadin-app-layout-drawer-width", width);
-            // Force update internal variable to fix gap
-            getElement().getStyle().set("--_vaadin-app-layout-drawer-offset-size", width);
+            if (!isMobileMode) {
+                String width = expanded ? "16rem" : "45px";
+                getElement().getStyle().set("--vaadin-app-layout-drawer-width", width);
+                // Force update internal variable to fix gap
+                getElement().getStyle().set("--_vaadin-app-layout-drawer-offset-size", width);
+            }
         });
-        // Initialize state
-        getElement().getStyle().set("--vaadin-app-layout-drawer-width", "16rem");
-        getElement().getStyle().set("--_vaadin-app-layout-drawer-offset-size", "16rem");
+        
+        // Set initial drawer state - closed on mobile
+        getElement().executeJs(
+            "const checkMobile = () => {" +
+            "  const isMobile = window.innerWidth < 1024;" +
+            "  this.isMobileMode = isMobile;" +
+            "  if (isMobile) {" +
+            "    this.drawerOpened = false;" +
+            "    this.style.setProperty('--vaadin-app-layout-drawer-width', '16rem');" +
+            "    this.style.setProperty('--_vaadin-app-layout-drawer-offset-size', '0px');" +
+            "  } else {" +
+            "    this.drawerOpened = true;" +
+            "    this.style.setProperty('--vaadin-app-layout-drawer-width', '16rem');" +
+            "    this.style.setProperty('--_vaadin-app-layout-drawer-offset-size', '16rem');" +
+            "  }" +
+            "  return isMobile;" +
+            "};" +
+            "window.addEventListener('resize', checkMobile);" +
+            "const initialMobile = checkMobile();" +
+            "return initialMobile;"
+        ).then(result -> {
+            isMobileMode = result.asBoolean();
+            if (isMobileMode) {
+                setDrawerOpened(false);
+                getElement().getStyle().set("--_vaadin-app-layout-drawer-offset-size", "0px");
+            } else {
+                setDrawerOpened(true);
+                // Initialize state for desktop
+                getElement().getStyle().set("--vaadin-app-layout-drawer-width", "16rem");
+                getElement().getStyle().set("--_vaadin-app-layout-drawer-offset-size", "16rem");
+            }
+        });
         
         addToDrawer(sidebar);
 
         setupSidebar();
+        
+        // Add backdrop click listener to close drawer on mobile
+        getElement().executeJs(
+            "this.addEventListener('drawer-opened-changed', (e) => {" +
+            "  if (this.isMobileMode && e.detail.value) {" +
+            "    if (!this._backdrop) {" +
+            "      this._backdrop = document.createElement('div');" +
+            "      this._backdrop.className = 'sidebar-backdrop active';" +
+            "      this._backdrop.addEventListener('click', () => {" +
+            "        this.drawerOpened = false;" +
+            "      });" +
+            "      document.body.appendChild(this._backdrop);" +
+            "    }" +
+            "    this._backdrop.classList.add('active');" +
+            "  } else if (this._backdrop) {" +
+            "    this._backdrop.classList.remove('active');" +
+            "  }" +
+            "});"
+        );
     }
 
     private void setupSidebar() {
@@ -54,6 +113,11 @@ public class MainLayout extends AppLayout {
     protected void afterNavigation() {
         super.afterNavigation();
         updateHeader();
+        
+        // Close drawer on mobile after navigation
+        if (isMobileMode) {
+            setDrawerOpened(false);
+        }
     }
 
     private void updateHeader() {

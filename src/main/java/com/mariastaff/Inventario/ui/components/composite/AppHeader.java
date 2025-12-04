@@ -17,7 +17,7 @@ public class AppHeader extends HorizontalLayout {
 
     public AppHeader() {
         setWidthFull();
-        addClassNames("flex", "w-full", "bg-bg-primary", "border-b", "border-border", "px-6", "py-3");
+        addClassNames("flex", "w-full", "bg-bg-primary", "border-b", "border-border", "px-4", "md:px-6", "py-3");
         setAlignItems(FlexComponent.Alignment.CENTER);
         setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
         setSpacing(false);
@@ -26,18 +26,16 @@ public class AppHeader extends HorizontalLayout {
         HorizontalLayout leftSection = new HorizontalLayout();
         leftSection.setAlignItems(FlexComponent.Alignment.CENTER);
         leftSection.setSpacing(true);
-        leftSection.addClassNames("flex");
+        leftSection.addClassNames("flex", "items-center", "gap-2");
         
         // Add Menu Button for sidebar toggle
         menuButton = new Button(VaadinIcon.MENU.create());
-
         menuButton.addClassNames("header-action-btn");
         
         AppLabel title = new AppLabel("app.title");
         title.addClassNames("text-lg", "font-semibold");
         
         leftSection.add(menuButton, title);
-        add(leftSection);
         
         
         
@@ -49,7 +47,6 @@ public class AppHeader extends HorizontalLayout {
         rightSection.setSpacing(false);
 
         Button themeToggle = new Button(VaadinIcon.MOON_O.create());
-
         themeToggle.addClassNames("header-action-btn", "hover:text-primary");
         
         
@@ -82,7 +79,7 @@ public class AppHeader extends HorizontalLayout {
         HorizontalLayout centerSection = new HorizontalLayout();
         centerSection.setAlignItems(FlexComponent.Alignment.CENTER);
         centerSection.setSpacing(true);
-        centerSection.addClassNames("flex", "md:flex", "flex-1", "justify-center"); // Hide on small screens, center on large
+        centerSection.addClassNames("header-center-nav", "flex", "flex-1", "justify-center");
         
         add(leftSection, centerSection, rightSection);
     }

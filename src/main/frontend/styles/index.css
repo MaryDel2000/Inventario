@@ -1,7 +1,4 @@
 /* General application configurations */
-:root {
-    /* Add any global variables or configurations here */
-}
 
 body {
     margin: 0;
@@ -47,4 +44,39 @@ a:where(:any-link):not(.text-white) {
 /* Custom class for header action buttons to force color */
 .header-action-btn {
     color: var(--color-link) !important;
+}
+
+/* Responsive fixes for mobile */
+@media (max-width: 768px) {
+    /* Hide header center navigation on mobile */
+    .header-center-nav {
+        display: none !important;
+    }
+}
+
+/* Mobile sidebar overlay */
+@media (max-width: 1024px) {
+    /* Offset adjustment when drawer is closed */
+    vaadin-app-layout:not([drawer-opened]) {
+        --_vaadin-app-layout-drawer-offset-size: 0px !important;
+    }
+    
+    /* Sidebar backdrop */
+    .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+        display: none;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+    }
+    
+    .sidebar-backdrop.active {
+        display: block;
+        opacity: 1;
+    }
 }
