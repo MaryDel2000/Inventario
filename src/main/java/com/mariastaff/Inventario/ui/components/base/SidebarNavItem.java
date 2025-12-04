@@ -6,7 +6,5 @@ public class SidebarNavItem extends AppNavItem {
 
     public SidebarNavItem(String labelText, AppIcon icon, Class<? extends Component> navigationTarget) {
         super(labelText, icon, navigationTarget);
-        // Add 10px spacing from the left as requested
-        getContent().getStyle().set("margin-left", "10px");
     }
 }

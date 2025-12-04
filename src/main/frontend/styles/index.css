@@ -4,10 +4,20 @@
 }
 
 body {
-    padding: 10px;
+    margin: 0;
+    padding: 0;
     box-sizing: border-box;
     background-color: var(--color-bg-primary);
     color: var(--color-text-main);
+}
+
+/* Prevent unwanted scroll on AppLayout content area */
+vaadin-app-layout::part(content) {
+    overflow: hidden;
+}
+
+vaadin-app-layout [slot="drawer"] {
+    overflow: hidden;
 }
 
 /* Scrollbar customization */

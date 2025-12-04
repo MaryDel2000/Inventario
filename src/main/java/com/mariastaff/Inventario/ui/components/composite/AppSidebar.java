@@ -92,7 +92,7 @@ public class AppSidebar extends VerticalLayout {
     private void updateSidebarState(boolean showExpanded) {
         if (showExpanded) {
             addClassName("w-64");
-            removeClassName("w-[45px]");
+            removeClassName("w-[60px]");
             removeClassName("p-2");
             addClassName("p-4");
             
@@ -104,11 +104,10 @@ public class AppSidebar extends VerticalLayout {
             logoLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
             
             // Restore expanded styles
-            logoComponent.getElement().getStyle().set("height", "75%");
         } else {
             removeClassName("w-64");
             removeClassName("w-10"); // Ensure old class is removed if present
-            addClassName("w-[45px]");
+            addClassName("w-[60px]");
             removeClassName("p-4");
             addClassName("p-2");
             
