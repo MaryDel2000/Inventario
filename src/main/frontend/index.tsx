@@ -1,6 +1,6 @@
 // Estilos globales (Tailwind procesado por PostCSS/Vite)
 import './styles/tailwind.src.css';
-import './styles/general.css';
+import './styles/index.css';
 import './styles/theme-light.css';
 import './styles/theme-dark.css';
 
