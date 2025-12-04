@@ -17,9 +17,10 @@ public class AppSidebar extends VerticalLayout {
     private boolean hoverExpanded = false; // Hover state
     private final VerticalLayout logoLayout;
     private final com.vaadin.flow.component.Component logoComponent;
+    private final com.vaadin.flow.component.Component collapsedLogoComponent;
     private final AppLabel logoLabel;
 
-    public AppSidebar(AppIcon logoIcon, String logoText) {
+    public AppSidebar(AppIcon logoIcon, AppIcon collapsedLogoIcon, String logoText) {
         addClassNames("w-64", "h-full", "bg-[var(--color-bg-surface)]", "border-r", "border-[var(--color-border)]", "p-4", "transition-all", "duration-300", "z-50");
         setSpacing(true);
         setPadding(false);
@@ -30,10 +31,20 @@ public class AppSidebar extends VerticalLayout {
         logoLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
         logoLayout.setPadding(false);
         logoLayout.setSpacing(true);
-        logoLayout.addClassNames("h-16", "shrink-0", "transition-all", "duration-300"); // Fixed height to prevent jump
+        logoLayout.setHeight("100px");
+        logoLayout.setMinHeight("100px");
+        logoLayout.getStyle().set("flex-shrink", "0");
+        logoLayout.addClassNames("shrink-0", "transition-all", "duration-300"); // Fixed height to prevent jump
         
         logoComponent = logoIcon.create();
-        logoLayout.add(logoComponent);
+        collapsedLogoComponent = collapsedLogoIcon.create();
+        collapsedLogoComponent.setVisible(false);
+        
+        // Apply styles to collapsed logo to ensure it fits well
+        collapsedLogoComponent.getElement().getStyle().set("max-height", "100%");
+        collapsedLogoComponent.getElement().getStyle().set("max-width", "100%");
+        
+        logoLayout.add(logoComponent, collapsedLogoComponent);
         
         logoLabel = new AppLabel(logoText);
         logoLabel.addClassNames("text-xl", "font-bold", "mt-2", "whitespace-nowrap", "overflow-hidden");
@@ -81,16 +92,34 @@ public class AppSidebar extends VerticalLayout {
         if (showExpanded) {
             addClassName("w-64");
             removeClassName("w-[45px]");
+            removeClassName("p-2");
+            addClassName("p-4");
+            
             logoComponent.setVisible(true);
+            collapsedLogoComponent.setVisible(false);
             logoLabel.setVisible(true);
+            
             logoLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+            logoLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
+            
+            // Restore expanded styles
+            logoComponent.getElement().getStyle().set("height", "75%");
         } else {
             removeClassName("w-64");
             removeClassName("w-10"); // Ensure old class is removed if present
             addClassName("w-[45px]");
+            removeClassName("p-4");
+            addClassName("p-2");
+            
             logoComponent.setVisible(false);
+            collapsedLogoComponent.setVisible(true);
             logoLabel.setVisible(false);
+            
             logoLayout.setAlignItems(FlexComponent.Alignment.CENTER);
+            logoLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.START);
+            
+            // Collapsed styles
+            collapsedLogoComponent.getElement().getStyle().set("height", "auto");
         }
         
         if (stateChangeHandler != null) {

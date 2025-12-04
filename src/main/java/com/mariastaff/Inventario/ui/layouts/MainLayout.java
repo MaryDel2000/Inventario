@@ -24,7 +24,7 @@ public class MainLayout extends AppLayout {
         header.addMenuListener(e -> sidebar.toggleSidebar());
         addToNavbar(header);
 
-        sidebar = new AppSidebar(new ImageAppIcon("/images/logo-MariaStaff.png"), "");
+        sidebar = new AppSidebar(new ImageAppIcon("/images/logo-MariaStaff.png"), new ImageAppIcon("/images/icon-MariaStaff.png"), "");
         sidebar.setStateChangeHandler(expanded -> {
             String width = expanded ? "16rem" : "45px";
             getElement().getStyle().set("--vaadin-app-layout-drawer-width", width);
