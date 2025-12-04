@@ -12,7 +12,7 @@ import jakarta.annotation.security.PermitAll;
 @PermitAll
 public class ReportMarginsView extends VerticalLayout {
     public ReportMarginsView() {
-        addClassNames("w-full", "h-full", "bg-[var(--color-bg-secondary)]", "p-6");
+        addClassNames("w-full", "h-full", "bg-bg-secondary", "p-6");
         add(new AppLabel("Próximamente Margen de Ganancia"));
     }
 }

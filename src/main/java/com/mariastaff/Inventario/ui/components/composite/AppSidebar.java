@@ -21,7 +21,7 @@ public class AppSidebar extends VerticalLayout {
     private final AppLabel logoLabel;
 
     public AppSidebar(AppIcon logoIcon, AppIcon collapsedLogoIcon, String logoText) {
-        addClassNames("w-64", "h-full", "bg-[var(--color-bg-surface)]", "border-r", "border-[var(--color-border)]", "p-4", "transition-all", "duration-300", "z-50");
+        addClassNames("w-64", "h-full", "bg-bg-secondary", "border-r", "border-border", "p-4", "transition-all", "duration-300", "z-50");
         setSpacing(true);
         setPadding(false);
 

@@ -1,21 +1,30 @@
 [theme~="dark"] {
     /* Backgrounds */
     --color-bg-primary: #212121;
+    /* Neutral Dark */
     --color-bg-secondary: #2c2c2c;
+    /* Neutral Lighter */
     --color-bg-surface: #2c2c2c;
+    /* Neutral Lighter */
+
+
 
     /* Text */
     --color-text-main: #f9fafb;
+    /* gray-50 */
     --color-text-secondary: #d1d5db;
+    /* gray-300 */
     --color-text-muted: #6b7280;
+    /* gray-500 */
     --color-text-inverted: #000000;
 
     /* Primary Brand */
     --color-primary: #3b82f6;
+    /* blue-500 */
     --color-primary-hover: #60a5fa;
+    /* blue-400 */
 
     /* Borders */
     --color-border: #424242;
-
-
+    /* Neutral Gray */
 }

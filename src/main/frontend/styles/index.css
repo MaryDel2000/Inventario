@@ -6,6 +6,8 @@
 body {
     padding: 10px;
     box-sizing: border-box;
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-main);
 }
 
 /* Scrollbar customization */
@@ -34,8 +36,6 @@ a:where(:any-link):not(.text-white) {
 
 /* Custom class for header action buttons to force color */
 .header-action-btn {
-    --vaadin-button-tertiary-text-color: #607d8b;
-    --lumo-primary-text-color: #607d8b;
     /* Fallback */
     color: #607d8b !important;
 }
