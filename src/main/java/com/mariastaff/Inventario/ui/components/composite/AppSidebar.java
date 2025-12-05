@@ -128,4 +128,16 @@ public class AppSidebar extends VerticalLayout {
         
         navItems.forEach(item -> item.setExpanded(showExpanded));
     }
+    
+    public void clearAllItems() {
+        navItems.clear();
+        // Remove all children except logo layout (which is the first element)
+        getChildren()
+            .filter(child -> child != logoLayout)
+            .forEach(this::remove);
+    }
+    
+    public void addExpandableItem(com.mariastaff.Inventario.ui.components.base.ExpandableSidebarNavItem item) {
+        add(item);
+    }
 }
