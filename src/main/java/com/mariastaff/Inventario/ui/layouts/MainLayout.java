@@ -6,7 +6,12 @@ import com.mariastaff.Inventario.ui.components.base.SidebarNavItem;
 import com.mariastaff.Inventario.ui.components.base.VaadinAppIcon;
 import com.mariastaff.Inventario.ui.components.composite.AppHeader;
 import com.mariastaff.Inventario.ui.components.composite.AppSidebar;
-import com.mariastaff.Inventario.ui.views.*;
+import com.mariastaff.Inventario.ui.views.inventory.*;
+import com.mariastaff.Inventario.ui.views.purchases.*;
+import com.mariastaff.Inventario.ui.views.sales.*;
+import com.mariastaff.Inventario.ui.views.accounting.*;
+import com.mariastaff.Inventario.ui.views.reports.*;
+import com.mariastaff.Inventario.ui.views.settings.*;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.icon.VaadinIcon;
 
