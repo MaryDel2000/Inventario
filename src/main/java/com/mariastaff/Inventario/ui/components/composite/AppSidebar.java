@@ -24,6 +24,8 @@ public class AppSidebar extends VerticalLayout {
         addClassNames("w-64", "h-full", "bg-bg-secondary", "border-r", "border-border", "p-4", "transition-all", "duration-300", "z-50");
         setSpacing(true);
         setPadding(false);
+        getStyle().set("overflow-y", "auto");
+        getStyle().set("overflow-x", "hidden");
 
         // Logo Area
         logoLayout = new VerticalLayout();

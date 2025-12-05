@@ -14,7 +14,8 @@ vaadin-app-layout::part(content) {
 }
 
 vaadin-app-layout [slot="drawer"] {
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 /* Scrollbar customization */

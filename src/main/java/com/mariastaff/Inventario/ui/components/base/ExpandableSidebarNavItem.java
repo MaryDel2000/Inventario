@@ -77,12 +77,15 @@ public class ExpandableSidebarNavItem extends VerticalLayout {
     public void addSubItem(AppNavItem subItem) {
         subItems.add(subItem);
         subItem.addClassNames("py-1");
+        subItem.getStyle().set("margin", "5px");
         subItemsLayout.add(subItem);
     }
 
     private void toggle() {
         expanded = !expanded;
         if (expanded) {
+            // Remove any visibility style set by JavaScript
+            subItemsLayout.getElement().executeJs("this.style.removeProperty('visibility');");
             subItemsLayout.setVisible(true);
             subItemsLayout.getStyle().set("max-height", (subItems.size() * 50) + "px");
             chevronDiv.getStyle().set("transform", "rotate(180deg)");

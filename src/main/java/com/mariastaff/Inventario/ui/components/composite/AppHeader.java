@@ -31,16 +31,10 @@ public class AppHeader extends HorizontalLayout {
         // Add Menu Button for sidebar toggle
         menuButton = new Button(VaadinIcon.MENU.create());
         menuButton.addClassNames("header-action-btn");
+        menuButton.getStyle().setMarginRight("15px");
         
-        AppLabel title = new AppLabel("app.title");
-        title.addClassNames("text-lg", "font-semibold");
+        leftSection.add(menuButton);
         
-        leftSection.add(menuButton, title);
-        
-        
-        
- 
-
         // Right side: Theme Switch & Profile
         HorizontalLayout rightSection = new HorizontalLayout();
         rightSection.addClassNames("flex", "items-center", "gap-4");
@@ -48,6 +42,7 @@ public class AppHeader extends HorizontalLayout {
 
         Button themeToggle = new Button(VaadinIcon.MOON_O.create());
         themeToggle.addClassNames("header-action-btn", "hover:text-primary");
+        themeToggle.getStyle().setMarginLeft("15px");
         
         
         themeToggle.addClickListener(e -> {
