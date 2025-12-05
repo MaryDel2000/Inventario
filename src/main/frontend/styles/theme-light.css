@@ -23,4 +23,8 @@
     /* Borders */
     --color-border: #e5e7eb;
     /* gray-200 */
+
+    /* Links & Actions */
+    --color-link: #607d8b;
+    /* blue-grey-500 */
 }

@@ -1,0 +1,89 @@
+/* General application configurations */
+
+body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-main);
+}
+
+/* Prevent unwanted scroll on AppLayout content area */
+vaadin-app-layout::part(content) {
+    overflow: hidden;
+}
+
+vaadin-app-layout [slot="drawer"] {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Scrollbar customization */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-muted);
+}
+
+/* Override Lumo's default link color to allow Tailwind classes to work */
+a:where(:any-link):not(.text-white) {
+    color: var(--color-link) !important;
+}
+
+/* Custom class for header action buttons to force color */
+.header-action-btn {
+    color: var(--color-link) !important;
+}
+
+/* Responsive fixes for mobile */
+@media (max-width: 768px) {
+    /* Hide header center navigation on mobile */
+    .header-center-nav {
+        display: none !important;
+    }
+}
+
+/* Mobile sidebar overlay */
+@media (max-width: 1024px) {
+    /* Offset adjustment when drawer is closed */
+    vaadin-app-layout:not([drawer-opened]) {
+        --_vaadin-app-layout-drawer-offset-size: 0px !important;
+    }
+    
+    /* Ensure sidebar drawer is above backdrop */
+    vaadin-app-layout::part(drawer) {
+        z-index: 1001 !important;
+    }
+    
+    /* Sidebar backdrop - positioned to the right of the drawer */
+    .sidebar-backdrop {
+        position: fixed;
+        top: 0;
+        left: 16rem; /* Start after sidebar width (256px = 16rem) */
+        width: calc(100vw - 16rem);
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: none;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+        pointer-events: auto; /* Ensure it captures clicks */
+    }
+    
+    .sidebar-backdrop.active {
+        display: block;
+        opacity: 1;
+    }
+}

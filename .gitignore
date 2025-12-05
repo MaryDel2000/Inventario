@@ -60,3 +60,7 @@ pnpm-debug.log
 
 # Vaadin bundles
 /src/main/bundles/
+
+### Docker ###
+docker/postgresql/*
+target/

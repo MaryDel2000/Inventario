@@ -6,7 +6,7 @@ import com.mariastaff.Inventario.ui.components.base.VaadinAppIcon;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
+
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -17,7 +17,7 @@ public class AppHeader extends HorizontalLayout {
 
     public AppHeader() {
         setWidthFull();
-        addClassNames("w-full", "bg-[var(--color-bg-primary)]", "border-b", "border-[var(--color-border)]", "px-6", "py-3");
+        addClassNames("flex", "w-full", "bg-bg-primary", "border-b", "border-border", "px-4", "md:px-6", "py-3");
         setAlignItems(FlexComponent.Alignment.CENTER);
         setJustifyContentMode(FlexComponent.JustifyContentMode.BETWEEN);
         setSpacing(false);
@@ -26,30 +26,24 @@ public class AppHeader extends HorizontalLayout {
         HorizontalLayout leftSection = new HorizontalLayout();
         leftSection.setAlignItems(FlexComponent.Alignment.CENTER);
         leftSection.setSpacing(true);
+        leftSection.addClassNames("flex", "items-center", "gap-2");
         
         // Add Menu Button for sidebar toggle
         menuButton = new Button(VaadinIcon.MENU.create());
-        menuButton.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
         menuButton.addClassNames("header-action-btn");
+        menuButton.getStyle().setMarginRight("15px");
         
-        AppLabel title = new AppLabel("app.title");
-        title.addClassNames("text-lg", "font-semibold");
+        leftSection.add(menuButton);
         
-        leftSection.add(menuButton, title);
-        add(leftSection);
-        
-        
-        
- 
-
         // Right side: Theme Switch & Profile
         HorizontalLayout rightSection = new HorizontalLayout();
         rightSection.addClassNames("flex", "items-center", "gap-4");
         rightSection.setSpacing(false);
 
         Button themeToggle = new Button(VaadinIcon.MOON_O.create());
-        themeToggle.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-        themeToggle.addClassNames("header-action-btn", "hover:text-[var(--color-primary)]");
+        themeToggle.addClassNames("header-action-btn", "hover:text-primary");
+        themeToggle.getStyle().setMarginLeft("15px");
+        
         
         themeToggle.addClickListener(e -> {
             UI.getCurrent().getPage().executeJs(
@@ -68,10 +62,11 @@ public class AppHeader extends HorizontalLayout {
                 }
             });
         });
+        
 
         Avatar avatar = new Avatar("Maria Staff");
         avatar.setImage("https://i.pravatar.cc/150?img=32");
-        avatar.addClassNames("border-2", "border-[var(--color-border)]");
+        avatar.addClassNames("border-2", "border-border");
 
         rightSection.add(themeToggle, avatar);
 
@@ -79,7 +74,7 @@ public class AppHeader extends HorizontalLayout {
         HorizontalLayout centerSection = new HorizontalLayout();
         centerSection.setAlignItems(FlexComponent.Alignment.CENTER);
         centerSection.setSpacing(true);
-        centerSection.addClassNames("hidden", "md:flex", "flex-1", "justify-center"); // Hide on small screens, center on large
+        centerSection.addClassNames("header-center-nav", "flex", "flex-1", "justify-center");
         
         add(leftSection, centerSection, rightSection);
     }

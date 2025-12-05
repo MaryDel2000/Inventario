@@ -53,6 +53,8 @@ dependencies {
 		exclude group: 'com.vaadin', module: 'hilla-dev'
 		exclude group: 'com.vaadin', module: 'hilla-endpoint'
 		exclude group: 'com.vaadin', module: 'hilla-engine-runtime'
+		// Excluir Lumo theme
+		exclude group: 'com.vaadin', module: 'vaadin-lumo-theme'
 	}
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

@@ -8,7 +8,7 @@ public class AppLabel extends Span {
         super();
         setText(getTranslation(i18nKey));
         // Default Tailwind styles for labels
-        addClassNames("text-sm", "font-medium", "text-[var(--color-text-main)]");
+        addClassNames("text-sm", "font-medium", "text-text-main");
     }
 
     public AppLabel(String i18nKey, String... classNames) {

@@ -16,7 +16,7 @@ public class AppNavItem extends Composite<RouterLink> {
 
     public AppNavItem(String labelText, AppIcon icon, Class<? extends com.vaadin.flow.component.Component> navigationTarget) {
         this.label = new AppLabel(labelText);
-        this.label.removeClassNames("text-[var(--color-text-main)]");
+        this.label.removeClassNames("text-text-main");
         this.label.addClassNames("text-[#607d8b]");
         this.icon = icon;
         
@@ -44,15 +44,15 @@ public class AppNavItem extends Composite<RouterLink> {
         link.setHighlightCondition(HighlightConditions.locationPrefix());
         link.setHighlightAction((r, active) -> {
             if (active) {
-                r.addClassNames("bg-[var(--color-primary)]", "text-white");
-                r.removeClassNames("hover:bg-[var(--color-bg-secondary)]", "text-[#607d8b]");
+                r.addClassNames("bg-primary", "text-white");
+                r.removeClassNames("hover:bg-bg-secondary", "text-[#607d8b]");
                 label.addClassNames("text-white");
                 label.removeClassNames("text-[#607d8b]");
                 iconDiv.removeClassNames("text-[#607d8b]");
                 iconDiv.addClassNames("text-white");
             } else {
-                r.removeClassNames("bg-[var(--color-primary)]", "text-white");
-                r.addClassNames("hover:bg-[var(--color-bg-secondary)]", "text-[#607d8b]");
+                r.removeClassNames("bg-primary", "text-white");
+                r.addClassNames("hover:bg-bg-secondary", "text-[#607d8b]");
                 label.removeClassNames("text-white");
                 label.addClassNames("text-[#607d8b]");
                 iconDiv.addClassNames("text-[#607d8b]");

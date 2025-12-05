@@ -21,9 +21,11 @@ public class AppSidebar extends VerticalLayout {
     private final AppLabel logoLabel;
 
     public AppSidebar(AppIcon logoIcon, AppIcon collapsedLogoIcon, String logoText) {
-        addClassNames("w-64", "h-full", "bg-[var(--color-bg-surface)]", "border-r", "border-[var(--color-border)]", "p-4", "transition-all", "duration-300", "z-50");
+        addClassNames("w-64", "h-full", "bg-bg-secondary", "border-r", "border-border", "p-4", "transition-all", "duration-300", "z-50");
         setSpacing(true);
         setPadding(false);
+        getStyle().set("overflow-y", "auto");
+        getStyle().set("overflow-x", "hidden");
 
         // Logo Area
         logoLayout = new VerticalLayout();
@@ -40,9 +42,10 @@ public class AppSidebar extends VerticalLayout {
         collapsedLogoComponent = collapsedLogoIcon.create();
         collapsedLogoComponent.setVisible(false);
         
-        // Apply styles to collapsed logo to ensure it fits well
-        collapsedLogoComponent.getElement().getStyle().set("max-height", "100%");
-        collapsedLogoComponent.getElement().getStyle().set("max-width", "100%");
+        // Apply styles to collapsed logo: 24x24px with 10px margin
+        collapsedLogoComponent.getElement().getStyle().set("width", "40px");
+        collapsedLogoComponent.getElement().getStyle().set("height", "40px");
+        collapsedLogoComponent.getElement().getStyle().set("margin", "10px");
         
         logoLayout.add(logoComponent, collapsedLogoComponent);
         
@@ -91,7 +94,7 @@ public class AppSidebar extends VerticalLayout {
     private void updateSidebarState(boolean showExpanded) {
         if (showExpanded) {
             addClassName("w-64");
-            removeClassName("w-[45px]");
+            removeClassName("w-[60px]");
             removeClassName("p-2");
             addClassName("p-4");
             
@@ -103,11 +106,10 @@ public class AppSidebar extends VerticalLayout {
             logoLayout.setJustifyContentMode(FlexComponent.JustifyContentMode.CENTER);
             
             // Restore expanded styles
-            logoComponent.getElement().getStyle().set("height", "75%");
         } else {
             removeClassName("w-64");
             removeClassName("w-10"); // Ensure old class is removed if present
-            addClassName("w-[45px]");
+            addClassName("w-[60px]");
             removeClassName("p-4");
             addClassName("p-2");
             
@@ -127,5 +129,17 @@ public class AppSidebar extends VerticalLayout {
         }
         
         navItems.forEach(item -> item.setExpanded(showExpanded));
+    }
+    
+    public void clearAllItems() {
+        navItems.clear();
+        // Remove all children except logo layout (which is the first element)
+        getChildren()
+            .filter(child -> child != logoLayout)
+            .forEach(this::remove);
+    }
+    
+    public void addExpandableItem(com.mariastaff.Inventario.ui.components.base.ExpandableSidebarNavItem item) {
+        add(item);
     }
 }

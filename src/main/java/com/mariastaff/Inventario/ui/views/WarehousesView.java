@@ -12,7 +12,7 @@ import jakarta.annotation.security.PermitAll;
 @PermitAll
 public class WarehousesView extends VerticalLayout {
     public WarehousesView() {
-        addClassNames("w-full", "h-full", "bg-[var(--color-bg-secondary)]", "p-6");
+        addClassNames("w-full", "h-full", "bg-bg-secondary", "p-6");
         add(new AppLabel("Próximamente Almacenes"));
     }
 }
