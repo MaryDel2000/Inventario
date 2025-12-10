@@ -159,7 +159,7 @@ CREATE TABLE inv_producto (
     usuario_creacion_id BIGINT,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     usuario_modificacion_id BIGINT,
-    fecha_actualizacion TIMESTAMP
+    fecha_modificacion TIMESTAMP
 );
 
 CREATE TABLE inv_producto_variante (

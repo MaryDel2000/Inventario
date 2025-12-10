@@ -22,11 +22,6 @@ public class ProductoService {
         return repository.save(producto);
     }
     
-    public void delete(InvProducto producto) {
-        repository.delete(producto);
-    }
-    
-    public long count() {
-        return repository.count();
-    }
+    public void deleteProducto(InvProducto entity) { repository.delete(entity); }
+    public long countProductos() { return repository.count(); }
 }

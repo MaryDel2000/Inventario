@@ -30,6 +30,8 @@ public abstract class AbstractEntity implements Serializable {
         return version;
     }
 
+
+
     @Override
     public int hashCode() {
         if (id != null) {

@@ -17,4 +17,5 @@ public class MovimientoService {
     public List<InvMovimiento> findAllMovimientos() { return movimientoRepository.findAll(); }
     public InvMovimiento saveMovimiento(InvMovimiento entity) { return movimientoRepository.save(entity); }
     public void deleteMovimiento(InvMovimiento entity) { movimientoRepository.delete(entity); }
+    public long countMovimientos() { return movimientoRepository.count(); }
 }

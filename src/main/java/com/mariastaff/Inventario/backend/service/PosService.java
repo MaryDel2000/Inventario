@@ -29,6 +29,7 @@ public class PosService {
     public List<PosVenta> findAllVentas() { return ventaRepository.findAll(); }
     public PosVenta saveVenta(PosVenta entity) { return ventaRepository.save(entity); }
     public void deleteVenta(PosVenta entity) { ventaRepository.delete(entity); }
+    public List<PosVenta> findVentasPorCobrar() { return ventaRepository.findByEstadoPagoNot("PAGADO"); }
 
     public List<PosTurno> findAllTurnos() { return turnoRepository.findAll(); }
     public PosTurno saveTurno(PosTurno entity) { return turnoRepository.save(entity); }

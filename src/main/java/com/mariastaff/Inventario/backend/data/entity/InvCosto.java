@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "inv_costo")
-public class InvCosto extends AuditableEntity { // Note: SQL only has creation audit, but extending AuditableEntity is safe (just ignored or matches). SQL has creacion only.
+public class InvCosto extends AbstractEntity { // Note: SQL only has creation audit, but extending AuditableEntity is safe (just ignored or matches). SQL has creacion only.
     // AuditableEntity has modif fields too. They will be null in DB if column doesn't exist, OR fail if JPA expects them.
     // SQL V1 created inv_costo with ONLY usuario_creacion_id, fecha_creacion.
     // AuditableEntity has usuario_modificacion_id, fecha_modificacion.

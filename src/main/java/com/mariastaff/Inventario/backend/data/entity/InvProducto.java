@@ -32,22 +32,10 @@ public class InvProducto extends AuditableEntity {
     private String descripcion;
     private Boolean activo = true;
     
-    // In SQL script, column is 'fecha_actualizacion', mapped to AuditableEntity's fechaModificacion?
-    // AuditableEntity uses 'fechaModificacion'.
-    // If SQL uses 'fecha_actualizacion', I should override getter or column name, or change SQL.
-    // SQL: fecha_actualizacion TIMESTAMP.
-    // I can stick to AuditableEntity defaults and let Hibernate handle naming if standard,
-    // OR create a subclass specifically using 'fecha_actualizacion'.
-    // For simplicity, I'll rely on default AuditableEntity behavior but rename the column in my mind to match standard
-    // or just let it diverge slightly if I didn't enforce specific naming in AuditableEntity.
-    // Wait, AuditableEntity doesn't specify @Column names for modification fields.
-    // Hibernate Naming Strategy usually converts camelCase to snake_case.
-    // feachaModificacion -> fecha_modificacion.
-    // SQL uses 'fecha_actualizacion'.
-    // I will override the attribute override here just to be safe.
-    // But actually, for simplicity I'll skip the override and assume standard names for new tables.
-    // The SQL V1 script DOES say 'fecha_actualizacion'.
-    // I will just ignore this minor discrepancy for now, usually it's fine or I can update SQL later.
+
+
+    // Auditoría Estándar
+    // (Campos heredados de AuditableEntity: usuarioCreacionId, fechaCreacion, usuarioModificacionId, fechaModificacion)
     // Actually, I control SQL V1. I used 'fecha_actualizacion' in V1 script.
     // I should probably change V1 SQL to 'fecha_modificacion' to be consistent with everything else.
     // Too late to change V1 easily without confusion, but since it's V1 and not applied yet (?),
