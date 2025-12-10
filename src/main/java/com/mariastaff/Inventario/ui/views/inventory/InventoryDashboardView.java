@@ -11,7 +11,7 @@ import jakarta.annotation.security.PermitAll;
 @PageTitle("Dashboard Inventario | Inventario")
 @Route(value = "inventory/dashboard", layout = MainLayout.class)
 @RouteAlias(value = "", layout = MainLayout.class)
-@PermitAll
+@jakarta.annotation.security.PermitAll
 public class InventoryDashboardView extends VerticalLayout {
     public InventoryDashboardView() {
         addClassNames("w-full", "h-full", "bg-bg-secondary", "p-6");
