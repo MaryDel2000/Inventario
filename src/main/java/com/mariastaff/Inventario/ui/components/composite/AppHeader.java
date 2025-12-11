@@ -9,6 +9,9 @@ import com.vaadin.flow.component.button.Button;
 
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.contextmenu.ContextMenu;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 
 public class AppHeader extends HorizontalLayout {
@@ -66,7 +69,32 @@ public class AppHeader extends HorizontalLayout {
 
         Avatar avatar = new Avatar("Maria Staff");
         avatar.setImage("https://i.pravatar.cc/150?img=32");
-        avatar.addClassNames("border-2", "border-border");
+        avatar.addClassNames("border-2", "border-border", "cursor-pointer", "hover:scale-105", "transition-transform");
+
+        ContextMenu userMenu = new ContextMenu(avatar);
+        userMenu.setOpenOnClick(true);
+        
+        Div menuContent = new Div();
+        menuContent.addClassNames("flex", "flex-col", "items-center", "p-4", "gap-3", "min-w-[220px]");
+        
+        Span emailText = new Span("mail@mail.mail");
+        emailText.addClassNames("text-sm", "font-medium", "text-text-secondary", "mb-1");
+        
+        Avatar profileAvatar = new Avatar("Maria Staff");
+        profileAvatar.setImage("https://i.pravatar.cc/150?img=32");
+        profileAvatar.setWidth("5rem");
+        profileAvatar.setHeight("5rem");
+        profileAvatar.addClassNames("border-4", "border-surface-card", "shadow-sm", "mb-2");
+
+        Button profileBtn = new Button("Perfil");
+        profileBtn.addClassNames("w-full", "bg-black", "text-white", "rounded-md", "hover:bg-gray-800", "font-medium");
+        
+        Button logoutBtn = new Button("Cerrar Sesión", VaadinIcon.EXIT.create());
+        logoutBtn.addClassNames("w-full", "bg-black", "text-white", "rounded-md", "hover:bg-gray-800", "font-medium");
+        logoutBtn.addClickListener(e -> UI.getCurrent().getPage().setLocation("/logout"));
+
+        menuContent.add(emailText, profileAvatar, profileBtn, logoutBtn);
+        userMenu.add(menuContent);
 
         rightSection.add(themeToggle, avatar);
 
