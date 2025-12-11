@@ -7,7 +7,7 @@ import com.mariastaff.Inventario.backend.service.GeneralService;
 import com.mariastaff.Inventario.ui.components.base.AppLabel;
 import com.mariastaff.Inventario.ui.layouts.MainLayout;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
+
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.notification.Notification;
@@ -51,7 +51,7 @@ public class GeneralSettingsView extends VerticalLayout {
         monedaDefault.setItemLabelGenerator(GenMoneda::getNombre);
         monedaDefault.setItems(generalService.findAllMonedas());
         
-        saveButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveButton.addClassNames("bg-primary", "text-white", "hover:bg-primary-hover", "px-4", "py-2", "rounded");
         saveButton.addClickListener(e -> save());
     }
     

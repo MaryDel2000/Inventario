@@ -5,7 +5,7 @@ import com.mariastaff.Inventario.backend.service.ContabilidadService;
 import com.mariastaff.Inventario.ui.components.base.AppLabel;
 import com.mariastaff.Inventario.ui.layouts.MainLayout;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
+
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -44,7 +44,7 @@ public class ManualEntriesView extends VerticalLayout {
         // Needs proper detail grid (debe/haber) but basic header form for now.
         
         Button save = new Button("Guardar Cabecera", e -> save());
-        save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        save.addClassNames("bg-primary", "text-white", "hover:bg-primary-hover", "px-4", "py-2", "rounded");
         
         binder.forField(descripcion).bind("descripcion");
         binder.forField(origen).bind("origen");

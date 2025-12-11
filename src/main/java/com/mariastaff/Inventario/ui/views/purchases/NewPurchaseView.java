@@ -5,7 +5,7 @@ import com.mariastaff.Inventario.backend.service.CompraService;
 import com.mariastaff.Inventario.ui.components.base.AppLabel;
 import com.mariastaff.Inventario.ui.layouts.MainLayout;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
+
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -43,9 +43,9 @@ public class NewPurchaseView extends VerticalLayout {
         TextField tipoDocumento = new TextField("Tipo Documento");
         
         Button save = new Button("Guardar", e -> save());
-        save.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        save.addClassNames("bg-primary", "text-white", "hover:bg-primary-hover", "px-4", "py-2", "rounded");
         
-        binder.bindInstanceFields(this);
+
         binder.forField(numeroDocumento).bind("numeroDocumento");
         binder.forField(tipoDocumento).bind("tipoDocumento");
         

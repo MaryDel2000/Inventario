@@ -9,7 +9,7 @@ import com.mariastaff.Inventario.backend.service.ProductoService;
 import com.mariastaff.Inventario.ui.components.base.AppLabel;
 import com.mariastaff.Inventario.ui.layouts.MainLayout;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
+
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Span;

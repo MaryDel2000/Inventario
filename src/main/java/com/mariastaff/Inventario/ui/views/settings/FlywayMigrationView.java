@@ -2,7 +2,7 @@ package com.mariastaff.Inventario.ui.views.settings;
 
 import com.mariastaff.Inventario.ui.layouts.MainLayout;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.icon.Icon;
@@ -32,14 +32,16 @@ public class FlywayMigrationView extends VerticalLayout {
         add(new H2("Gestión de Migraciones de Base de Datos"));
         
         HorizontalLayout toolbar = new HorizontalLayout();
-        Button migrateBtn = new Button("Ejecutar Migraciones", new Icon("lumo", "play"));
-        migrateBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        Button migrateBtn = new Button("Ejecutar Migraciones", VaadinIcon.PLAY.create());
+        migrateBtn.addClassNames("bg-primary", "text-white", "hover:bg-primary-hover", "px-4", "py-2", "rounded");
         migrateBtn.addClickListener(e -> runMigration());
         
-        Button repairBtn = new Button("Reparar (Repair)", new Icon("lumo", "tools"));
+        Button repairBtn = new Button("Reparar (Repair)", VaadinIcon.TOOLS.create());
+        repairBtn.addClassNames("bg-white", "text-secondary", "border", "border-gray-300", "hover:bg-gray-50", "px-4", "py-2", "rounded");
         repairBtn.addClickListener(e -> runRepair());
 
-        Button refreshBtn = new Button("Refrescar", new Icon("lumo", "reload"));
+        Button refreshBtn = new Button("Refrescar", VaadinIcon.REFRESH.create());
+        refreshBtn.addClassNames("bg-white", "text-secondary", "border", "border-gray-300", "hover:bg-gray-50", "px-4", "py-2", "rounded");
         refreshBtn.addClickListener(e -> refreshGrid());
         
         toolbar.add(migrateBtn, repairBtn, refreshBtn);
