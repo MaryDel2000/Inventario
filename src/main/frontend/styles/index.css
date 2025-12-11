@@ -87,3 +87,14 @@ a:where(:any-link):not(.text-white) {
         opacity: 1;
     }
 }
+
+/* 
+   FIX: Make Context Menu Overlay transparent 
+   This allows the internal Tailwind-styled div to control the background and border completely.
+   This overrides the default Lumo 'bg-white' on the overlay part.
+*/
+vaadin-context-menu-overlay::part(overlay) {
+    background-color: transparent;
+    box-shadow: none;
+    padding: 0;
+}

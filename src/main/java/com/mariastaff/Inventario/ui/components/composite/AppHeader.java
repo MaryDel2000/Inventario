@@ -75,16 +75,19 @@ public class AppHeader extends HorizontalLayout {
         userMenu.setOpenOnClick(true);
         
         Div menuContent = new Div();
-        menuContent.addClassNames("flex", "flex-col", "items-center", "p-4", "gap-3", "min-w-[220px]");
+        menuContent.addClassNames("flex", "flex-col", "items-center", "p-4", "gap-3", "min-w-[220px]", 
+            "bg-white", "dark:bg-[#2c2c2c]", 
+            "text-gray-900", "dark:text-white", 
+            "rounded-lg", "shadow-xl", "border", "border-gray-200", "dark:border-gray-700");
         
         Span emailText = new Span("mail@mail.mail");
-        emailText.addClassNames("text-sm", "font-medium", "text-text-secondary", "mb-1");
+        emailText.addClassNames("text-sm", "font-medium", "text-[#607d8b]", "mb-1");
         
         Avatar profileAvatar = new Avatar("Maria Staff");
         profileAvatar.setImage("https://i.pravatar.cc/150?img=32");
         profileAvatar.setWidth("5rem");
         profileAvatar.setHeight("5rem");
-        profileAvatar.addClassNames("border-4", "border-surface-card", "shadow-sm", "mb-2");
+        profileAvatar.addClassNames("border-4", "border-white", "dark:border-gray-600", "shadow-sm", "mb-2");
 
         Button profileBtn = new Button("Perfil");
         profileBtn.addClassNames("w-full", "bg-black", "text-white", "rounded-md", "hover:bg-gray-800", "font-medium");
