@@ -14,7 +14,7 @@ public class SecurityConfig extends VaadinWebSecurity {
         // Configurar OAuth2 Login
         http.oauth2Login(oauth2 -> oauth2
             .loginPage("/oauth2/authorization/authentik") // Redirigir al provider configurado
-            .defaultSuccessUrl("/ui/inventory/dashboard", true)
+            .defaultSuccessUrl("/ui/", true)
         );
 
         // Permitir acceso a recursos estáticos comunes si es necesario
