@@ -1,0 +1,13 @@
+vista compras esta dando problemas -----listo
+vista configuracion/usuarios esta dando problemas ----listo
+
+
+
+------------------------------------------------------------------------------------------------
+
+---correccion de modo oscuro.
+------identificar los componentes que tienen problemas, de no haber componentes qe se creen nuevos.
+
+
+
+

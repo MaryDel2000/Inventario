@@ -29,7 +29,7 @@ public class ProvidersView extends VerticalLayout {
     }
 
     private void configureGrid() {
-        grid.addClassNames("bg-white", "rounded-lg", "shadow");
+        grid.addClassNames( "bg-bg-surface", "rounded-lg", "shadow");
         grid.setSizeFull();
         grid.setColumns();
         grid.addColumn(p -> p.getEntidad() != null ? p.getEntidad().getNombreCompleto() : "-").setHeader("Nombre");

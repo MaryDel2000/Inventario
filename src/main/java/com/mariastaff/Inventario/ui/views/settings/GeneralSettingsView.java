@@ -57,7 +57,7 @@ public class GeneralSettingsView extends VerticalLayout {
     
     private FormLayout createForm() {
         FormLayout form = new FormLayout();
-        form.addClassNames("bg-white", "p-6", "rounded-lg", "shadow", "max-w-2xl");
+        form.addClassNames( "bg-bg-surface", "p-6", "rounded-lg", "shadow", "max-w-2xl");
         form.add(monedaDefault, ivaPorcentajeDefault, saveButton);
         return form;
     }

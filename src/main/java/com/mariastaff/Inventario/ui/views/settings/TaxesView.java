@@ -29,7 +29,7 @@ public class TaxesView extends VerticalLayout {
     }
 
     private void configureGrid() {
-        grid.addClassNames("bg-white", "rounded-lg", "shadow");
+        grid.addClassNames( "bg-bg-surface", "rounded-lg", "shadow");
         grid.setSizeFull();
         grid.setColumns("nombre", "porcentaje");
         grid.addColumn(i -> i.getActivo() ? "Sí" : "No").setHeader("Activo");

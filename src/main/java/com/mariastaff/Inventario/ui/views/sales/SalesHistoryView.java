@@ -29,7 +29,7 @@ public class SalesHistoryView extends VerticalLayout {
     }
 
     private void configureGrid() {
-        grid.addClassNames("bg-white", "rounded-lg", "shadow");
+        grid.addClassNames( "bg-bg-surface", "rounded-lg", "shadow");
         grid.setSizeFull();
         grid.setColumns("numeroDocumento", "fechaHora", "totalNeto", "estado", "estadoPago");
         grid.addColumn(v -> v.getCliente() != null ? v.getCliente().getEntidad().getNombreCompleto() : "Consumidor Final").setHeader("Cliente");

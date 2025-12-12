@@ -29,7 +29,7 @@ public class JournalView extends VerticalLayout {
     }
 
     private void configureGrid() {
-        grid.addClassNames("bg-white", "rounded-lg", "shadow");
+        grid.addClassNames( "bg-bg-surface", "rounded-lg", "shadow");
         grid.setSizeFull();
         grid.setColumns("fecha", "descripcion", "origen");
         grid.addColumn(a -> a.getSucursal() != null ? a.getSucursal().getNombre() : "-").setHeader("Sucursal");

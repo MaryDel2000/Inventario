@@ -33,26 +33,11 @@ public class InventoryDashboardView extends VerticalLayout {
         HorizontalLayout stats = new HorizontalLayout();
         stats.addClassNames("w-full", "gap-4", "flex-wrap");
         
-        stats.add(createCard(getTranslation("view.inventory.card.products"), String.valueOf(productoService.countProductos())));
-        stats.add(createCard(getTranslation("view.inventory.card.warehouses"), String.valueOf(almacenService.countAlmacenes())));
-        stats.add(createCard(getTranslation("view.inventory.card.stock"), String.valueOf(almacenService.countExistencias())));
-        stats.add(createCard(getTranslation("view.inventory.card.movements"), String.valueOf(movimientoService.countMovimientos())));
+        stats.add(new com.mariastaff.Inventario.ui.components.composite.StatCard(getTranslation("view.inventory.card.products"), String.valueOf(productoService.countProductos())));
+        stats.add(new com.mariastaff.Inventario.ui.components.composite.StatCard(getTranslation("view.inventory.card.warehouses"), String.valueOf(almacenService.countAlmacenes())));
+        stats.add(new com.mariastaff.Inventario.ui.components.composite.StatCard(getTranslation("view.inventory.card.stock"), String.valueOf(almacenService.countExistencias())));
+        stats.add(new com.mariastaff.Inventario.ui.components.composite.StatCard(getTranslation("view.inventory.card.movements"), String.valueOf(movimientoService.countMovimientos())));
         
         add(stats);
-    }
-    
-    private VerticalLayout createCard(String title, String value) {
-        VerticalLayout card = new VerticalLayout();
-        card.addClassNames("bg-white", "rounded-lg", "shadow", "p-6", "items-center", "justify-center");
-        card.setWidth("200px");
-        
-        Span valSpan = new Span(value);
-        valSpan.addClassNames("text-4xl", "font-bold", "text-primary");
-        
-        Span titleSpan = new Span(title);
-        titleSpan.addClassNames("text-secondary", "font-medium");
-        
-        card.add(valSpan, titleSpan);
-        return card;
     }
 }

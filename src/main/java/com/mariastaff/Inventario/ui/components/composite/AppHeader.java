@@ -75,10 +75,11 @@ public class AppHeader extends HorizontalLayout {
         userMenu.setOpenOnClick(true);
         
         Div menuContent = new Div();
+
         menuContent.addClassNames("flex", "flex-col", "items-center", "p-4", "gap-3", "min-w-[220px]", 
-            "bg-white", "dark:bg-[#2c2c2c]", 
-            "text-gray-900", "dark:text-white", 
-            "rounded-lg", "shadow-xl", "border", "border-gray-200", "dark:border-gray-700");
+            "bg-bg-surface", 
+            "text-text-main", 
+            "rounded-lg", "shadow-xl", "border", "border-border");
         
         Span emailText = new Span("mail@mail.mail");
         emailText.addClassNames("text-sm", "font-medium", "text-[#607d8b]", "mb-1");

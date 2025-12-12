@@ -56,7 +56,7 @@ public class POSView extends VerticalLayout {
         
         // Left Panel: Product Selection & Cart
         VerticalLayout leftPanel = new VerticalLayout();
-        leftPanel.addClassNames("bg-white", "rounded-lg", "shadow", "p-4");
+        leftPanel.addClassNames("bg-bg-surface", "rounded-lg", "shadow", "p-4");
         leftPanel.setSizeFull(); // Takes available space
         
         configureControls();
@@ -70,7 +70,7 @@ public class POSView extends VerticalLayout {
         
         // Right Panel: Totals & Actions
         VerticalLayout rightPanel = new VerticalLayout();
-        rightPanel.addClassNames("bg-slate-50", "rounded-lg", "shadow", "p-6", "border", "border-slate-200");
+        rightPanel.addClassNames("bg-bg-surface", "rounded-lg", "shadow", "p-6", "border", "border-border");
         rightPanel.setWidth("300px");
         rightPanel.setSpacing(true);
         

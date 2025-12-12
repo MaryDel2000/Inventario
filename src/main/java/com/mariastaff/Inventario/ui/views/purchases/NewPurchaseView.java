@@ -37,7 +37,7 @@ public class NewPurchaseView extends VerticalLayout {
     
     private FormLayout createForm() {
         FormLayout form = new FormLayout();
-        form.addClassNames("bg-white", "p-6", "rounded-lg", "shadow", "max-w-2xl");
+        form.addClassNames("bg-bg-surface", "p-6", "rounded-lg", "shadow", "max-w-2xl");
         
         TextField numeroDocumento = new TextField("Número Documento");
         TextField tipoDocumento = new TextField("Tipo Documento");

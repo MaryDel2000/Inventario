@@ -29,7 +29,7 @@ public class WarehousesView extends VerticalLayout {
     }
 
     private void configureGrid() {
-        grid.addClassNames("bg-white", "rounded-lg", "shadow");
+        grid.addClassNames( "bg-bg-surface", "rounded-lg", "shadow");
         grid.setSizeFull();
         grid.setColumns("nombre", "codigo", "tipoAlmacen", "direccion");
         grid.addColumn(a -> a.getSucursal() != null ? a.getSucursal().getNombre() : "Global").setHeader("Sucursal");

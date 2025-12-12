@@ -37,11 +37,11 @@ public class FlywayMigrationView extends VerticalLayout {
         migrateBtn.addClickListener(e -> runMigration());
         
         Button repairBtn = new Button("Reparar (Repair)", VaadinIcon.TOOLS.create());
-        repairBtn.addClassNames("bg-white", "text-secondary", "border", "border-gray-300", "hover:bg-gray-50", "px-4", "py-2", "rounded");
+        repairBtn.addClassNames("bg-bg-surface", "text-text-secondary", "border", "border-border", "hover:bg-bg-secondary", "px-4", "py-2", "rounded");
         repairBtn.addClickListener(e -> runRepair());
 
         Button refreshBtn = new Button("Refrescar", VaadinIcon.REFRESH.create());
-        refreshBtn.addClassNames("bg-white", "text-secondary", "border", "border-gray-300", "hover:bg-gray-50", "px-4", "py-2", "rounded");
+        refreshBtn.addClassNames("bg-bg-surface", "text-text-secondary", "border", "border-border", "hover:bg-bg-secondary", "px-4", "py-2", "rounded");
         refreshBtn.addClickListener(e -> refreshGrid());
         
         toolbar.add(migrateBtn, repairBtn, refreshBtn);

@@ -29,7 +29,7 @@ public class PurchasesHistoryView extends VerticalLayout {
     }
 
     private void configureGrid() {
-        grid.addClassNames("bg-white", "rounded-lg", "shadow");
+        grid.addClassNames( "bg-bg-surface", "rounded-lg", "shadow");
         grid.setSizeFull();
         grid.setColumns("numeroDocumento", "fechaCompra", "totalCompra", "estado", "tipoDocumento");
         grid.addColumn(c -> c.getProveedor() != null ? c.getProveedor().getEntidad().getNombreCompleto() : "-").setHeader("Proveedor");

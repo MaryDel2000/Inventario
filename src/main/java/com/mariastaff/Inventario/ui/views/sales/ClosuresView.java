@@ -31,7 +31,7 @@ public class ClosuresView extends VerticalLayout {
     }
 
     private void configureGrid() {
-        grid.addClassNames("bg-white", "rounded-lg", "shadow");
+        grid.addClassNames( "bg-bg-surface", "rounded-lg", "shadow");
         grid.setSizeFull();
         grid.setColumns("fechaHoraCierre", "montoFinalEfectivoDeclarado", "diferencia", "estado");
         grid.addColumn(t -> t.getUsuarioCajero() != null ? t.getUsuarioCajero().getUsername() : "-").setHeader("Cajero");

@@ -29,7 +29,7 @@ public class ChartOfAccountsView extends VerticalLayout {
     }
 
     private void configureGrid() {
-        grid.addClassNames("bg-white", "rounded-lg", "shadow");
+        grid.addClassNames( "bg-bg-surface", "rounded-lg", "shadow");
         grid.setSizeFull();
         grid.setColumns("codigo", "nombre", "tipo", "nivel");
         grid.addColumn(c -> c.getActiva() ? "Sí" : "No").setHeader("Activa");

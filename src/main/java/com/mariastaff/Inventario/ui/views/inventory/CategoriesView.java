@@ -29,7 +29,7 @@ public class CategoriesView extends VerticalLayout {
     }
 
     private void configureGrid() {
-        grid.addClassNames("bg-white", "rounded-lg", "shadow");
+        grid.addClassNames( "bg-bg-surface", "rounded-lg", "shadow");
         grid.setSizeFull();
         grid.setColumns("nombre", "descripcion");
         grid.addColumn(c -> c.getActivo() ? "Sí" : "No").setHeader("Activo");

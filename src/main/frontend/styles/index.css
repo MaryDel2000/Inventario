@@ -49,6 +49,7 @@ a:where(:any-link):not(.text-white) {
 
 /* Responsive fixes for mobile */
 @media (max-width: 768px) {
+
     /* Hide header center navigation on mobile */
     .header-center-nav {
         display: none !important;
@@ -57,21 +58,23 @@ a:where(:any-link):not(.text-white) {
 
 /* Mobile sidebar overlay */
 @media (max-width: 1024px) {
+
     /* Offset adjustment when drawer is closed */
     vaadin-app-layout:not([drawer-opened]) {
         --_vaadin-app-layout-drawer-offset-size: 0px !important;
     }
-    
+
     /* Ensure sidebar drawer is above backdrop */
     vaadin-app-layout::part(drawer) {
         z-index: 1001 !important;
     }
-    
+
     /* Sidebar backdrop - positioned to the right of the drawer */
     .sidebar-backdrop {
         position: fixed;
         top: 0;
-        left: 16rem; /* Start after sidebar width (256px = 16rem) */
+        left: 16rem;
+        /* Start after sidebar width (256px = 16rem) */
         width: calc(100vw - 16rem);
         height: 100vh;
         background: rgba(0, 0, 0, 0.5);
@@ -79,9 +82,10 @@ a:where(:any-link):not(.text-white) {
         display: none;
         opacity: 0;
         transition: opacity 0.3s ease-in-out;
-        pointer-events: auto; /* Ensure it captures clicks */
+        pointer-events: auto;
+        /* Ensure it captures clicks */
     }
-    
+
     .sidebar-backdrop.active {
         display: block;
         opacity: 1;
@@ -97,4 +101,67 @@ vaadin-context-menu-overlay::part(overlay) {
     background-color: transparent;
     box-shadow: none;
     padding: 0;
+}
+
+/* 
+   GLOBAL VAADIN RESTYLING - WITHOUT LUMO
+   Applying our theme variables directly to Vaadin component parts.
+*/
+
+/* Grid */
+vaadin-grid {
+    border: 1px solid var(--color-border);
+    background-color: var(--color-bg-surface);
+    color: var(--color-text-main);
+}
+
+vaadin-grid::part(header-cell) {
+    background-color: var(--color-bg-surface);
+    color: var(--color-text-secondary);
+    border-bottom: 1px solid var(--color-border);
+}
+
+vaadin-grid::part(body-cell) {
+    background-color: var(--color-bg-surface);
+    color: var(--color-text-main);
+    border-bottom: 1px solid var(--color-border);
+}
+
+vaadin-grid::part(row):hover {
+    background-color: var(--color-bg-secondary);
+}
+
+/* Text Field & Inputs */
+vaadin-text-field::part(input-field),
+vaadin-number-field::part(input-field),
+vaadin-email-field::part(input-field),
+vaadin-password-field::part(input-field),
+vaadin-date-picker::part(input-field),
+vaadin-combo-box::part(input-field),
+vaadin-text-area::part(input-field) {
+    background-color: var(--color-bg-surface);
+    color: var(--color-text-main);
+    border: 1px solid var(--color-border);
+    border-radius: 0.375rem;
+    /* rounded-md */
+}
+
+vaadin-text-field::part(label),
+vaadin-number-field::part(label),
+vaadin-email-field::part(label),
+vaadin-combo-box::part(label),
+vaadin-date-picker::part(label) {
+    color: var(--color-text-secondary);
+}
+
+/* Button - Default variants might still use Lumo, override them */
+vaadin-button {
+    background-color: var(--color-bg-surface);
+    color: var(--color-text-main);
+    border: 1px solid var(--color-border);
+}
+
+/* Ensure global font matches */
+* {
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
 }

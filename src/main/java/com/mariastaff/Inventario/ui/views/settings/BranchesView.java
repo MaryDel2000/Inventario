@@ -29,7 +29,7 @@ public class BranchesView extends VerticalLayout {
     }
 
     private void configureGrid() {
-        grid.addClassNames("bg-white", "rounded-lg", "shadow");
+        grid.addClassNames( "bg-bg-surface", "rounded-lg", "shadow");
         grid.setSizeFull();
         grid.setColumns("nombre", "codigo", "direccion", "telefono");
         grid.addColumn(s -> s.getActivo() ? "Sí" : "No").setHeader("Activo");

@@ -29,7 +29,7 @@ public class CustomersView extends VerticalLayout {
     }
 
     private void configureGrid() {
-        grid.addClassNames("bg-white", "rounded-lg", "shadow");
+        grid.addClassNames( "bg-bg-surface", "rounded-lg", "shadow");
         grid.setSizeFull();
         grid.setColumns("limiteCredito", "diasCredito");
         grid.addColumn(c -> c.getEntidad() != null ? c.getEntidad().getNombreCompleto() : "-").setHeader("Nombre");
