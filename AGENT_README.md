@@ -10,12 +10,12 @@ Sistema de gestión de inventario, punto de venta (POS), compras y contabilidad 
 - **Seguridad**: Spring Security (integrado con Authentik).
 
 ## 2. Estrategia de Diseño y Estilos (CRÍTICO)
-**IMPORTANTE**: Aunque el proyecto utiliza Vaadin, **NO dependemos de los estilos predeterminados de Lumo**.
+**IMPORTANTE**: El proyecto utiliza una estrategia de **"Utility-First" con Tailwind CSS**.
 Se ha adoptado una estrategia de **"Utility-First" con Tailwind CSS**.
 
 ### Reglas de Estilo:
 *   **Tailwind CSS**: Es la fuente principal de estilos. Se utiliza para márgenes, padding, colores, tipografía, flexbox, grid, etc.
-*   **Lumo Desactivado/Sobrescrito**: Se han eliminado o sobrescrito gran parte de los estilos por defecto de Vaadin Lumo para permitir que Tailwind controle la apariencia.
+*   **Estilos Personalizados**: Se utilizan estilos personalizados para permitir que Tailwind controle la apariencia completamente.
 *   **Tema Oscuro/Claro**: La gestión del tema se hace mediante clases de Tailwind (`dark:` prefix) y variables CSS personalizadas definidas en `theme-dark.css` y `theme-light.css`.
 
 ### Archivos Clave de Estilos:
@@ -25,7 +25,7 @@ Se ha adoptado una estrategia de **"Utility-First" con Tailwind CSS**.
 *   `tailwind.config.js`: Configuración de Tailwind, incluyendo colores personalizados como `bg-primary`, `text-main`, etc.
 
 ## 3. Componentes UI Personalizados
-Para lograr una apariencia moderna que Lumo no ofrece por defecto, se han creado componentes compuestos (`Composite`):
+Para lograr una apariencia moderna y personalizada, se han creado componentes compuestos (`Composite`):
 
 *   **`AppHeader.java`**: Barra superior personalizada. Contiene el toggle de sidebar, toggle de tema y menú de usuario.
     *   *Nota*: El menú de usuario utiliza un `ContextMenu` altamente personalizado con clases Tailwind. Se ha parcheado `index.css` para hacer transparente el overlay de Vaadin y permitir que Tailwind controle el fondo.

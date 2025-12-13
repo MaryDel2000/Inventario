@@ -37,7 +37,7 @@ vaadin-app-layout [slot="drawer"] {
     background: var(--color-text-muted);
 }
 
-/* Override Lumo's default link color to allow Tailwind classes to work */
+/* Override default link color to allow Tailwind classes to work */
 a:where(:any-link):not(.text-white) {
     color: var(--color-link) !important;
 }
@@ -95,7 +95,7 @@ a:where(:any-link):not(.text-white) {
 /* 
    FIX: Make Context Menu Overlay transparent 
    This allows the internal Tailwind-styled div to control the background and border completely.
-   This overrides the default Lumo 'bg-white' on the overlay part.
+   This overrides the default 'bg-white' on the overlay part.
 */
 vaadin-context-menu-overlay::part(overlay) {
     background-color: transparent;
@@ -104,7 +104,7 @@ vaadin-context-menu-overlay::part(overlay) {
 }
 
 /* 
-   GLOBAL VAADIN RESTYLING - WITHOUT LUMO
+   GLOBAL VAADIN RESTYLING
    Applying our theme variables directly to Vaadin component parts.
 */
 
@@ -154,7 +154,7 @@ vaadin-date-picker::part(label) {
     color: var(--color-text-secondary);
 }
 
-/* Button - Default variants might still use Lumo, override them */
+/* Button - Default variants might need overrides */
 vaadin-button {
     background-color: var(--color-bg-surface);
     color: var(--color-text-main);
