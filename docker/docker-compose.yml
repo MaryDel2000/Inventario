@@ -4,3 +4,4 @@ version: "3.8"
 include:
   - postgres.yml
   - authentik.yml
+  - tomcat.yml
