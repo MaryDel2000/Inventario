@@ -39,5 +39,9 @@ public class InventoryDashboardView extends VerticalLayout {
         stats.add(new com.mariastaff.Inventario.ui.components.composite.StatCard(getTranslation("view.inventory.card.movements"), String.valueOf(movimientoService.countMovimientos())));
         
         add(stats);
+        
+        com.mariastaff.Inventario.ui.components.charts.DailyMovementsChart chart = new com.mariastaff.Inventario.ui.components.charts.DailyMovementsChart(movimientoService.getDailyMovements());
+        chart.addClassNames("mt-6");
+        add(chart);
     }
 }

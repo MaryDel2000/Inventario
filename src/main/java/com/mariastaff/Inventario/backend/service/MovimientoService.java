@@ -18,4 +18,12 @@ public class MovimientoService {
     public InvMovimiento saveMovimiento(InvMovimiento entity) { return movimientoRepository.save(entity); }
     public void deleteMovimiento(InvMovimiento entity) { movimientoRepository.delete(entity); }
     public long countMovimientos() { return movimientoRepository.count(); }
+
+    public java.util.Map<java.time.LocalDate, Long> getDailyMovements() {
+        return movimientoRepository.findDailyMovements().stream()
+            .collect(java.util.stream.Collectors.toMap(
+                row -> (java.time.LocalDate) row[0],
+                row -> (Long) row[1]
+            ));
+    }
 }
