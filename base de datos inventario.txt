@@ -1,0 +1,701 @@
+base de datos inventario
+
+// ---------------------------------------------------------
+// 1. Optimización: Centralización de Entidades (Personas/Empresas)
+// ---------------------------------------------------------
+
+Table gen_entidad {
+  id int [pk, increment]
+  nombre_completo varchar
+  identificacion varchar // DNI, RUC, Pasaporte
+  telefono varchar
+  email varchar
+  direccion varchar
+  tipo_entidad varchar // 'PERSONA', 'EMPRESA'
+  activo boolean [default: true]
+  // Auditoría Estándar
+  usuario_creacion_id int
+  fecha_creacion datetime [default: `now()`]
+  usuario_modificacion_id int
+  fecha_modificacion datetime
+}
+
+Table sys_usuario {
+  id int [pk, increment]
+  entidad_id int // Referencia a gen_entidad
+  autentik_uuid varchar [unique]
+  username varchar [unique] // Se separa del email de contacto
+  activo boolean [default: true]
+  // Auditoría Estándar
+  usuario_creacion_id int
+  fecha_creacion datetime [default: `now()`]
+  usuario_modificacion_id int
+  fecha_modificacion datetime
+}
+
+Table hr_trabajador {
+  id int [pk, increment]
+  entidad_id int [unique] // Datos personales en gen_entidad
+  usuario_id int [unique, null] // Login del sistema (opcional)
+  sucursal_id int
+  codigo_empleado varchar
+  puesto varchar
+  fecha_contratacion date
+  activo boolean
+  // Auditoría Estándar
+  usuario_creacion_id int
+  fecha_creacion datetime
+  usuario_modificacion_id int
+  fecha_modificacion datetime
+}
+
+Table pos_cliente {
+  id int [pk, increment]
+  entidad_id int // Datos personales en gen_entidad
+  limite_credito decimal [default: 0]
+  dias_credito int [default: 0]
+  activo boolean
+  fecha_registro datetime
+  // Auditoría Estándar
+  usuario_creacion_id int
+  fecha_creacion datetime
+  usuario_modificacion_id int
+  fecha_modificacion datetime
+}
+
+Table inv_proveedor {
+  id int [pk, increment]
+  entidad_id int // Datos contacto en gen_entidad
+  activo boolean
+  // Auditoría Estándar
+  usuario_creacion_id int
+  fecha_creacion datetime
+  usuario_modificacion_id int
+  fecha_modificacion datetime
+}
+
+// ---------------------------------------------------------
+// Configuración General y Sucursales
+// ---------------------------------------------------------
+
+Table sys_configuracion {
+  id int [pk, increment]
+  moneda_default_id int
+  iva_porcentaje_default decimal
+  // Auditoría Estándar
+  usuario_creacion_id int
+  fecha_creacion datetime
+  usuario_modificacion_id int
+  fecha_ultima_actualizacion datetime
+}
+
+Table gen_sucursal {
+  id int [pk, increment]
+  nombre varchar
+  codigo varchar
+  direccion varchar
+  telefono varchar
+  activo boolean
+  // Auditoría Estándar
+  usuario_creacion_id int
+  fecha_creacion datetime
+  usuario_modificacion_id int
+  fecha_modificacion datetime
+}
+
+// ---------------------------------------------------------
+// 2. Optimización: Inventario, Precios y Stock
+// ---------------------------------------------------------
+
+Table inv_almacen {
+  id int [pk, increment]
+  
+  // CAMBIO CLAVE: "null" permite almacenes globales o virtuales
+  // que no pertenecen físicamente a una sucursal específica
+  // (ej. "Bodega Central China", "Aduana", "En Tránsito Marítimo").
+  sucursal_id int [null] 
+  
+  nombre varchar
+  codigo varchar // Ej. "PROV-001", "TRANS-SEA"
+  
+  // Define la naturaleza del almacén:
+  // 'FISICO' (Tienda/Bodega real)
+  // 'TRANSITO' (Camión/Barco)
+  // 'PROVEEDOR' (Pagado pero en sus instalaciones)
+  // 'MERMA' (Almacén lógico para mercancía dañada)
+  tipo_almacen varchar 
+  
+  // FLAGS DE COMPORTAMIENTO (Lógica de Negocio)
+  
+  // Si es TRUE, el stock cuenta para los activos de la empresa (valor contable),
+  // pero NO está físicamente en nuestras manos.
+  es_externo boolean [default: false] 
+  
+  // Si es FALSE, el sistema POS (Punto de Venta) NO debe permitir vender
+  // productos de este almacén, aunque haya existencia positiva.
+  permite_venta boolean [default: true] 
+  
+  // Información adicional para almacenes externos
+  direccion varchar
+  responsable_contacto varchar // Nombre del chofer o contacto en el proveedor
+  
+  descripcion varchar
+  activo boolean [default: true]
+  
+  // Auditoría Estándar
+  usuario_creacion_id int
+  fecha_creacion datetime [default: `now()`]
+  usuario_modificacion_id int
+  fecha_modificacion datetime
+}
+
+Table inv_ubicacion {
+  id int [pk, increment]
+  almacen_id int
+  codigo varchar
+  descripcion varchar
+  activo boolean
+}
+
+Table inv_categoria {
+  id int [pk, increment]
+  nombre varchar
+  descripcion varchar
+  activo boolean
+}
+
+Table inv_unidad_medida {
+  id int [pk, increment]
+  nombre varchar
+  abreviatura varchar
+  activo boolean
+}
+
+Table inv_impuesto {
+  id int [pk, increment]
+  nombre varchar
+  porcentaje decimal
+  activo boolean
+}
+
+Table inv_producto {
+  id int [pk, increment]
+  nombre varchar
+  codigo_interno varchar
+  categoria_id int
+  unidad_medida_id int
+  impuesto_id int
+  maneja_variantes boolean
+  maneja_caducidad boolean
+  descripcion varchar
+  activo boolean
+  // Auditoría Estándar
+  usuario_creacion_id int
+  fecha_creacion datetime
+  usuario_modificacion_id int
+  fecha_actualizacion datetime // Alias de modificacion
+}
+
+Table inv_producto_variante {
+  id int [pk, increment]
+  producto_id int
+  nombre_variante varchar
+  codigo_barras varchar
+  codigo_interno_variante varchar
+  activo boolean
+}
+
+// NUEVA TABLA: Listas de Precios (Optimización 1)
+Table inv_lista_precio {
+  id int [pk, increment]
+  nombre varchar
+  descripcion varchar
+  sucursal_id int [null] // Null = Todas las sucursales
+  prioridad int
+  activo boolean
+  fecha_inicio_vigencia datetime
+  fecha_fin_vigencia datetime
+  // Auditoría
+  usuario_creacion_id int
+  fecha_creacion datetime
+  usuario_modificacion_id int
+  fecha_modificacion datetime
+}
+
+// MODIFICADA: Ahora se liga a una lista de precios
+Table inv_precio_venta {
+  id int [pk, increment]
+  lista_precio_id int // FK a inv_lista_precio
+  producto_variante_id int
+  precio_venta decimal
+  // Las fechas aqui son opcionales para sobreescribir la lista
+  fecha_inicio_vigencia datetime 
+  fecha_fin_vigencia datetime
+  motivo_cambio varchar
+  // Auditoría
+  usuario_creacion_id int
+  fecha_creacion datetime
+  usuario_modificacion_id int
+  fecha_modificacion datetime
+}
+
+Table inv_costo {
+  id int [pk, increment]
+  producto_variante_id int
+  moneda_id int
+  costo_unitario decimal
+  fecha_inicio_vigencia datetime
+  fecha_fin_vigencia datetime
+  // Auditoría
+  usuario_creacion_id int
+  fecha_creacion datetime
+}
+
+Table inv_compra {
+  id int [pk, increment]
+  sucursal_id int
+  proveedor_id int
+  almacen_destino_id int
+  // Auditoría
+  usuario_creacion_id int // Quien registró
+  fecha_compra datetime
+  usuario_modificacion_id int
+  fecha_modificacion datetime
+  
+  tipo_documento varchar
+  numero_documento varchar
+  total_compra decimal
+  estado varchar
+  observaciones varchar
+}
+
+Table inv_compra_detalle {
+  id int [pk, increment]
+  compra_id int
+  producto_variante_id int
+  cantidad decimal
+  costo_unitario decimal
+  subtotal decimal
+  fecha_caducidad datetime
+}
+
+Table inv_compra_historial {
+  id int [pk, increment]
+  compra_id int
+  estado_anterior varchar
+  estado_nuevo varchar
+  usuario_id int
+  fecha_cambio datetime [default: `now()`]
+  observaciones varchar
+}
+
+Table inv_lote {
+  id int [pk, increment]
+  producto_variante_id int
+  codigo_lote varchar
+  fecha_caducidad datetime
+  observaciones varchar
+}
+
+Table inv_existencia {
+  id int [pk, increment]
+  almacen_id int
+  ubicacion_id int
+  producto_variante_id int
+  lote_id int
+  cantidad_disponible decimal
+  fecha_ultima_actualizacion datetime
+}
+
+// NUEVA TABLA: Historial de Stock (Optimización 1)
+Table inv_historial_existencia {
+  id int [pk, increment]
+  almacen_id int
+  ubicacion_id int
+  producto_variante_id int
+  lote_id int
+  cantidad_anterior decimal
+  cantidad_nueva decimal
+  diferencia decimal
+  tipo_movimiento varchar // 'VENTA', 'COMPRA', 'AJUSTE', 'TRACE'
+  referencia_id int // ID de la venta, compra o movimiento
+  fecha_historial datetime [default: `now()`]
+  usuario_responsable_id int
+}
+
+Table inv_movimiento {
+  id int [pk, increment]
+  tipo_movimiento varchar
+  sucursal_id int
+  almacen_origen_id int
+  almacen_destino_id int
+  // Auditoría
+  usuario_creacion_id int
+  fecha_movimiento datetime
+  usuario_modificacion_id int
+  fecha_modificacion datetime
+  
+  referencia_tipo varchar
+  referencia_id int
+  observaciones varchar
+}
+
+Table inv_movimiento_detalle {
+  id int [pk, increment]
+  movimiento_id int
+  producto_variante_id int
+  lote_id int
+  cantidad decimal
+  ubicacion_origen_id int
+  ubicacion_destino_id int
+}
+
+// ---------------------------------------------------------
+// Promociones y Moneda
+// ---------------------------------------------------------
+
+Table inv_promocion {
+  id int [pk, increment]
+  codigo_cupon varchar
+  nombre varchar
+  tipo_descuento varchar
+  valor decimal
+  fecha_inicio_vigencia datetime
+  fecha_fin_vigencia datetime
+  activo boolean
+  usuario_creacion_id int
+}
+
+Table inv_promocion_aplicacion {
+  id int [pk, increment]
+  promocion_id int
+  referencia_tipo varchar
+  referencia_id int
+}
+
+Table gen_moneda {
+  id int [pk, increment]
+  codigo varchar
+  nombre varchar
+  simbolo varchar
+  activo boolean
+}
+
+Table gen_moneda_denominacion {
+  id int [pk, increment]
+  moneda_id int
+  nombre varchar
+  valor decimal
+  tipo varchar
+  activo boolean
+}
+
+Table gen_moneda_tasa {
+  id int [pk, increment]
+  moneda_origen_id int
+  moneda_destino_id int
+  tasa_conversion decimal
+  fecha_actualizacion datetime
+}
+
+// ---------------------------------------------------------
+// 3. Optimización: Flexibilidad en Pagos y Trazabilidad Venta
+// ---------------------------------------------------------
+
+Table pos_punto_venta {
+  id int [pk, increment]
+  sucursal_id int
+  nombre varchar
+  descripcion varchar
+  activo boolean
+}
+
+Table pos_caja {
+  id int [pk, increment]
+  sucursal_id int
+  punto_venta_id int
+  nombre varchar
+  cookie_key varchar
+  activo boolean
+}
+
+Table pos_caja_usuario {
+  id int [pk, increment]
+  caja_id int
+  usuario_id int
+  fecha_inicio datetime
+  fecha_fin datetime
+  activo boolean
+}
+
+Table pos_turno {
+  id int [pk, increment]
+  caja_id int
+  usuario_cajero_id int
+  usuario_supervisor_id int
+  fecha_hora_apertura datetime
+  fecha_hora_cierre datetime
+  monto_inicial_efectivo decimal
+  monto_final_efectivo_declarado decimal
+  monto_final_efectivo_calculado decimal
+  diferencia decimal
+  estado varchar
+}
+
+Table pos_turno_arqueo {
+  id int [pk, increment]
+  turno_id int
+  moneda_denominacion_id int
+  cantidad int
+  total_valor decimal
+  tipo_arqueo varchar
+}
+
+Table pos_venta {
+  id int [pk, increment]
+  sucursal_id int
+  punto_venta_id int
+  turno_id int
+  cliente_id int
+  usuario_vendedor_id int
+  tipo_documento varchar
+  numero_documento varchar
+  fecha_hora datetime
+  total_bruto decimal
+  descuento_total decimal
+  impuestos_total decimal
+  total_neto decimal
+  estado varchar
+  estado_pago varchar
+  almacen_salida_id int
+  movimiento_id int [null] // Optimización: Referencia al movimiento de inventario generado
+  // Auditoría
+  usuario_creacion_id int
+  fecha_creacion datetime
+  usuario_modificacion_id int
+  fecha_modificacion datetime
+}
+
+Table pos_venta_detalle {
+  id int [pk, increment]
+  venta_id int
+  producto_variante_id int
+  cantidad decimal
+  precio_unitario decimal
+  impuesto_id int
+  descuento_monto decimal
+  subtotal decimal
+  impuestos_monto decimal
+}
+
+Table pos_venta_promocion {
+  id int [pk, increment]
+  venta_id int
+  promocion_id int
+  monto_descuento decimal
+  fecha_aplicacion datetime
+}
+
+// NUEVA TABLA: Catálogo de Tipos de Pago (Optimización 4)
+Table pos_tipo_pago {
+  id int [pk, increment]
+  nombre varchar // Efectivo, Tarjeta, Transferencia, Puntos
+  codigo_interno varchar
+  requiere_referencia boolean
+  activo boolean
+}
+
+Table pos_pago {
+  id int [pk, increment]
+  venta_id int
+  tipo_pago_id int // FK a pos_tipo_pago (Optimización 4)
+  monto_total decimal
+  monto_recibido decimal
+  monto_vuelto decimal
+  referencia_pago varchar
+  fecha_pago datetime
+  usuario_registro_id int
+}
+
+Table pos_pago_efectivo_desglose {
+  id int [pk, increment]
+  pago_id int
+  moneda_denominacion_id int
+  cantidad int
+  monto_total decimal
+  tipo_movimiento varchar
+}
+
+Table pos_devolucion {
+  id int [pk, increment]
+  venta_id int
+  sucursal_id int
+  movimiento_id int [null] // Optimización: Referencia al movimiento de entrada de inventario
+  // Auditoría
+  usuario_creacion_id int
+  fecha_creacion datetime
+  usuario_modificacion_id int
+  fecha_modificacion datetime // Reemplaza fecha_hora simple
+  
+  motivo_general varchar
+  total_reembolso decimal
+  estado varchar
+}
+
+Table pos_devolucion_detalle {
+  id int [pk, increment]
+  devolucion_id int
+  venta_detalle_id int
+  producto_variante_id int
+  cantidad_devuelta decimal
+  precio_reembolso_unitario decimal
+  monto_reembolso_linea decimal
+}
+
+// ---------------------------------------------------------
+// Contabilidad
+// ---------------------------------------------------------
+
+Table cont_periodo {
+  id int [pk, increment]
+  nombre varchar
+  fecha_inicio datetime
+  fecha_fin datetime
+  estado varchar
+  usuario_cierre_id int
+  fecha_cierre datetime
+}
+
+Table cont_cuenta {
+  id int [pk, increment]
+  codigo varchar
+  nombre varchar
+  tipo varchar
+  nivel int
+  activa boolean
+}
+
+Table cont_asiento {
+  id int [pk, increment]
+  periodo_id int
+  fecha datetime
+  descripcion varchar
+  origen varchar
+  origen_id int
+  sucursal_id int
+  usuario_registro_id int
+  fecha_creacion datetime
+}
+
+Table cont_asiento_detalle {
+  id int [pk, increment]
+  asiento_id int
+  cuenta_id int
+  descripcion_linea varchar
+  debe decimal
+  haber decimal
+}
+
+// ---------------------------------------------------------
+// RELACIONES (Referencias Actualizadas)
+// ---------------------------------------------------------
+
+// Relaciones Entidad Centralizada
+Ref: gen_entidad.id < sys_usuario.entidad_id
+Ref: gen_entidad.id < hr_trabajador.entidad_id
+Ref: gen_entidad.id < pos_cliente.entidad_id
+Ref: gen_entidad.id < inv_proveedor.entidad_id
+
+// Auditoría Usuario
+Ref: sys_usuario.id < sys_configuracion.usuario_modificacion_id
+Ref: sys_usuario.id < sys_configuracion.usuario_creacion_id
+Ref: sys_usuario.id < gen_entidad.usuario_creacion_id
+Ref: sys_usuario.id < hr_trabajador.usuario_creacion_id
+Ref: sys_usuario.id < pos_cliente.usuario_creacion_id
+Ref: sys_usuario.id < inv_proveedor.usuario_creacion_id
+Ref: sys_usuario.id < inv_producto.usuario_creacion_id
+Ref: sys_usuario.id < inv_precio_venta.usuario_creacion_id
+Ref: sys_usuario.id < inv_costo.usuario_creacion_id
+Ref: sys_usuario.id < inv_compra.usuario_creacion_id
+Ref: sys_usuario.id < inv_movimiento.usuario_creacion_id
+Ref: sys_usuario.id < pos_venta.usuario_creacion_id
+Ref: sys_usuario.id < pos_devolucion.usuario_creacion_id
+Ref: sys_usuario.id < inv_historial_existencia.usuario_responsable_id
+Ref: sys_usuario.id < pos_pago.usuario_registro_id
+
+// Sucursales
+Ref: gen_sucursal.id < hr_trabajador.sucursal_id
+Ref: gen_sucursal.id < inv_almacen.sucursal_id
+Ref: gen_sucursal.id < inv_compra.sucursal_id
+Ref: gen_sucursal.id < inv_movimiento.sucursal_id
+Ref: gen_sucursal.id < pos_punto_venta.sucursal_id
+Ref: gen_sucursal.id < pos_caja.sucursal_id
+Ref: gen_sucursal.id < pos_venta.sucursal_id
+Ref: gen_sucursal.id < cont_asiento.sucursal_id
+Ref: gen_sucursal.id < inv_lista_precio.sucursal_id
+
+// Inventario
+Ref: inv_almacen.id < inv_ubicacion.almacen_id
+Ref: inv_categoria.id < inv_producto.categoria_id
+Ref: inv_unidad_medida.id < inv_producto.unidad_medida_id
+Ref: inv_impuesto.id < inv_producto.impuesto_id
+Ref: inv_producto.id < inv_producto_variante.producto_id
+Ref: inv_producto_variante.id < inv_precio_venta.producto_variante_id
+Ref: inv_producto_variante.id < inv_costo.producto_variante_id
+Ref: inv_producto_variante.id < inv_compra_detalle.producto_variante_id
+Ref: inv_producto_variante.id < inv_lote.producto_variante_id
+Ref: inv_producto_variante.id < inv_existencia.producto_variante_id
+Ref: inv_producto_variante.id < inv_movimiento_detalle.producto_variante_id
+Ref: inv_proveedor.id < inv_compra.proveedor_id
+Ref: inv_compra.id < inv_compra_detalle.compra_id
+Ref: inv_compra.id < inv_compra_historial.compra_id
+Ref: inv_almacen.id < inv_existencia.almacen_id
+Ref: inv_ubicacion.id < inv_existencia.ubicacion_id
+Ref: inv_lote.id < inv_existencia.lote_id
+Ref: inv_movimiento.id < inv_movimiento_detalle.movimiento_id
+Ref: inv_almacen.id < inv_movimiento.almacen_origen_id
+Ref: inv_almacen.id < inv_movimiento.almacen_destino_id
+Ref: inv_lista_precio.id < inv_precio_venta.lista_precio_id
+Ref: inv_movimiento.id < pos_venta.movimiento_id
+Ref: inv_movimiento.id < pos_devolucion.movimiento_id
+
+// Historial Stock
+Ref: inv_almacen.id < inv_historial_existencia.almacen_id
+Ref: inv_ubicacion.id < inv_historial_existencia.ubicacion_id
+Ref: inv_producto_variante.id < inv_historial_existencia.producto_variante_id
+Ref: inv_lote.id < inv_historial_existencia.lote_id
+
+// Monedas
+Ref: gen_moneda.id < sys_configuracion.moneda_default_id
+Ref: gen_moneda.id < inv_costo.moneda_id
+Ref: gen_moneda.id < gen_moneda_tasa.moneda_origen_id
+Ref: gen_moneda.id < gen_moneda_tasa.moneda_destino_id
+Ref: gen_moneda.id < gen_moneda_denominacion.moneda_id
+
+// POS y Ventas
+Ref: pos_punto_venta.id < pos_caja.punto_venta_id
+Ref: pos_caja.id < pos_caja_usuario.caja_id
+Ref: sys_usuario.id < pos_caja_usuario.usuario_id
+Ref: pos_caja.id < pos_turno.caja_id
+Ref: sys_usuario.id < pos_turno.usuario_cajero_id
+Ref: sys_usuario.id < pos_turno.usuario_supervisor_id
+Ref: pos_turno.id < pos_turno_arqueo.turno_id
+Ref: gen_moneda_denominacion.id < pos_turno_arqueo.moneda_denominacion_id
+Ref: pos_punto_venta.id < pos_venta.punto_venta_id
+Ref: pos_turno.id < pos_venta.turno_id
+Ref: pos_cliente.id < pos_venta.cliente_id
+Ref: sys_usuario.id < pos_venta.usuario_vendedor_id
+Ref: pos_venta.id < pos_venta_detalle.venta_id
+Ref: pos_venta.id < pos_pago.venta_id
+Ref: pos_venta.id < pos_devolucion.venta_id
+Ref: pos_devolucion.id < pos_devolucion_detalle.devolucion_id
+Ref: pos_pago.id < pos_pago_efectivo_desglose.pago_id
+Ref: gen_moneda_denominacion.id < pos_pago_efectivo_desglose.moneda_denominacion_id
+Ref: pos_tipo_pago.id < pos_pago.tipo_pago_id
+
+// Contabilidad
+Ref: cont_periodo.id < cont_asiento.periodo_id
+Ref: cont_asiento.id < cont_asiento_detalle.asiento_id
+Ref: cont_cuenta.id < cont_asiento_detalle.cuenta_id
+Ref: sys_usuario.id < cont_periodo.usuario_cierre_id
+Ref: sys_usuario.id < cont_asiento.usuario_registro_id

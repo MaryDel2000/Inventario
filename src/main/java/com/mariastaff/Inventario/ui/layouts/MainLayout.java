@@ -6,9 +6,17 @@ import com.mariastaff.Inventario.ui.components.base.SidebarNavItem;
 import com.mariastaff.Inventario.ui.components.base.VaadinAppIcon;
 import com.mariastaff.Inventario.ui.components.composite.AppHeader;
 import com.mariastaff.Inventario.ui.components.composite.AppSidebar;
-import com.mariastaff.Inventario.ui.views.*;
+import com.mariastaff.Inventario.ui.views.inventory.*;
+import com.mariastaff.Inventario.ui.views.purchases.*;
+import com.mariastaff.Inventario.ui.views.sales.*;
+import com.mariastaff.Inventario.ui.views.accounting.*;
+import com.mariastaff.Inventario.ui.views.reports.*;
+import com.mariastaff.Inventario.ui.views.settings.*;
 import com.vaadin.flow.component.applayout.AppLayout;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 
 public class MainLayout extends AppLayout {
 
@@ -114,13 +122,16 @@ public class MainLayout extends AppLayout {
     public void rebuildSidebar(boolean isMobile) {
         this.isMobileMode = isMobile;
         setupSidebarForMode(isMobile);
+        updateHeader();
     }
 
     private void setupSidebar() {
         // Check if we should setup for mobile or desktop
         getElement().executeJs("return window.innerWidth < 1024;").then(result -> {
             boolean isMobile = result.asBoolean();
+            this.isMobileMode = isMobile;
             setupSidebarForMode(isMobile);
+            updateHeader();
         });
     }
     
@@ -229,6 +240,24 @@ public class MainLayout extends AppLayout {
         header.clearNavigationItems();
         Class<?> currentView = getContent().getClass();
 
+        if (isMobileMode) {
+            ViewInfo info = getViewInfo(currentView);
+            if (info != null) {
+                Span text = new Span(getTranslation(info.titleKey));
+                text.addClassNames("font-bold", "text-lg", "text-text-main");
+                
+                com.vaadin.flow.component.Component icon = info.icon.create();
+                icon.addClassName("text-primary");
+                
+                HorizontalLayout hl = new HorizontalLayout(icon, text);
+                hl.setAlignItems(FlexComponent.Alignment.CENTER);
+                hl.setSpacing(true);
+                
+                header.addNavigationItem(hl);
+            }
+            return;
+        }
+
         if (isInventoryView(currentView)) {
             addInventoryHeaderItems();
         } else if (isPurchaseView(currentView)) {
@@ -331,5 +360,64 @@ public class MainLayout extends AppLayout {
         header.addNavigationItem(new HeaderNavItem("nav.settings.currencies", new VaadinAppIcon(VaadinIcon.DOLLAR), CurrenciesView.class));
         header.addNavigationItem(new HeaderNavItem("nav.settings.taxes", new VaadinAppIcon(VaadinIcon.FILE_ADD), TaxesView.class));
         header.addNavigationItem(new HeaderNavItem("nav.settings.general", new VaadinAppIcon(VaadinIcon.COG), GeneralSettingsView.class));
+    }
+
+    private ViewInfo getViewInfo(Class<?> view) {
+        // Inventory
+        if (view.equals(InventoryDashboardView.class)) return new ViewInfo("nav.inventory.dashboard", new VaadinAppIcon(VaadinIcon.DASHBOARD));
+        if (view.equals(ProductsView.class)) return new ViewInfo("nav.inventory.products", new VaadinAppIcon(VaadinIcon.PACKAGE));
+        if (view.equals(CategoriesView.class)) return new ViewInfo("nav.inventory.categories", new VaadinAppIcon(VaadinIcon.TAGS));
+        if (view.equals(UOMView.class)) return new ViewInfo("nav.inventory.uom", new VaadinAppIcon(VaadinIcon.SLIDERS));
+        if (view.equals(MovementsView.class)) return new ViewInfo("nav.inventory.movements", new VaadinAppIcon(VaadinIcon.EXCHANGE));
+        if (view.equals(WarehousesView.class)) return new ViewInfo("nav.inventory.warehouses", new VaadinAppIcon(VaadinIcon.BUILDING));
+        if (view.equals(LocationsView.class)) return new ViewInfo("nav.inventory.locations", new VaadinAppIcon(VaadinIcon.MAP_MARKER));
+        if (view.equals(BatchesView.class)) return new ViewInfo("nav.inventory.batches", new VaadinAppIcon(VaadinIcon.BARCODE));
+        
+        // Purchases
+        if (view.equals(NewPurchaseView.class)) return new ViewInfo("nav.purchases.new", new VaadinAppIcon(VaadinIcon.PLUS_CIRCLE));
+        if (view.equals(PurchasesHistoryView.class)) return new ViewInfo("nav.purchases.history", new VaadinAppIcon(VaadinIcon.CLOCK));
+        if (view.equals(ProvidersView.class)) return new ViewInfo("nav.purchases.providers", new VaadinAppIcon(VaadinIcon.TRUCK));
+        
+        // Sales
+        if (view.equals(POSView.class)) return new ViewInfo("nav.sales.pos", new VaadinAppIcon(VaadinIcon.CASH));
+        if (view.equals(ShiftView.class)) return new ViewInfo("nav.sales.shift", new VaadinAppIcon(VaadinIcon.CLOCK));
+        if (view.equals(ClosuresView.class)) return new ViewInfo("nav.sales.closures", new VaadinAppIcon(VaadinIcon.LOCK));
+        if (view.equals(CustomersView.class)) return new ViewInfo("nav.sales.customers", new VaadinAppIcon(VaadinIcon.USER));
+        if (view.equals(ReceivablesView.class)) return new ViewInfo("nav.sales.receivables", new VaadinAppIcon(VaadinIcon.MONEY));
+        if (view.equals(SalesHistoryView.class)) return new ViewInfo("nav.sales.history", new VaadinAppIcon(VaadinIcon.FILE_TEXT));
+        
+        // Accounting
+        if (view.equals(FinancialDashboardView.class)) return new ViewInfo("nav.accounting.dashboard", new VaadinAppIcon(VaadinIcon.CHART));
+        if (view.equals(JournalView.class)) return new ViewInfo("nav.accounting.journal", new VaadinAppIcon(VaadinIcon.BOOK));
+        if (view.equals(ChartOfAccountsView.class)) return new ViewInfo("nav.accounting.chart", new VaadinAppIcon(VaadinIcon.LIST));
+        if (view.equals(FiscalPeriodsView.class)) return new ViewInfo("nav.accounting.periods", new VaadinAppIcon(VaadinIcon.CALENDAR));
+        if (view.equals(ManualEntriesView.class)) return new ViewInfo("nav.accounting.manual", new VaadinAppIcon(VaadinIcon.EDIT));
+        
+        // Reports
+        if (view.equals(ReportSalesUserView.class)) return new ViewInfo("nav.reports.sales_user", new VaadinAppIcon(VaadinIcon.USER));
+        if (view.equals(ReportTopProductsView.class)) return new ViewInfo("nav.reports.top_products", new VaadinAppIcon(VaadinIcon.STAR));
+        if (view.equals(ReportMarginsView.class)) return new ViewInfo("nav.reports.margins", new VaadinAppIcon(VaadinIcon.TRENDING_UP));
+        if (view.equals(ReportKardexView.class)) return new ViewInfo("nav.reports.kardex", new VaadinAppIcon(VaadinIcon.FILE_TEXT_O));
+        if (view.equals(ReportInventoryValueView.class)) return new ViewInfo("nav.reports.inventory_value", new VaadinAppIcon(VaadinIcon.MONEY));
+        if (view.equals(ReportIncomeStatementView.class)) return new ViewInfo("nav.reports.income_statement", new VaadinAppIcon(VaadinIcon.PIE_CHART));
+        if (view.equals(ReportTrialBalanceView.class)) return new ViewInfo("nav.reports.trial_balance", new VaadinAppIcon(VaadinIcon.SCALE));
+        
+        // Settings
+        if (view.equals(BranchesView.class)) return new ViewInfo("nav.settings.branches", new VaadinAppIcon(VaadinIcon.BUILDING_O));
+        if (view.equals(UsersView.class)) return new ViewInfo("nav.settings.users", new VaadinAppIcon(VaadinIcon.USERS));
+        if (view.equals(CurrenciesView.class)) return new ViewInfo("nav.settings.currencies", new VaadinAppIcon(VaadinIcon.DOLLAR));
+        if (view.equals(TaxesView.class)) return new ViewInfo("nav.settings.taxes", new VaadinAppIcon(VaadinIcon.FILE_ADD));
+        if (view.equals(GeneralSettingsView.class)) return new ViewInfo("nav.settings.general", new VaadinAppIcon(VaadinIcon.COG));
+
+        return null;
+    }
+
+    private static class ViewInfo {
+        final String titleKey;
+        final VaadinAppIcon icon;
+        ViewInfo(String titleKey, VaadinAppIcon icon) {
+            this.titleKey = titleKey;
+            this.icon = icon;
+        }
     }
 }

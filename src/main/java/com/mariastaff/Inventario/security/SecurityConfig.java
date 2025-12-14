@@ -4,6 +4,7 @@ import com.vaadin.flow.spring.security.VaadinWebSecurity;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -14,6 +15,14 @@ public class SecurityConfig extends VaadinWebSecurity {
         // Configurar OAuth2 Login
         http.oauth2Login(oauth2 -> oauth2
             .loginPage("/oauth2/authorization/authentik") // Redirigir al provider configurado
+            .defaultSuccessUrl("/ui/", true)
+        );
+        
+        // Configurar Logout para redirigir a Authentik
+        http.logout(logout -> logout
+            .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
+            .logoutSuccessUrl("http://localhost:9000/application/o/inv/end-session/")
+            .permitAll()
         );
 
         // Permitir acceso a recursos estáticos comunes si es necesario
