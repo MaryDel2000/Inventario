@@ -48,13 +48,6 @@ a:where(:any-link):not(.text-white) {
 }
 
 /* Responsive fixes for mobile */
-@media (max-width: 768px) {
-
-    /* Hide header center navigation on mobile */
-    .header-center-nav {
-        display: none !important;
-    }
-}
 
 /* Mobile sidebar overlay */
 @media (max-width: 1024px) {
