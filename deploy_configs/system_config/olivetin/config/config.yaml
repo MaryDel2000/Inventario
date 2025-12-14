@@ -1,0 +1,32 @@
+actions:
+  - title: "Crear Nueva Instantánea"
+    icon: "&#x1F4F7;" # Camera icon
+    shell: |
+      docker exec authentik-db-${ENV_TAG} pg_dump -U ${POSTGRES_USER} -F c -b -v -f /backups/snapshot_$(date +%Y-%m-%d_%H-%M).dump ${POSTGRES_DB}
+
+  - title: "Restaurar Instantánea"
+    icon: "&#x21BA;" # Counter-clockwise arrow
+    arguments:
+      - name: snapshot_file
+        type: choice
+        title: "Seleccionar Instantánea"
+        choices:
+          shell: |
+            find /backups -name "*.dump" -printf "%f\n" | sort -r
+    shell: |
+      if [ -z "{{ snapshot_file }}" ]; then
+        echo "Error: No se seleccionó ningún archivo."
+        exit 1
+      fi
+      
+      echo "Restaurando desde {{ snapshot_file }}..."
+      # Terminate connections usually needed before drop
+      docker exec authentik-db-${ENV_TAG} psql -U ${POSTGRES_USER} -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${POSTGRES_DB}' AND pid <> pg_backend_pid();"
+      
+      # Drop and recreate database to ensure clean state
+      docker exec authentik-db-${ENV_TAG} psql -U ${POSTGRES_USER} -c "DROP DATABASE IF EXISTS \"${POSTGRES_DB}\";"
+      docker exec authentik-db-${ENV_TAG} psql -U ${POSTGRES_USER} -c "CREATE DATABASE \"${POSTGRES_DB}\";"
+      
+      # Restore
+      docker exec authentik-db-${ENV_TAG} pg_restore -U ${POSTGRES_USER} -d ${POSTGRES_DB} -v /backups/{{ snapshot_file }}
+      echo "Restauración completada."

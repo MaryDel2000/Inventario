@@ -1,0 +1,15 @@
+services:
+  olivetin:
+    image: jamesread/olivetin
+    container_name: olivetin
+    restart: always
+    ports:
+      - "1337:1337"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /system_config/olivetin/config:/config
+      - /system_config/olivetin/backups:/backups
+    environment:
+      - POSTGRES_USER=${APP_DB_USER}
+      - POSTGRES_DB=${APP_DB_NAME}
+      - ENV_TAG=${ENV_TAG}
