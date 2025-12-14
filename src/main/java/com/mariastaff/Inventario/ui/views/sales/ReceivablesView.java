@@ -24,7 +24,7 @@ public class ReceivablesView extends VerticalLayout {
         
         configureGrid();
         
-        add(new AppLabel("Cuentas por Cobrar1"), grid);
+        add(grid);
         updateList();
     }
 
