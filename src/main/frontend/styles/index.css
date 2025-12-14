@@ -119,16 +119,37 @@ vaadin-grid::part(header-cell) {
     background-color: var(--color-bg-surface);
     color: var(--color-text-secondary);
     border-bottom: 1px solid var(--color-border);
+    padding: 0.75rem 1rem;
 }
 
 vaadin-grid::part(body-cell) {
     background-color: var(--color-bg-surface);
     color: var(--color-text-main);
     border-bottom: 1px solid var(--color-border);
+    padding: 0.75rem 1rem;
 }
 
 vaadin-grid::part(row):hover {
     background-color: var(--color-bg-secondary);
+}
+
+/* 
+   FIX: Vaadin Grid Sorter Spacing & Responsiveness
+   Separating the sort indicators from the column header text.
+   Ensure content truncates properly on smaller screens.
+*/
+vaadin-grid-sorter {
+    align-items: center;
+}
+
+vaadin-grid-sorter::part(indicators) {
+    margin-left: 0.5rem;
+}
+
+vaadin-grid-sorter::part(content) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Text Field & Inputs */
