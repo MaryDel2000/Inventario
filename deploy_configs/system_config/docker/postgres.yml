@@ -5,12 +5,12 @@ services:
 
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      APP_DB_NAME: ${APP_DB_NAME}
-      APP_DB_USER: ${APP_DB_USER}
-      APP_DB_PASSWORD: ${APP_DB_PASSWORD}
+      POSTGRES_DB: ${AUTHENTIK_DB_NAME}
+      POSTGRES_USER: ${AUTHENTIK_DB_USER}
+      POSTGRES_PASSWORD: ${AUTHENTIK_DB_PASSWORD}
+      INVENTORY_DB_NAME: ${INVENTORY_DB_NAME}
+      INVENTORY_DB_USER: ${INVENTORY_DB_USER}
+      INVENTORY_DB_PASSWORD: ${INVENTORY_DB_PASSWORD}
 
     volumes:
       - /system_config/postgres/init-app-db.sh:/docker-entrypoint-initdb.d/init-app-db.sh:ro
