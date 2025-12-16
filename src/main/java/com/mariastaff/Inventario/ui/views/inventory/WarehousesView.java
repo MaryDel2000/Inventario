@@ -8,6 +8,14 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.checkbox.Checkbox;
+import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.textfield.TextField;
 import jakarta.annotation.security.PermitAll;
 
 @PageTitle("Almacenes | Inventario")
@@ -24,7 +32,17 @@ public class WarehousesView extends VerticalLayout {
         
         configureGrid();
         
-        add(new AppLabel("Listado de Almacenes"), grid);
+        configureGrid();
+        
+        
+        Button addBtn = new Button("Nuevo Almacén", VaadinIcon.PLUS.create());
+        addBtn.addClassNames("bg-primary", "text-white", "text-sm", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow", "hover:shadow-md", "transition-all");
+        addBtn.addClickListener(e -> openWarehouseDialog());
+
+        HorizontalLayout header = new HorizontalLayout(new AppLabel("Listado de Almacenes"), addBtn);
+        header.addClassNames("w-full", "justify-between", "items-center");
+
+        add(header, grid);
         updateList();
     }
 
@@ -39,5 +57,37 @@ public class WarehousesView extends VerticalLayout {
 
     private void updateList() {
         grid.setItems(service.findAllAlmacenes());
+    }
+
+    private void openWarehouseDialog() {
+        Dialog dialog = new Dialog();
+        dialog.setHeaderTitle("Nuevo Almacén");
+        
+        FormLayout formLayout = new FormLayout();
+        formLayout.addClassNames("w-full", "max-w-lg");
+        
+        TextField nombre = new TextField("Nombre");
+        TextField codigo = new TextField("Código");
+        TextField tipoAlmacen = new TextField("Tipo Almacén");
+        TextField direccion = new TextField("Dirección");
+        Checkbox activo = new Checkbox("Activo");
+        activo.setValue(true);
+
+        formLayout.add(nombre, codigo, tipoAlmacen, direccion, activo);
+        
+        Button saveButton = new Button("Guardar", e -> {
+            Notification.show("Almacén preparado para guardar (Simulación)", 3000, Notification.Position.BOTTOM_END);
+            dialog.close();
+        });
+        saveButton.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
+
+        Button cancelButton = new Button("Cancelar", e -> dialog.close());
+        cancelButton.addClassNames("bg-gray-200", "text-gray-700", "font-medium", "py-2", "px-4", "rounded-lg");
+
+        dialog.getFooter().add(cancelButton);
+        dialog.getFooter().add(saveButton);
+        
+        dialog.add(formLayout);
+        dialog.open();
     }
 }

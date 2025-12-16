@@ -15,4 +15,5 @@
 ## 3. Desarrollo
 - **i18n**: SIEMPRE usa `getTranslation("key")`. Textos en `src/main/resources/messages.properties`.
 - **Estructura**: Vistas en `ui/views`, Layout en `ui/layouts/MainLayout.java`.
+- **Estado**: Formularios de creación en vistas de inventario (Productos, Categorías, UOM, Almacenes, Ubicaciones) listos en UI, pendientes de lógica de guardado.
 - **Ejecutar**: `./run-dev.sh`.
