@@ -15,6 +15,9 @@ export default {
         'primary': 'var(--color-primary)',
         'primary-hover': 'var(--color-primary-hover)',
         'border': 'var(--color-border)',
+        'success': '#16a34a', // green-600
+        'error': '#dc2626',   // red-600
+        'info': '#1f2937',    // gray-800
       }
     },
   },

@@ -9,11 +9,11 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.mariastaff.Inventario.ui.components.base.TailwindModal;
+import com.mariastaff.Inventario.ui.components.base.TailwindNotification;
 import com.mariastaff.Inventario.ui.components.base.TailwindToggle;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import jakarta.annotation.security.PermitAll;
@@ -80,12 +80,15 @@ public class WarehousesView extends VerticalLayout {
         modal.addContent(formLayout);
         
         Button saveButton = new Button("Guardar", e -> {
-            Notification.show("Almacén preparado para guardar (Simulación)", 3000, Notification.Position.BOTTOM_END);
+            TailwindNotification.show("Nuevo Almacén guardado correctamente", TailwindNotification.Type.SUCCESS);
             modal.close();
         });
         saveButton.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
 
-        Button cancelButton = new Button("Cancelar", e -> modal.close());
+        Button cancelButton = new Button("Cancelar", e -> {
+            TailwindNotification.show("Cambios descartados", TailwindNotification.Type.INFO);
+            modal.close();
+        });
         cancelButton.addClassNames("bg-gray-200", "text-gray-700", "font-medium", "py-2", "px-4", "rounded-lg");
 
         modal.addFooterButton(cancelButton);
