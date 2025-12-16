@@ -8,9 +8,9 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.mariastaff.Inventario.ui.components.base.TailwindModal;
+import com.mariastaff.Inventario.ui.components.base.TailwindToggle;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.checkbox.Checkbox;
-import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -59,32 +59,34 @@ public class CategoriesView extends VerticalLayout {
     }
 
     private void openCategoryDialog() {
-        Dialog dialog = new Dialog();
-        dialog.setHeaderTitle("Nueva Categoría");
+        TailwindModal modal = new TailwindModal("Nueva Categoría");
         
         FormLayout formLayout = new FormLayout();
         formLayout.addClassNames("w-full", "max-w-lg");
         
         TextField nombre = new TextField("Nombre");
+        nombre.addClassName("w-full");
         TextField descripcion = new TextField("Descripción");
-        Checkbox activo = new Checkbox("Activo");
+        descripcion.addClassName("w-full");
+        TailwindToggle activo = new TailwindToggle("Activo");
         activo.setValue(true);
 
         formLayout.add(nombre, descripcion, activo);
+        modal.addContent(formLayout);
         
         Button saveButton = new Button("Guardar", e -> {
             Notification.show("Categoría preparada para guardar (Simulación)", 3000, Notification.Position.BOTTOM_END);
-            dialog.close();
+            modal.close();
         });
         saveButton.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
 
-        Button cancelButton = new Button("Cancelar", e -> dialog.close());
+        Button cancelButton = new Button("Cancelar", e -> modal.close());
         cancelButton.addClassNames("bg-gray-200", "text-gray-700", "font-medium", "py-2", "px-4", "rounded-lg");
 
-        dialog.getFooter().add(cancelButton);
-        dialog.getFooter().add(saveButton);
+        modal.addFooterButton(cancelButton);
+        modal.addFooterButton(saveButton);
         
-        dialog.add(formLayout);
-        dialog.open();
+        add(modal);
+        modal.open();
     }
 }
