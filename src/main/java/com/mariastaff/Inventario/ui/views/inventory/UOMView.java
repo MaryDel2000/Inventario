@@ -84,7 +84,7 @@ public class UOMView extends VerticalLayout {
             TailwindNotification.show("Cambios descartados", TailwindNotification.Type.INFO);
             modal.close();
         });
-        cancelButton.addClassNames("bg-gray-200", "text-gray-700", "font-medium", "py-2", "px-4", "rounded-lg");
+        cancelButton.addClassNames("bg-[var(--color-bg-secondary)]", "text-[var(--color-text-main)]", "font-medium", "py-2", "px-4", "rounded-lg");
 
         modal.addFooterButton(cancelButton);
         modal.addFooterButton(saveButton);

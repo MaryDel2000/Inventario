@@ -26,14 +26,25 @@ public class TailwindModal extends Div {
 
         // Modal Content Card
         // Increased max-width to max-w-2xl
+        // Modal Content Card
+        // Increased max-width to max-w-2xl
+        // Modal Content Card
+        // Increased max-width to max-w-2xl
         Div modalContent = new Div();
-        modalContent.addClassNames("relative", "transform", "rounded-xl", "bg-white", "text-left", "shadow-2xl", "transition-all", "w-full", "max-w-2xl", "border", "border-gray-200");
+        modalContent.addClassNames("relative", "transform", "rounded-xl", "text-left", "shadow-2xl", "transition-all", "w-full", "max-w-2xl", "border");
+        modalContent.getStyle().set("background-color", "var(--color-bg-surface)");
+        modalContent.getStyle().set("color", "var(--color-text-main)");
+        modalContent.getStyle().set("border-color", "var(--color-border)");
         
         // Header
         Div header = new Div();
-        header.addClassNames("bg-white", "px-6", "py-4", "border-b", "border-gray-100");
+        header.addClassNames("px-6", "py-4", "border-b");
+        header.getStyle().set("background-color", "var(--color-bg-surface)");
+        header.getStyle().set("border-color", "var(--color-border)");
+        
         H3 titleComponent = new H3(title);
-        titleComponent.addClassNames("text-xl", "font-bold", "text-gray-800", "m-0");
+        titleComponent.addClassNames("text-xl", "font-bold", "m-0");
+        titleComponent.getStyle().set("color", "var(--color-text-main)");
         header.add(titleComponent);
         
         // Body
@@ -44,7 +55,9 @@ public class TailwindModal extends Div {
         
         // Footer
         footerLayout = new HorizontalLayout();
-        footerLayout.addClassNames("bg-gray-50", "px-6", "py-4", "flex", "justify-end", "gap-3", "border-t", "border-gray-100");
+        footerLayout.addClassNames("px-6", "py-4", "flex", "justify-end", "gap-3", "border-t");
+        footerLayout.getStyle().set("background-color", "var(--color-bg-secondary)");
+        footerLayout.getStyle().set("border-color", "var(--color-border)");
         footerLayout.setSpacing(false); // Managed by gap-3
 
         modalContent.add(header, bodyLayout, footerLayout);
