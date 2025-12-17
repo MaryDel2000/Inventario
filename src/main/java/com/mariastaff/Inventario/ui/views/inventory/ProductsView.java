@@ -40,7 +40,6 @@ public class ProductsView extends VerticalLayout {
         
         configureGrid();
         
-        
         Button addBtn = new Button("Nuevo Producto", VaadinIcon.PLUS.create());
         addBtn.addClassNames("bg-primary", "text-white", "text-sm", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow", "hover:shadow-md", "transition-all"); // Tailwind styled button
         addBtn.addClickListener(e -> openProductDialog());
@@ -75,31 +74,37 @@ public class ProductsView extends VerticalLayout {
         
         FormLayout formLayout = new FormLayout();
         formLayout.addClassNames("w-full", "max-w-lg");
+        formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1));
         
         TextField nombre = new TextField("Nombre");
         nombre.addClassName("w-full");
+        
         TextField codigo = new TextField("Código Interno");
         codigo.addClassName("w-full");
         
-        ComboBox<InvCategoria> categoria = new ComboBox<>("Categoría");
-        categoria.setItems(catalogoService.findAllCategorias());
-        categoria.setItemLabelGenerator(InvCategoria::getNombre);
+        TextField descripcion = new TextField("Descripción");
+        descripcion.addClassName("w-full");
+        
+        TextField categoria = new TextField("Categoría");
         categoria.addClassName("w-full");
         
-        ComboBox<InvUnidadMedida> unidadMedida = new ComboBox<>("Unidad de Medida");
-        unidadMedida.setItems(catalogoService.findAllUnidadesMedida());
-        unidadMedida.setItemLabelGenerator(InvUnidadMedida::getNombre);
+        TextField unidadMedida = new TextField("Unidad de Medida");
         unidadMedida.addClassName("w-full");
         
         TailwindToggle activo = new TailwindToggle("Activo");
         activo.setValue(true);
 
-        formLayout.add(nombre, codigo, categoria, unidadMedida, activo);
+        formLayout.add(nombre, codigo, descripcion, categoria, unidadMedida, activo);
         modal.addContent(formLayout);
         
         Button saveButton = new Button("Guardar", e -> {
-            TailwindNotification.show("Nuevo Producto guardado correctamente", TailwindNotification.Type.SUCCESS);
-            modal.close();
+            // Simulación: Solo mostrar que los datos se mantienen y se pueden leer
+            String cat = categoria.getValue();
+            String uom = unidadMedida.getValue();
+            String desc = descripcion.getValue();
+            
+            TailwindNotification.show("Simulación: " + cat + " / " + uom + " / " + desc, TailwindNotification.Type.SUCCESS);
+            // No guardamos en DB ni cerramos el modal
         });
         saveButton.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
 

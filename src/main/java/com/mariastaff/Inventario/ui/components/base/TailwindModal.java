@@ -13,7 +13,7 @@ public class TailwindModal extends Div {
     private final HorizontalLayout footerLayout;
 
     public TailwindModal(String title) {
-        addClassNames("fixed", "inset-0", "z-[9999]", "overflow-y-auto");
+        addClassNames("fixed", "inset-0", "z-50", "overflow-y-auto");
         
         // Backdrop with blur effect and dark overlay
         // Using bg-gray-900 with clear opacity class and explicit full viewport dimensions
