@@ -45,37 +45,27 @@ public class TailwindNotification extends Div {
             TailwindNotification notification = new TailwindNotification(message, type);
             ui.add(notification);
 
-            // Animate In with small delay to ensure DOM is ready
-            new Thread(() -> {
-                try { Thread.sleep(50); } catch (Exception e) {}
-                ui.access(() -> {
-                     notification.getStyle().set("opacity", "1");
-                     notification.getStyle().set("transform", "translateY(0)");
-                });
-            }).start();
-
-            // Auto Close after 3 seconds
-            new Thread(() -> {
-                try {
-                    Thread.sleep(3000);
-                } catch (InterruptedException e) {}
-                
-                try {
-                    ui.access(() -> {
-                        notification.getStyle().set("opacity", "0");
-                        notification.getStyle().set("transform", "translateY(10px)");
-                        // Remove from DOM after animation finishes
-                        new Thread(() -> {
-                            try {
-                                Thread.sleep(500); 
-                                ui.access(() -> notification.removeFromParent());
-                            } catch (Exception ex) {}
-                        }).start();
-                    });
-                } catch (Exception e) {
-                   // UI might be detached
-                }
-            }).start();
+            // Execute animation logic on the client side to avoid server roundtrip delays
+            // 1. Wait a tick to ensure element is in DOM (setTimeout 10ms)
+            // 2. Add properties to trigger transition (opacity 1, translate 0)
+            // 3. Wait 3000ms
+            // 4. Remove properties to trigger fade out
+            // 5. Wait 500ms for transition
+            // 6. Remove element
+            notification.getElement().executeJs(
+                "var el = this;" +
+                "setTimeout(function() {" +
+                "  el.style.opacity = '1';" +
+                "  el.style.transform = 'translateY(0)';" +
+                "}, 10);" +
+                "setTimeout(function() {" +
+                "  el.style.opacity = '0';" +
+                "  el.style.transform = 'translateY(10px)';" +
+                "  setTimeout(function() {" +
+                "    el.remove();" +
+                "  }, 500);" +
+                "}, 3000);"
+            );
         }
     }
 }
