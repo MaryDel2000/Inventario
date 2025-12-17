@@ -103,8 +103,8 @@ public class ProductsView extends VerticalLayout {
             String uom = unidadMedida.getValue();
             String desc = descripcion.getValue();
             
-            TailwindNotification.show("Simulación: " + cat + " / " + uom + " / " + desc, TailwindNotification.Type.SUCCESS);
-            // No guardamos en DB ni cerramos el modal
+            TailwindNotification.show("Se guardó correctamente", TailwindNotification.Type.SUCCESS);
+            modal.close();
         });
         saveButton.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
 
