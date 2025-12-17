@@ -31,7 +31,7 @@ public class TailwindModal extends Div {
         // Modal Content Card
         // Increased max-width to max-w-2xl
         Div modalContent = new Div();
-        modalContent.addClassNames("relative", "transform", "rounded-xl", "text-left", "shadow-2xl", "transition-all", "w-full", "max-w-2xl", "border");
+        modalContent.addClassNames("relative", "transform", "rounded-xl", "text-left", "shadow-2xl", "transition-all", "w-full", "max-w-2xl", "border", "overflow-hidden");
         modalContent.getStyle().set("background-color", "var(--color-bg-surface)");
         modalContent.getStyle().set("color", "var(--color-text-main)");
         modalContent.getStyle().set("border-color", "var(--color-border)");
