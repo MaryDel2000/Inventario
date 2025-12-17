@@ -18,7 +18,8 @@ public class TailwindToggle extends AbstractField<TailwindToggle, Boolean> imple
 
     public TailwindToggle(String label) {
         super(false);
-        addClassNames("flex", "items-center", "gap-3", "cursor-pointer", "mt-4");
+        addClassNames("flex", "items-center", "gap-3", "cursor-pointer", "pl-1");
+        getStyle().set("margin-top", "1.5rem");
 
         // Label
         labelSpan = new Span(label);
