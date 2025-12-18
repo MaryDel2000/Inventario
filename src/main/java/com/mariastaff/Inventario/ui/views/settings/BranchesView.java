@@ -4,8 +4,18 @@ import com.mariastaff.Inventario.backend.data.entity.GenSucursal;
 import com.mariastaff.Inventario.backend.service.GeneralService;
 import com.mariastaff.Inventario.ui.components.base.AppLabel;
 import com.mariastaff.Inventario.ui.layouts.MainLayout;
+import com.mariastaff.Inventario.ui.components.base.TailwindModal;
+import com.mariastaff.Inventario.ui.components.base.TailwindNotification;
+import com.mariastaff.Inventario.ui.components.base.TailwindToggle;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.PermitAll;
@@ -24,7 +34,14 @@ public class BranchesView extends VerticalLayout {
         
         configureGrid();
         
-        add(new AppLabel("Sucursales"), grid);
+        Button addBtn = new Button("Nueva Sucursal", VaadinIcon.PLUS.create());
+        addBtn.addClassNames("bg-primary", "text-white", "text-sm", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow", "hover:shadow-md", "transition-all");
+        addBtn.addClickListener(e -> openDialog());
+
+        HorizontalLayout header = new HorizontalLayout(new AppLabel("Sucursales"), addBtn);
+        header.addClassNames("w-full", "justify-between", "items-center");
+
+        add(header, grid);
         updateList();
     }
 
@@ -38,5 +55,64 @@ public class BranchesView extends VerticalLayout {
 
     private void updateList() {
         grid.setItems(service.findAllSucursales());
+    }
+
+    private void openDialog() {
+        TailwindModal modal = new TailwindModal("Nueva Sucursal");
+        
+        GenSucursal item = new GenSucursal();
+        Binder<GenSucursal> binder = new Binder<>(GenSucursal.class);
+
+        FormLayout formLayout = new FormLayout();
+        formLayout.addClassNames("w-full");
+        
+        TextField nombre = new TextField("Nombre");
+        nombre.addClassName("w-full");
+        
+        TextField codigo = new TextField("Código");
+        codigo.addClassName("w-full");
+        
+        TextField direccion = new TextField("Dirección");
+        direccion.addClassName("w-full");
+        
+        TextField telefono = new TextField("Teléfono");
+        telefono.addClassName("w-full");
+
+        TailwindToggle activo = new TailwindToggle("Activo");
+        activo.setValue(true);
+
+        formLayout.add(nombre, codigo, direccion, telefono, activo);
+        
+        modal.addContent(formLayout);
+
+        binder.forField(nombre).asRequired("Nombre obligatorio").bind(GenSucursal::getNombre, GenSucursal::setNombre);
+        binder.forField(codigo).bind(GenSucursal::getCodigo, GenSucursal::setCodigo);
+        binder.forField(direccion).bind(GenSucursal::getDireccion, GenSucursal::setDireccion);
+        binder.forField(telefono).bind(GenSucursal::getTelefono, GenSucursal::setTelefono);
+        binder.forField(activo).bind(GenSucursal::getActivo, GenSucursal::setActivo); // Assuming method exists
+
+        Button saveButton = new Button("Guardar", e -> {
+            try {
+                binder.writeBean(item);
+                TailwindNotification.show("Sucursal guardada (Simulación)", TailwindNotification.Type.SUCCESS);
+                updateList();
+                modal.close();
+            } catch (ValidationException ex) {
+                TailwindNotification.show("Revise los campos requeridos", TailwindNotification.Type.ERROR);
+            }
+        });
+        saveButton.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
+
+        Button cancelButton = new Button("Cancelar", e -> {
+            TailwindNotification.show("Cambios descartados", TailwindNotification.Type.INFO);
+            modal.close();
+        });
+        cancelButton.addClassNames("bg-[var(--color-bg-secondary)]", "text-[var(--color-text-main)]", "font-medium", "py-2", "px-4", "rounded-lg");
+
+        modal.addFooterButton(cancelButton);
+        modal.addFooterButton(saveButton);
+        
+        add(modal);
+        modal.open();
     }
 }
