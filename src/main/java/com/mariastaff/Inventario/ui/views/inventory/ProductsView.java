@@ -3,6 +3,7 @@ package com.mariastaff.Inventario.ui.views.inventory;
 import com.mariastaff.Inventario.backend.data.entity.InvProducto;
 import com.mariastaff.Inventario.backend.data.entity.InvCategoria;
 import com.mariastaff.Inventario.backend.data.entity.InvUnidadMedida;
+import com.mariastaff.Inventario.backend.data.entity.InvProductoVariante;
 import com.mariastaff.Inventario.backend.data.entity.InvUbicacion;
 import com.mariastaff.Inventario.backend.service.ProductoService;
 import com.mariastaff.Inventario.backend.service.CatalogoService;
@@ -57,11 +58,15 @@ public class ProductsView extends VerticalLayout {
         uomBtn.addClassNames("bg-white", "text-primary", "border", "border-gray-200", "text-sm", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow-sm", "hover:shadow-md", "hover:bg-gray-50", "transition-all", "mr-2");
         uomBtn.addClickListener(e -> openUOMDialog());
 
+        Button varBtn = new Button("Ver Variantes", VaadinIcon.QRCODE.create());
+        varBtn.addClassNames("bg-white", "text-primary", "border", "border-gray-200", "text-sm", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow-sm", "hover:shadow-md", "hover:bg-gray-50", "transition-all", "mr-2");
+        varBtn.addClickListener(e -> openVariantsDialog());
+
         Button addBtn = new Button("Nuevo Producto", VaadinIcon.PLUS.create());
         addBtn.addClassNames("bg-primary", "text-white", "text-sm", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow", "hover:shadow-md", "transition-all"); // Tailwind styled button
         addBtn.addClickListener(e -> openProductDialog());
 
-        HorizontalLayout buttons = new HorizontalLayout(catBtn, uomBtn, addBtn);
+        HorizontalLayout buttons = new HorizontalLayout(catBtn, uomBtn, varBtn, addBtn);
         // buttons.setSpacing(true); // Tailwind handles spacing via margin on catBtn, but container spacing is safer. 
         // Actually HorizontalLayout has spacing by default usually, but let's trust the classes.
         buttons.setAlignItems(Alignment.CENTER);
@@ -517,6 +522,191 @@ public class ProductsView extends VerticalLayout {
                      catalogoService.saveUnidadMedida(newUom);
                      uomGrid.setItems(catalogoService.findAllUnidadesMedida());
                      TailwindNotification.show("Unidad creada", TailwindNotification.Type.SUCCESS);
+                     addModal.close();
+                 } catch (Exception ex) {
+                     TailwindNotification.show("Error al guardar", TailwindNotification.Type.ERROR);
+                 }
+             });
+             saveAddBtn.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
+             
+             Button cancelAddBtn = new Button("Cancelar", event -> addModal.close());
+             cancelAddBtn.addClassNames("bg-[var(--color-bg-secondary)]", "text-[var(--color-text-main)]", "font-medium", "py-2", "px-4", "rounded-lg");
+             
+             addModal.addFooterButton(cancelAddBtn);
+             addModal.addFooterButton(saveAddBtn);
+             add(addModal);
+             addModal.open();
+        });
+
+        // Add layout with button and grid
+        VerticalLayout content = new VerticalLayout(addBtn, gridContainer);
+        content.setPadding(false);
+        content.setSpacing(true);
+        content.addClassNames("w-full", "h-full");
+
+        modal.addContent(content);
+
+        Button closeBtn = new Button("Cerrar", e -> modal.close());
+        closeBtn.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
+        modal.addFooterButton(closeBtn);
+
+        add(modal);
+        modal.open();
+    }
+
+    private void openVariantsDialog() {
+        TailwindModal modal = new TailwindModal("Listado de Variantes de Producto");
+        modal.setDialogMaxWidth("max-w-6xl");
+
+        Grid<InvProductoVariante> varGrid = new Grid<>(InvProductoVariante.class, false);
+        varGrid.addClassNames("bg-bg-surface", "rounded-lg", "shadow");
+        
+        varGrid.addColumn(v -> v.getProducto() != null ? v.getProducto().getNombre() : "-").setHeader("Producto").setAutoWidth(true);
+        varGrid.addColumn(InvProductoVariante::getNombreVariante).setHeader("Variante").setAutoWidth(true);
+        varGrid.addColumn(InvProductoVariante::getCodigoBarras).setHeader("Cód. Barras").setAutoWidth(true);
+        varGrid.addColumn(InvProductoVariante::getCodigoInternoVariante).setHeader("Cód. Interno").setAutoWidth(true);
+        
+        varGrid.addColumn(new ComponentRenderer<>(v -> {
+            TailwindToggle toggle = new TailwindToggle("");
+            toggle.getStyle().set("margin-top", "0");
+            toggle.setValue(Boolean.TRUE.equals(v.getActivo()));
+            
+            toggle.addValueChangeListener(event -> {
+                v.setActivo(event.getValue());
+                try {
+                    service.saveVariante(v);
+                    TailwindNotification.show("Estado actualizado", TailwindNotification.Type.SUCCESS);
+                } catch (Exception e) {
+                    toggle.setValue(event.getOldValue());
+                    TailwindNotification.show("Error al actualizar", TailwindNotification.Type.ERROR);
+                }
+            });
+            return toggle;
+        })).setHeader("Activo").setAutoWidth(true);
+
+        varGrid.addComponentColumn(v -> {
+            Button editBtn = new Button(VaadinIcon.EDIT.create());
+            editBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+            editBtn.addClassNames("text-primary", "hover:text-blue-700", "mr-2");
+            
+            editBtn.addClickListener(e -> {
+                 TailwindModal editModal = new TailwindModal("Editar Variante");
+                 
+                 ComboBox<InvProducto> productField = new ComboBox<>("Producto");
+                 productField.setItems(service.findAll());
+                 productField.setItemLabelGenerator(InvProducto::getNombre);
+                 productField.setValue(v.getProducto());
+                 productField.addClassName("w-full");
+
+                 TextField nameField = new TextField("Nombre Variante");
+                 nameField.addClassName("w-full");
+                 nameField.setValue(v.getNombreVariante() != null ? v.getNombreVariante() : "");
+                 
+                 TextField barcodeField = new TextField("Código Barras");
+                 barcodeField.addClassName("w-full");
+                 if (v.getCodigoBarras() != null) barcodeField.setValue(v.getCodigoBarras());
+
+                 TextField internalCodeField = new TextField("Código Interno");
+                 internalCodeField.addClassName("w-full");
+                 if (v.getCodigoInternoVariante() != null) internalCodeField.setValue(v.getCodigoInternoVariante());
+                 
+                 FormLayout layout = new FormLayout(productField, nameField, barcodeField, internalCodeField);
+                 layout.addClassName("w-full");
+                 editModal.addContent(layout);
+                 
+                 Button saveEditBtn = new Button("Guardar", event -> {
+                     if (productField.getValue() == null) {
+                         TailwindNotification.show("El producto es obligatorio", TailwindNotification.Type.ERROR);
+                         return;
+                     }
+                     v.setProducto(productField.getValue());
+                     v.setNombreVariante(nameField.getValue());
+                     v.setCodigoBarras(barcodeField.getValue());
+                     v.setCodigoInternoVariante(internalCodeField.getValue());
+                     try {
+                         service.saveVariante(v);
+                         varGrid.setItems(service.findAllVariantes());
+                         TailwindNotification.show("Variante actualizada", TailwindNotification.Type.SUCCESS);
+                         editModal.close();
+                     } catch (Exception ex) {
+                         TailwindNotification.show("Error al guardar", TailwindNotification.Type.ERROR);
+                     }
+                 });
+                 saveEditBtn.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
+                 
+                 Button cancelEditBtn = new Button("Cancelar", event -> editModal.close());
+                 cancelEditBtn.addClassNames("bg-[var(--color-bg-secondary)]", "text-[var(--color-text-main)]", "font-medium", "py-2", "px-4", "rounded-lg");
+                 
+                 editModal.addFooterButton(cancelEditBtn);
+                 editModal.addFooterButton(saveEditBtn);
+                 add(editModal);
+                 editModal.open();
+            });
+
+            Button deleteBtn = new Button(VaadinIcon.TRASH.create());
+            deleteBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
+            deleteBtn.addClassNames("text-red-500", "hover:text-red-700");
+            
+            deleteBtn.addClickListener(event -> {
+                try {
+                    service.deleteVariante(v);
+                    varGrid.setItems(service.findAllVariantes());
+                    TailwindNotification.show("Variante eliminada", TailwindNotification.Type.SUCCESS);
+                } catch (DataIntegrityViolationException e) {
+                     TailwindNotification.show("No se puede eliminar: La variante está en uso", TailwindNotification.Type.ERROR);
+                } catch (Exception e) {
+                     TailwindNotification.show("Error al eliminar variante", TailwindNotification.Type.ERROR);
+                }
+            });
+            return new HorizontalLayout(editBtn, deleteBtn);
+        }).setHeader("Acciones").setAutoWidth(true);
+
+        varGrid.setItems(service.findAllVariantes());
+
+        com.vaadin.flow.component.html.Div gridContainer = new com.vaadin.flow.component.html.Div(varGrid);
+        gridContainer.addClassNames("w-full", "h-96", "overflow-hidden", "flex", "flex-col");
+        varGrid.setHeightFull();
+
+         // Add Button
+        Button addBtn = new Button("Nueva Variante", VaadinIcon.PLUS.create());
+        addBtn.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow", "mb-4", "w-fit");
+        addBtn.addClickListener(e -> {
+             TailwindModal addModal = new TailwindModal("Nueva Variante");
+             
+             ComboBox<InvProducto> productField = new ComboBox<>("Producto");
+             productField.setItems(service.findAll());
+             productField.setItemLabelGenerator(InvProducto::getNombre);
+             productField.addClassName("w-full");
+
+             TextField nameField = new TextField("Nombre Variante");
+             nameField.addClassName("w-full");
+             
+             TextField barcodeField = new TextField("Código Barras");
+             barcodeField.addClassName("w-full");
+             
+             TextField internalCodeField = new TextField("Código Interno");
+             internalCodeField.addClassName("w-full");
+             
+             FormLayout layout = new FormLayout(productField, nameField, barcodeField, internalCodeField);
+             layout.addClassName("w-full");
+             addModal.addContent(layout);
+             
+             Button saveAddBtn = new Button("Guardar", event -> {
+                 if (productField.getValue() == null) {
+                     TailwindNotification.show("El producto es obligatorio", TailwindNotification.Type.ERROR);
+                     return;
+                 }
+                 InvProductoVariante newVar = new InvProductoVariante();
+                 newVar.setProducto(productField.getValue());
+                 newVar.setNombreVariante(nameField.getValue());
+                 newVar.setCodigoBarras(barcodeField.getValue());
+                 newVar.setCodigoInternoVariante(internalCodeField.getValue());
+                 newVar.setActivo(true);
+                 
+                 try {
+                     service.saveVariante(newVar);
+                     varGrid.setItems(service.findAllVariantes());
+                     TailwindNotification.show("Variante creada", TailwindNotification.Type.SUCCESS);
                      addModal.close();
                  } catch (Exception ex) {
                      TailwindNotification.show("Error al guardar", TailwindNotification.Type.ERROR);

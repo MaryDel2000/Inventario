@@ -34,7 +34,7 @@ public class SimpleI18NProvider implements I18NProvider {
         try {
             value = bundle.getString(key);
         } catch (MissingResourceException e) {
-            return "!" + key + "!";
+            return "###" + key + "###";
         }
 
         if (params.length > 0) {

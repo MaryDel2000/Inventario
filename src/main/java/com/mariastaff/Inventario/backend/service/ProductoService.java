@@ -9,9 +9,11 @@ import org.springframework.stereotype.Service;
 public class ProductoService {
 
     private final InvProductoRepository repository;
+    private final com.mariastaff.Inventario.backend.data.repository.InvProductoVarianteRepository varianteRepository;
 
-    public ProductoService(InvProductoRepository repository) {
+    public ProductoService(InvProductoRepository repository, com.mariastaff.Inventario.backend.data.repository.InvProductoVarianteRepository varianteRepository) {
         this.repository = repository;
+        this.varianteRepository = varianteRepository;
     }
 
     public List<InvProducto> findAll() {
@@ -24,4 +26,17 @@ public class ProductoService {
     
     public void deleteProducto(InvProducto entity) { repository.delete(entity); }
     public long countProductos() { return repository.count(); }
+
+    // Variantes
+    public List<com.mariastaff.Inventario.backend.data.entity.InvProductoVariante> findAllVariantes() {
+        return varianteRepository.findAll();
+    }
+
+    public com.mariastaff.Inventario.backend.data.entity.InvProductoVariante saveVariante(com.mariastaff.Inventario.backend.data.entity.InvProductoVariante variante) {
+        return varianteRepository.save(variante);
+    }
+
+    public void deleteVariante(com.mariastaff.Inventario.backend.data.entity.InvProductoVariante variante) {
+        varianteRepository.delete(variante);
+    }
 }

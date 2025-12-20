@@ -23,7 +23,7 @@
     - `CategoriesView` independiente **ELIMINADA**. Gestión integrada en `ProductsView`.
     - `UOMView` independiente **ELIMINADA**. Gestión integrada en `ProductsView`.
     - `ProductsView`: 
-      - Formulario permite crear categorías dinámicamente ("AllowCustomValue").
+      - Formularios permiten crear categorías y unidades dinámicamente ("AllowCustomValue").
       - Botón "Ver Categorías" abre diálogo de gestión (listar, crear, editar, toggle activo, eliminar).
       - Botón "Ver Unidades" abre diálogo de gestión de Unidades de Medida (listar, crear, editar, toggle activo, eliminar).
       - Selectores filtran solo ítems activos.
