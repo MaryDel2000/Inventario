@@ -102,21 +102,21 @@ public class AppHeader extends HorizontalLayout {
         Span emailText = new Span("mail@mail.mail");
         emailText.addClassNames("text-sm", "text-text-secondary", "mb-4");
         
-        // Buttons: Increased height to h-16 (64px) for solid touch target
-        // Profile Button: Primary color background, explicit WHITE text
-        Button profileBtn = new Button("Perfil", VaadinIcon.USER.create());
-        profileBtn.addClassNames("w-full", "h-16", 
+        // Buttons: Increased height to h-20 (80px) for larger touch target
+        // Profile Button: Primary color background, explicit WHITE text, Centered content, NO ICON
+        Button profileBtn = new Button("Perfil");
+        profileBtn.addClassNames("w-full", "h-20", 
             "bg-primary", 
             "rounded-lg", "hover:opacity-90", "transition-opacity",
-            "font-medium", "flex", "items-center", "justify-start", "px-6", "gap-4", "text-base");
+            "font-medium", "flex", "items-center", "justify-center", "gap-4", "text-base");
         profileBtn.getStyle().set("color", "white"); // Force white text
         
-        // Logout Button: Same style as Profile Button
-        Button logoutBtn = new Button("Cerrar Sesión", VaadinIcon.EXIT.create());
-        logoutBtn.addClassNames("w-full", "h-16", 
+        // Logout Button: Same style as Profile Button, NO ICON
+        Button logoutBtn = new Button("Cerrar Sesión");
+        logoutBtn.addClassNames("w-full", "h-20", 
             "bg-primary", 
             "rounded-lg", "hover:opacity-90", "transition-opacity",
-            "font-medium", "flex", "items-center", "justify-start", "px-6", "gap-4", "text-base");
+            "font-medium", "flex", "items-center", "justify-center", "gap-4", "text-base");
         logoutBtn.getStyle().set("color", "white"); // Force white text
         
         logoutBtn.addClickListener(e -> UI.getCurrent().getPage().setLocation("/logout"));
