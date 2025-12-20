@@ -4,4 +4,5 @@ import com.mariastaff.Inventario.backend.data.entity.InvCategoria;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface InvCategoriaRepository extends JpaRepository<InvCategoria, Long> {
+    java.util.List<InvCategoria> findByActivoTrue();
 }

@@ -35,6 +35,7 @@ public class CatalogoService {
     }
 
     public List<InvCategoria> findAllCategorias() { return categoriaRepository.findAll(); }
+    public List<InvCategoria> findCategoriasActivas() { return categoriaRepository.findByActivoTrue(); }
     public InvCategoria saveCategoria(InvCategoria entity) { return categoriaRepository.save(entity); }
     public void deleteCategoria(InvCategoria entity) { categoriaRepository.delete(entity); }
 

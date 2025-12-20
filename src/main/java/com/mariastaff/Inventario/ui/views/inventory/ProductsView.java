@@ -26,6 +26,9 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
+import com.vaadin.flow.component.button.ButtonVariant;
+import org.springframework.dao.DataIntegrityViolationException;
 import jakarta.annotation.security.PermitAll;
 
 @PageTitle("Productos | Inventario")
@@ -46,11 +49,20 @@ public class ProductsView extends VerticalLayout {
         
         configureGrid();
         
+        Button catBtn = new Button("Ver Categorías", VaadinIcon.TAGS.create());
+        catBtn.addClassNames("bg-white", "text-primary", "border", "border-gray-200", "text-sm", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow-sm", "hover:shadow-md", "hover:bg-gray-50", "transition-all", "mr-2");
+        catBtn.addClickListener(e -> openCategoriesDialog());
+
         Button addBtn = new Button("Nuevo Producto", VaadinIcon.PLUS.create());
         addBtn.addClassNames("bg-primary", "text-white", "text-sm", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow", "hover:shadow-md", "transition-all"); // Tailwind styled button
         addBtn.addClickListener(e -> openProductDialog());
 
-        HorizontalLayout header = new HorizontalLayout(new AppLabel("view.products.title"), addBtn);
+        HorizontalLayout buttons = new HorizontalLayout(catBtn, addBtn);
+        // buttons.setSpacing(true); // Tailwind handles spacing via margin on catBtn, but container spacing is safer. 
+        // Actually HorizontalLayout has spacing by default usually, but let's trust the classes.
+        buttons.setAlignItems(Alignment.CENTER);
+        
+        HorizontalLayout header = new HorizontalLayout(new AppLabel("view.products.title"), buttons);
         header.addClassNames("w-full", "justify-between", "items-center");
 
         add(header, grid);
@@ -96,8 +108,29 @@ public class ProductsView extends VerticalLayout {
         descripcion.addClassName("w-full");
         
         ComboBox<InvCategoria> categoria = new ComboBox<>("Categoría");
-        categoria.setItems(catalogoService.findAllCategorias());
+        categoria.setItems(catalogoService.findCategoriasActivas());
         categoria.setItemLabelGenerator(InvCategoria::getNombre);
+        categoria.setAllowCustomValue(true);
+        categoria.addCustomValueSetListener(event -> {
+            String customValue = event.getDetail();
+            // Look for existing category (optional optimization, but good practice if user types exact existing name)
+            // Here we assume if they typed it and it wasn't selected, they intend to create it or it didn't match.
+            // Since we don't have a findByName on the service, we proceed to create.
+            
+            InvCategoria newCategory = new InvCategoria();
+            newCategory.setNombre(customValue);
+            newCategory.setActivo(true);
+            newCategory.setDescripcion("Creada desde Productos"); 
+            
+            try {
+                InvCategoria savedCategory = catalogoService.saveCategoria(newCategory);
+                categoria.setItems(catalogoService.findAllCategorias());
+                categoria.setValue(savedCategory);
+                TailwindNotification.show("Nueva categoría añadida", TailwindNotification.Type.SUCCESS);
+            } catch (Exception ex) {
+                TailwindNotification.show("Error al guardar categoría", TailwindNotification.Type.ERROR);
+            }
+        });
         categoria.addClassName("w-full");
         
         ComboBox<InvUnidadMedida> unidadMedida = new ComboBox<>("Unidad de Medida");
@@ -169,6 +202,81 @@ public class ProductsView extends VerticalLayout {
         modal.addFooterButton(cancelButton);
         modal.addFooterButton(saveButton);
         
+        add(modal);
+        modal.open();
+    }
+
+    private void openCategoriesDialog() {
+        TailwindModal modal = new TailwindModal("Listado de Categorías");
+        modal.setDialogMaxWidth("max-w-5xl"); // Wider for grid
+
+        Grid<InvCategoria> catGrid = new Grid<>(InvCategoria.class, false); // Disable auto columns
+        catGrid.addClassNames("bg-bg-surface", "rounded-lg", "shadow");
+        
+        catGrid.addColumn(InvCategoria::getNombre).setHeader("Nombre").setAutoWidth(true);
+        catGrid.addColumn(InvCategoria::getDescripcion).setHeader("Descripción").setAutoWidth(true);
+        
+        // Editable Active Toggle Column
+        catGrid.addColumn(new ComponentRenderer<>(category -> {
+            TailwindToggle toggle = new TailwindToggle("");
+            toggle.getStyle().set("margin-top", "0");
+            // Assuming TailwindToggle has setValue/getValue or similar if it extends Checkbox or CustomField
+            // If it's a custom component wrapper, we might need to access inner.
+            // Based on previous code: toggle.setValue(true); implies it works like Field.
+            toggle.setValue(Boolean.TRUE.equals(category.getActivo()));
+            
+            toggle.addValueChangeListener(event -> {
+                category.setActivo(event.getValue());
+                try {
+                    catalogoService.saveCategoria(category);
+                    TailwindNotification.show("Estado actualizado", TailwindNotification.Type.SUCCESS);
+                } catch (Exception e) {
+                    toggle.setValue(event.getOldValue()); // Revert on error
+                    TailwindNotification.show("Error al actualizar", TailwindNotification.Type.ERROR);
+                }
+            });
+            return toggle;
+        })).setHeader("Activo").setAutoWidth(true);
+
+        // Delete Column
+        catGrid.addComponentColumn(category -> {
+            Button deleteBtn = new Button(VaadinIcon.TRASH.create());
+            deleteBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
+            deleteBtn.addClassNames("text-red-500", "hover:text-red-700");
+            
+            deleteBtn.addClickListener(event -> {
+                try {
+                    catalogoService.deleteCategoria(category);
+                    catGrid.setItems(catalogoService.findAllCategorias()); // Refresh grid
+                    TailwindNotification.show("Categoría eliminada", TailwindNotification.Type.SUCCESS);
+                    
+                    // Also refresh the main combo box if it exists in the parent scope (conceptually)
+                    // But we are in a dialog method. 
+                    // Ideally we should refresh the ComboBox in the main form too if we delete something.
+                    // Doing a full page refresh or component refresh might be needed.
+                    // For now, let's just refresh the grid.
+                    
+                } catch (DataIntegrityViolationException e) {
+                     TailwindNotification.show("No se puede eliminar: La categoría está en uso", TailwindNotification.Type.ERROR);
+                } catch (Exception e) {
+                     TailwindNotification.show("Error al eliminar categoría", TailwindNotification.Type.ERROR);
+                }
+            });
+            return deleteBtn;
+        }).setHeader("Acciones").setAutoWidth(true);
+
+        catGrid.setItems(catalogoService.findAllCategorias());
+
+        com.vaadin.flow.component.html.Div gridContainer = new com.vaadin.flow.component.html.Div(catGrid);
+        gridContainer.addClassNames("w-full", "h-96", "overflow-hidden", "flex", "flex-col");
+        catGrid.setHeightFull();
+
+        modal.addContent(gridContainer);
+
+        Button closeBtn = new Button("Cerrar", e -> modal.close());
+        closeBtn.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
+        modal.addFooterButton(closeBtn);
+
         add(modal);
         modal.open();
     }

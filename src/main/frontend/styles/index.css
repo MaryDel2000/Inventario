@@ -179,3 +179,30 @@ vaadin-button {
 * {
     font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
 }
+
+/* Fix for ComboBox (Select) Overlay Transparency and Text Contrast */
+vaadin-combo-box-overlay::part(overlay) {
+    background-color: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    /* shadow-lg */
+}
+
+/* Ensure items inside the combo box list share the correct theme colors */
+vaadin-combo-box-item {
+    background-color: var(--color-bg-surface);
+    color: var(--color-text-main);
+}
+
+/* Hover state for items */
+vaadin-combo-box-item::part(content):hover {
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text-main);
+}
+
+/* Selected state for items */
+vaadin-combo-box-item[selected] {
+    background-color: var(--color-bg-secondary);
+    color: var(--color-primary);
+    font-weight: 600;
+}

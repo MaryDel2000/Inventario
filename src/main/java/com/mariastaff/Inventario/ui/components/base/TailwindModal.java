@@ -11,6 +11,7 @@ public class TailwindModal extends Div {
 
     private final VerticalLayout bodyLayout;
     private final HorizontalLayout footerLayout;
+    private final Div modalContent;
 
     public TailwindModal(String title) {
         addClassNames("fixed", "inset-0", "z-50", "overflow-y-auto");
@@ -22,15 +23,13 @@ public class TailwindModal extends Div {
         
         // Modal Panel Container (Centering)
         Div panelContainer = new Div();
-        panelContainer.addClassNames("flex", "min-h-full", "items-center", "justify-center", "p-4", "text-center");
+        // Added w-full to ensure justify-center works relative to full width
+        // Also ensure pointer-events-none is handled if needed, but for now strict centering
+        panelContainer.addClassNames("flex", "min-h-full", "w-full", "items-center", "justify-center", "p-4", "text-center");
 
         // Modal Content Card
         // Increased max-width to max-w-2xl
-        // Modal Content Card
-        // Increased max-width to max-w-2xl
-        // Modal Content Card
-        // Increased max-width to max-w-2xl
-        Div modalContent = new Div();
+        modalContent = new Div();
         modalContent.addClassNames("relative", "transform", "rounded-xl", "text-left", "shadow-2xl", "transition-all", "w-full", "max-w-2xl", "border", "overflow-hidden");
         modalContent.getStyle().set("background-color", "var(--color-bg-surface)");
         modalContent.getStyle().set("color", "var(--color-text-main)");
@@ -84,5 +83,10 @@ public class TailwindModal extends Div {
 
     public void close() {
         getElement().removeFromParent();
+    }
+
+    public void setDialogMaxWidth(String maxWidthClass) {
+        modalContent.removeClassName("max-w-2xl");
+        modalContent.addClassName(maxWidthClass);
     }
 }
