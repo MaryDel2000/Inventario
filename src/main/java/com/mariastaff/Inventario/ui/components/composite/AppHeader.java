@@ -67,40 +67,49 @@ public class AppHeader extends HorizontalLayout {
         });
         
 
-        Avatar avatar = new Avatar("Maria Staff");
-        avatar.setImage("https://i.pravatar.cc/150?img=32");
-        avatar.addClassNames("border-2", "border-border", "cursor-pointer", "hover:scale-105", "transition-transform");
+        Button profileTriggerBtn = new Button(VaadinIcon.USER.create());
+        profileTriggerBtn.addClassNames("rounded-full", "min-w-[40px]", "w-10", "h-10", "p-0", 
+            "bg-gray-100", "dark:bg-gray-800", "text-gray-600", "dark:text-gray-300",
+            "border", "border-border", "flex", "items-center", "justify-center",
+            "hover:ring-2", "hover:ring-gray-300", "transition-all");
 
-        ContextMenu userMenu = new ContextMenu(avatar);
+        ContextMenu userMenu = new ContextMenu(profileTriggerBtn);
         userMenu.setOpenOnClick(true);
         
         Div menuContent = new Div();
-
-        menuContent.addClassNames("flex", "flex-col", "items-center", "p-4", "gap-3", "min-w-[220px]", 
+        menuContent.addClassNames("flex", "flex-col", "items-center", "p-5", "gap-4", "min-w-[240px]", 
             "bg-bg-surface", 
             "text-text-main", 
-            "rounded-lg", "shadow-xl", "border", "border-border");
+            "rounded-xl", "shadow-xl", "border", "border-border");
         
-        Span emailText = new Span("mail@mail.mail");
-        emailText.addClassNames("text-sm", "font-medium", "text-[#607d8b]", "mb-1");
-        
-        Avatar profileAvatar = new Avatar("Maria Staff");
-        profileAvatar.setImage("https://i.pravatar.cc/150?img=32");
-        profileAvatar.setWidth("5rem");
-        profileAvatar.setHeight("5rem");
-        profileAvatar.addClassNames("border-4", "border-white", "dark:border-gray-600", "shadow-sm", "mb-2");
+        // Profile header in menu
+        Div profileIconContainer = new Div(VaadinIcon.USER.create());
+        profileIconContainer.addClassNames("w-16", "h-16", "rounded-full", 
+            "bg-gray-100", "dark:bg-gray-700", 
+            "text-gray-500", "dark:text-gray-400", 
+            "flex", "items-center", "justify-center", "text-3xl", "mb-1");
 
-        Button profileBtn = new Button("Perfil");
-        profileBtn.addClassNames("w-full", "bg-black", "text-white", "rounded-md", "hover:bg-gray-800", "font-medium");
+        Span userName = new Span("Maria Staff");
+        userName.addClassNames("font-bold", "text-lg", "leading-none");
+
+        Span emailText = new Span("mail@mail.mail");
+        emailText.addClassNames("text-sm", "text-gray-500", "dark:text-gray-400", "mb-2");
+        
+        Button profileBtn = new Button("Perfil", VaadinIcon.USER.create());
+        profileBtn.addClassNames("w-full", "h-11", "bg-black", "dark:bg-gray-700", "text-white", 
+            "rounded-lg", "hover:bg-gray-800", "dark:hover:bg-gray-600", 
+            "font-medium", "flex", "items-center", "justify-start", "px-4", "gap-3", "text-base"); // Taller and spaced
         
         Button logoutBtn = new Button("Cerrar Sesión", VaadinIcon.EXIT.create());
-        logoutBtn.addClassNames("w-full", "bg-black", "text-white", "rounded-md", "hover:bg-gray-800", "font-medium");
+        logoutBtn.addClassNames("w-full", "h-11", "bg-black", "dark:bg-gray-700", "text-white", 
+            "rounded-lg", "hover:bg-gray-800", "dark:hover:bg-gray-600", 
+            "font-medium", "flex", "items-center", "justify-start", "px-4", "gap-3", "text-base");
         logoutBtn.addClickListener(e -> UI.getCurrent().getPage().setLocation("/logout"));
 
-        menuContent.add(emailText, profileAvatar, profileBtn, logoutBtn);
+        menuContent.add(profileIconContainer, userName, emailText, profileBtn, logoutBtn);
         userMenu.add(menuContent);
 
-        rightSection.add(themeToggle, avatar);
+        rightSection.add(themeToggle, profileTriggerBtn);
 
         // Center side: Navigation
         HorizontalLayout centerSection = new HorizontalLayout();
