@@ -67,43 +67,58 @@ public class AppHeader extends HorizontalLayout {
         });
         
 
+        // Profile Trigger Button matching other header action buttons style
         Button profileTriggerBtn = new Button(VaadinIcon.USER.create());
         profileTriggerBtn.addClassNames("rounded-full", "min-w-[40px]", "w-10", "h-10", "p-0", 
-            "bg-gray-100", "dark:bg-gray-800", "text-gray-600", "dark:text-gray-300",
-            "border", "border-border", "flex", "items-center", "justify-center",
-            "hover:ring-2", "hover:ring-gray-300", "transition-all");
+            "bg-transparent", 
+            "text-text-secondary", // Semantic text color
+            "border", "border-transparent",
+            "flex", "items-center", "justify-center",
+            "hover:bg-bg-secondary", "hover:text-primary", "transition-colors", "cursor-pointer");
 
         ContextMenu userMenu = new ContextMenu(profileTriggerBtn);
         userMenu.setOpenOnClick(true);
         
         Div menuContent = new Div();
-        menuContent.addClassNames("flex", "flex-col", "items-center", "p-5", "gap-4", "min-w-[240px]", 
+        // Force solid background (bg-surface) to ensure consistency with theme
+        // Increased padding and gap
+        menuContent.addClassNames("flex", "flex-col", "items-center", "p-6", "pt-8", "gap-4", "min-w-[280px]", 
             "bg-bg-surface", 
-            "text-text-main", 
+            "text-text-main",
             "rounded-xl", "shadow-xl", "border", "border-border");
         
         // Profile header in menu
+        // Icon color matched to app theme
         Div profileIconContainer = new Div(VaadinIcon.USER.create());
-        profileIconContainer.addClassNames("w-16", "h-16", "rounded-full", 
-            "bg-gray-100", "dark:bg-gray-700", 
-            "text-gray-500", "dark:text-gray-400", 
-            "flex", "items-center", "justify-center", "text-3xl", "mb-1");
+        profileIconContainer.addClassNames("w-20", "h-20", "rounded-full", 
+            "bg-bg-secondary", 
+            "text-text-secondary", 
+            "flex", "items-center", "justify-center", "text-4xl", "mb-2",
+            "border", "border-border");
 
         Span userName = new Span("Maria Staff");
-        userName.addClassNames("font-bold", "text-lg", "leading-none");
+        userName.addClassNames("font-bold", "text-xl", "leading-none", "text-text-main");
 
         Span emailText = new Span("mail@mail.mail");
-        emailText.addClassNames("text-sm", "text-gray-500", "dark:text-gray-400", "mb-2");
+        emailText.addClassNames("text-sm", "text-text-secondary", "mb-4");
         
+        // Buttons: Increased height to h-16 (64px) for solid touch target
+        // Profile Button: Primary color background, explicit WHITE text
         Button profileBtn = new Button("Perfil", VaadinIcon.USER.create());
-        profileBtn.addClassNames("w-full", "h-11", "bg-black", "dark:bg-gray-700", "text-white", 
-            "rounded-lg", "hover:bg-gray-800", "dark:hover:bg-gray-600", 
-            "font-medium", "flex", "items-center", "justify-start", "px-4", "gap-3", "text-base"); // Taller and spaced
+        profileBtn.addClassNames("w-full", "h-16", 
+            "bg-primary", 
+            "rounded-lg", "hover:opacity-90", "transition-opacity",
+            "font-medium", "flex", "items-center", "justify-start", "px-6", "gap-4", "text-base");
+        profileBtn.getStyle().set("color", "white"); // Force white text
         
+        // Logout Button: Same style as Profile Button
         Button logoutBtn = new Button("Cerrar Sesión", VaadinIcon.EXIT.create());
-        logoutBtn.addClassNames("w-full", "h-11", "bg-black", "dark:bg-gray-700", "text-white", 
-            "rounded-lg", "hover:bg-gray-800", "dark:hover:bg-gray-600", 
-            "font-medium", "flex", "items-center", "justify-start", "px-4", "gap-3", "text-base");
+        logoutBtn.addClassNames("w-full", "h-16", 
+            "bg-primary", 
+            "rounded-lg", "hover:opacity-90", "transition-opacity",
+            "font-medium", "flex", "items-center", "justify-start", "px-6", "gap-4", "text-base");
+        logoutBtn.getStyle().set("color", "white"); // Force white text
+        
         logoutBtn.addClickListener(e -> UI.getCurrent().getPage().setLocation("/logout"));
 
         menuContent.add(profileIconContainer, userName, emailText, profileBtn, logoutBtn);
