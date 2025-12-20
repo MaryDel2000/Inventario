@@ -166,7 +166,7 @@ public class MainLayout extends AppLayout {
         inventoryItem.addSubItem(new SidebarNavItem("nav.inventory.dashboard", new VaadinAppIcon(VaadinIcon.DASHBOARD), InventoryDashboardView.class));
         inventoryItem.addSubItem(new SidebarNavItem("nav.inventory.products", new VaadinAppIcon(VaadinIcon.PACKAGE), ProductsView.class));
 
-        inventoryItem.addSubItem(new SidebarNavItem("nav.inventory.uom", new VaadinAppIcon(VaadinIcon.SLIDERS), UOMView.class));
+
         inventoryItem.addSubItem(new SidebarNavItem("nav.inventory.movements", new VaadinAppIcon(VaadinIcon.EXCHANGE), MovementsView.class));
         inventoryItem.addSubItem(new SidebarNavItem("nav.inventory.warehouses", new VaadinAppIcon(VaadinIcon.BUILDING), WarehousesView.class));
         inventoryItem.addSubItem(new SidebarNavItem("nav.inventory.locations", new VaadinAppIcon(VaadinIcon.MAP_MARKER), LocationsView.class));
@@ -275,7 +275,6 @@ public class MainLayout extends AppLayout {
 
     private boolean isInventoryView(Class<?> view) {
         return view.equals(InventoryDashboardView.class) || view.equals(ProductsView.class) || 
-               view.equals(UOMView.class) || 
                view.equals(MovementsView.class) || view.equals(WarehousesView.class) || 
                view.equals(LocationsView.class) || view.equals(BatchesView.class);
     }
@@ -284,7 +283,6 @@ public class MainLayout extends AppLayout {
         header.addNavigationItem(new HeaderNavItem("nav.inventory.dashboard", new VaadinAppIcon(VaadinIcon.DASHBOARD), InventoryDashboardView.class));
         header.addNavigationItem(new HeaderNavItem("nav.inventory.products", new VaadinAppIcon(VaadinIcon.PACKAGE), ProductsView.class));
 
-        header.addNavigationItem(new HeaderNavItem("nav.inventory.uom", new VaadinAppIcon(VaadinIcon.SLIDERS), UOMView.class));
         header.addNavigationItem(new HeaderNavItem("nav.inventory.movements", new VaadinAppIcon(VaadinIcon.EXCHANGE), MovementsView.class));
         header.addNavigationItem(new HeaderNavItem("nav.inventory.warehouses", new VaadinAppIcon(VaadinIcon.BUILDING), WarehousesView.class));
         header.addNavigationItem(new HeaderNavItem("nav.inventory.locations", new VaadinAppIcon(VaadinIcon.MAP_MARKER), LocationsView.class));
@@ -367,7 +365,7 @@ public class MainLayout extends AppLayout {
         if (view.equals(InventoryDashboardView.class)) return new ViewInfo("nav.inventory.dashboard", new VaadinAppIcon(VaadinIcon.DASHBOARD));
         if (view.equals(ProductsView.class)) return new ViewInfo("nav.inventory.products", new VaadinAppIcon(VaadinIcon.PACKAGE));
 
-        if (view.equals(UOMView.class)) return new ViewInfo("nav.inventory.uom", new VaadinAppIcon(VaadinIcon.SLIDERS));
+
         if (view.equals(MovementsView.class)) return new ViewInfo("nav.inventory.movements", new VaadinAppIcon(VaadinIcon.EXCHANGE));
         if (view.equals(WarehousesView.class)) return new ViewInfo("nav.inventory.warehouses", new VaadinAppIcon(VaadinIcon.BUILDING));
         if (view.equals(LocationsView.class)) return new ViewInfo("nav.inventory.locations", new VaadinAppIcon(VaadinIcon.MAP_MARKER));
