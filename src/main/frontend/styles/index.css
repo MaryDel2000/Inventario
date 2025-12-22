@@ -206,3 +206,61 @@ vaadin-combo-box-item[selected] {
     color: var(--color-primary);
     font-weight: 600;
 }
+
+/* Fix for DatePicker Overlay Transparency and Text Contrast */
+vaadin-date-picker-overlay::part(overlay) {
+    background-color: var(--color-bg-surface);
+    border: 1px solid var(--color-border);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    /* shadow-lg */
+}
+
+/* Ensure the calendar inside uses correct colors */
+vaadin-date-picker-overlay {
+    --lumo-base-color: var(--color-bg-surface);
+    --lumo-body-text-color: var(--color-text-main);
+    --lumo-primary-color: var(--color-primary);
+    --lumo-primary-text-color: var(--color-primary);
+
+    /* Ensure month calendar background is solid */
+    background-color: var(--color-bg-surface);
+    color: var(--color-text-main);
+}
+
+vaadin-month-calendar {
+    background-color: var(--color-bg-surface);
+    color: var(--color-text-main);
+}
+
+/* Ensure scrollers have solid backgrounds to prevent messy overlaps */
+vaadin-date-picker-month-scroller,
+vaadin-date-picker-year-scroller {
+    background-color: var(--color-bg-surface) !important;
+    opacity: 1 !important;
+    z-index: 10;
+    /* Ensure on top if slight overlap */
+}
+
+/* Fix overlay content width issue */
+vaadin-date-picker-overlay-content {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Year scroller specific styling for better visibility */
+vaadin-date-picker-year-scroller {
+    color: var(--color-text-secondary) !important;
+    border-left: 1px solid var(--color-border) !important;
+}
+
+/* Individual year items */
+vaadin-date-picker-year {
+    color: var(--color-text-secondary) !important;
+    background-color: var(--color-bg-surface) !important;
+}
+
+/* Current year highlight */
+vaadin-date-picker-year[current] {
+    color: var(--color-primary) !important;
+    font-weight: bold;
+}

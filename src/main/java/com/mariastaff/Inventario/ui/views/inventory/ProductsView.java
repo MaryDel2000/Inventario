@@ -18,7 +18,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.datepicker.DatePicker;
+import com.mariastaff.Inventario.ui.components.base.TailwindDatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.textfield.TextArea;
@@ -175,7 +175,7 @@ public class ProductsView extends VerticalLayout {
         TextField lote = new TextField("Lote (Inicial)");
         lote.addClassName("w-full");
 
-        DatePicker fechaCaducidad = new DatePicker("Fecha Caducidad Lote");
+        TailwindDatePicker fechaCaducidad = new TailwindDatePicker("Fecha Caducidad Lote");
         fechaCaducidad.addClassName("w-full");
 
         TextArea observacionesLote = new TextArea("Observaciones Lote");
