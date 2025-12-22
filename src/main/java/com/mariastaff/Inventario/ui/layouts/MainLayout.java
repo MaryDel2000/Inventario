@@ -170,7 +170,7 @@ public class MainLayout extends AppLayout {
         inventoryItem.addSubItem(new SidebarNavItem("nav.inventory.movements", new VaadinAppIcon(VaadinIcon.EXCHANGE), MovementsView.class));
         inventoryItem.addSubItem(new SidebarNavItem("nav.inventory.warehouses", new VaadinAppIcon(VaadinIcon.BUILDING), WarehousesView.class));
         inventoryItem.addSubItem(new SidebarNavItem("nav.inventory.locations", new VaadinAppIcon(VaadinIcon.MAP_MARKER), LocationsView.class));
-        inventoryItem.addSubItem(new SidebarNavItem("nav.inventory.batches", new VaadinAppIcon(VaadinIcon.BARCODE), BatchesView.class));
+
         sidebar.addExpandableItem(inventoryItem);
         
         // Purchases module
@@ -276,7 +276,7 @@ public class MainLayout extends AppLayout {
     private boolean isInventoryView(Class<?> view) {
         return view.equals(InventoryDashboardView.class) || view.equals(ProductsView.class) || 
                view.equals(MovementsView.class) || view.equals(WarehousesView.class) || 
-               view.equals(LocationsView.class) || view.equals(BatchesView.class);
+               view.equals(LocationsView.class);
     }
 
     private void addInventoryHeaderItems() {
@@ -286,7 +286,7 @@ public class MainLayout extends AppLayout {
         header.addNavigationItem(new HeaderNavItem("nav.inventory.movements", new VaadinAppIcon(VaadinIcon.EXCHANGE), MovementsView.class));
         header.addNavigationItem(new HeaderNavItem("nav.inventory.warehouses", new VaadinAppIcon(VaadinIcon.BUILDING), WarehousesView.class));
         header.addNavigationItem(new HeaderNavItem("nav.inventory.locations", new VaadinAppIcon(VaadinIcon.MAP_MARKER), LocationsView.class));
-        header.addNavigationItem(new HeaderNavItem("nav.inventory.batches", new VaadinAppIcon(VaadinIcon.BARCODE), BatchesView.class));
+
     }
 
     private boolean isPurchaseView(Class<?> view) {
@@ -369,7 +369,7 @@ public class MainLayout extends AppLayout {
         if (view.equals(MovementsView.class)) return new ViewInfo("nav.inventory.movements", new VaadinAppIcon(VaadinIcon.EXCHANGE));
         if (view.equals(WarehousesView.class)) return new ViewInfo("nav.inventory.warehouses", new VaadinAppIcon(VaadinIcon.BUILDING));
         if (view.equals(LocationsView.class)) return new ViewInfo("nav.inventory.locations", new VaadinAppIcon(VaadinIcon.MAP_MARKER));
-        if (view.equals(BatchesView.class)) return new ViewInfo("nav.inventory.batches", new VaadinAppIcon(VaadinIcon.BARCODE));
+
         
         // Purchases
         if (view.equals(NewPurchaseView.class)) return new ViewInfo("nav.purchases.new", new VaadinAppIcon(VaadinIcon.PLUS_CIRCLE));

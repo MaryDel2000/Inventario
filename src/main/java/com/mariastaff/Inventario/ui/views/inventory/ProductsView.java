@@ -5,6 +5,7 @@ import com.mariastaff.Inventario.backend.data.entity.InvCategoria;
 import com.mariastaff.Inventario.backend.data.entity.InvUnidadMedida;
 import com.mariastaff.Inventario.backend.data.entity.InvProductoVariante;
 import com.mariastaff.Inventario.backend.data.entity.InvUbicacion;
+import com.mariastaff.Inventario.backend.data.entity.InvLote;
 import com.mariastaff.Inventario.backend.service.ProductoService;
 import com.mariastaff.Inventario.backend.service.CatalogoService;
 import com.mariastaff.Inventario.backend.service.AlmacenService;
@@ -62,11 +63,15 @@ public class ProductsView extends VerticalLayout {
         varBtn.addClassNames("bg-white", "text-primary", "border", "border-gray-200", "text-sm", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow-sm", "hover:shadow-md", "hover:bg-gray-50", "transition-all", "mr-2");
         varBtn.addClickListener(e -> openVariantsDialog());
 
+        Button lotesBtn = new Button("Ver Lotes", VaadinIcon.BARCODE.create());
+        lotesBtn.addClassNames("bg-white", "text-primary", "border", "border-gray-200", "text-sm", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow-sm", "hover:shadow-md", "hover:bg-gray-50", "transition-all", "mr-2");
+        lotesBtn.addClickListener(e -> openBatchesDialog());
+
         Button addBtn = new Button("Nuevo Producto", VaadinIcon.PLUS.create());
         addBtn.addClassNames("bg-primary", "text-white", "text-sm", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow", "hover:shadow-md", "transition-all"); // Tailwind styled button
         addBtn.addClickListener(e -> openProductDialog());
 
-        HorizontalLayout buttons = new HorizontalLayout(catBtn, uomBtn, varBtn, addBtn);
+        HorizontalLayout buttons = new HorizontalLayout(catBtn, uomBtn, varBtn, lotesBtn, addBtn);
         // buttons.setSpacing(true); // Tailwind handles spacing via margin on catBtn, but container spacing is safer. 
         // Actually HorizontalLayout has spacing by default usually, but let's trust the classes.
         buttons.setAlignItems(Alignment.CENTER);
@@ -207,10 +212,32 @@ public class ProductsView extends VerticalLayout {
                 binder.writeBean(product);
                 
                 // Save Product
-                service.save(product);
+                InvProducto savedProduct = service.save(product);
                 
-                // NOTE: Location, Lot, Expiration and Observations are not saved here as they belong to Inventory/Stock entities,
-                // not the Product entity definition. Logic to create initial stock would be needed here.
+                // Logic to create initial Batch (Lote) if provided
+                if (lote.getValue() != null && !lote.getValue().trim().isEmpty()) {
+                    // Create a default variant to attach the batch to
+                    InvProductoVariante defaultVariant = new InvProductoVariante();
+                    defaultVariant.setProducto(savedProduct);
+                    defaultVariant.setNombreVariante(savedProduct.getNombre()); 
+                    defaultVariant.setCodigoInternoVariante(savedProduct.getCodigoInterno());
+                    defaultVariant.setActivo(true);
+                    
+                    // Save Variant
+                    InvProductoVariante savedVariant = service.saveVariante(defaultVariant);
+                    
+                    // Create Batch
+                    InvLote newLote = new InvLote();
+                    newLote.setProductoVariante(savedVariant);
+                    newLote.setCodigoLote(lote.getValue());
+                    if (fechaCaducidad.getValue() != null) {
+                        newLote.setFechaCaducidad(fechaCaducidad.getValue().atStartOfDay());
+                    }
+                    newLote.setObservaciones(observacionesLote.getValue());
+                    
+                    // Save Batch
+                    almacenService.saveLote(newLote);
+                }
                 
                 TailwindNotification.show("Producto guardado correctamente", TailwindNotification.Type.SUCCESS);
                 updateList();
@@ -737,5 +764,198 @@ public class ProductsView extends VerticalLayout {
 
         add(modal);
         modal.open();
+    }
+
+    private void openBatchesDialog() {
+        TailwindModal modal = new TailwindModal("Listado de Lotes");
+        modal.setDialogMaxWidth("max-w-6xl");
+
+        Grid<InvLote> grid = new Grid<>(InvLote.class, false);
+        grid.addClassNames("bg-bg-surface", "rounded-lg", "shadow");
+        
+        grid.addColumn(l -> l.getProductoVariante() != null && l.getProductoVariante().getProducto() != null ? 
+            l.getProductoVariante().getProducto().getNombre() + " - " + l.getProductoVariante().getNombreVariante() : "-").setHeader("Producto / Variante").setAutoWidth(true);
+        grid.addColumn(InvLote::getCodigoLote).setHeader("Cód. Lote").setAutoWidth(true);
+        grid.addColumn(l -> result(l.getFechaCaducidad())).setHeader("Caducidad").setAutoWidth(true);
+        grid.addColumn(InvLote::getObservaciones).setHeader("Observaciones").setAutoWidth(true);
+
+        grid.addComponentColumn(lote -> {
+            Button editBtn = new Button(VaadinIcon.EDIT.create());
+            editBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+            editBtn.addClassNames("text-primary", "hover:text-blue-700", "mr-2");
+            
+            editBtn.addClickListener(e -> {
+                 TailwindModal editModal = new TailwindModal("Editar Lote");
+                 
+                 ComboBox<InvProductoVariante> variantField = new ComboBox<>("Variante de Producto");
+                 variantField.setItems(service.findAllVariantes());
+                 variantField.setItemLabelGenerator(v -> v.getProducto().getNombre() + " - " + v.getNombreVariante());
+                 variantField.setValue(lote.getProductoVariante());
+                 variantField.addClassName("w-full");
+
+                 TextField codeField = new TextField("Código Lote");
+                 codeField.addClassName("w-full");
+                 codeField.setValue(lote.getCodigoLote() != null ? lote.getCodigoLote() : "");
+                 
+                 TailwindDatePicker expiryField = new TailwindDatePicker("Fecha Caducidad");
+                 expiryField.addClassName("w-full");
+                 if (lote.getFechaCaducidad() != null) {
+                     expiryField.setValue(lote.getFechaCaducidad().toLocalDate());
+                 }
+
+                 TextArea obsField = new TextArea("Observaciones");
+                 obsField.addClassName("w-full");
+                 if (lote.getObservaciones() != null) obsField.setValue(lote.getObservaciones());
+                 
+                 FormLayout layout = new FormLayout(variantField, codeField, expiryField, obsField);
+                 layout.addClassName("w-full");
+                 layout.setColspan(obsField, 2);
+                 editModal.addContent(layout);
+                 
+                 Button saveEditBtn = new Button("Guardar", event -> {
+                     if (variantField.getValue() == null) {
+                         TailwindNotification.show("La variante es obligatoria", TailwindNotification.Type.ERROR);
+                         return;
+                     }
+                     if (codeField.isEmpty()) {
+                         TailwindNotification.show("El código es obligatorio", TailwindNotification.Type.ERROR);
+                         return;
+                     }
+
+                     lote.setProductoVariante(variantField.getValue());
+                     lote.setCodigoLote(codeField.getValue());
+                     if (expiryField.getValue() != null) {
+                        lote.setFechaCaducidad(expiryField.getValue().atStartOfDay());
+                     } else {
+                        lote.setFechaCaducidad(null);
+                     }
+                     lote.setObservaciones(obsField.getValue());
+
+                     try {
+                         almacenService.saveLote(lote);
+                         grid.setItems(almacenService.findAllLotes());
+                         TailwindNotification.show("Lote actualizado", TailwindNotification.Type.SUCCESS);
+                         editModal.close();
+                     } catch (Exception ex) {
+                         TailwindNotification.show("Error al guardar", TailwindNotification.Type.ERROR);
+                     }
+                 });
+                 saveEditBtn.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
+                 
+                 Button cancelEditBtn = new Button("Cancelar", event -> editModal.close());
+                 cancelEditBtn.addClassNames("bg-[var(--color-bg-secondary)]", "text-[var(--color-text-main)]", "font-medium", "py-2", "px-4", "rounded-lg");
+                 
+                 editModal.addFooterButton(cancelEditBtn);
+                 editModal.addFooterButton(saveEditBtn);
+                 add(editModal);
+                 editModal.open();
+            });
+
+            Button deleteBtn = new Button(VaadinIcon.TRASH.create());
+            deleteBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
+            deleteBtn.addClassNames("text-red-500", "hover:text-red-700");
+            
+            deleteBtn.addClickListener(event -> {
+                try {
+                    almacenService.deleteLote(lote);
+                    grid.setItems(almacenService.findAllLotes());
+                    TailwindNotification.show("Lote eliminado", TailwindNotification.Type.SUCCESS);
+                } catch (DataIntegrityViolationException e) {
+                     TailwindNotification.show("No se puede eliminar: El lote está en uso", TailwindNotification.Type.ERROR);
+                } catch (Exception e) {
+                     TailwindNotification.show("Error al eliminar lote", TailwindNotification.Type.ERROR);
+                }
+            });
+            
+            return new HorizontalLayout(editBtn, deleteBtn);
+        }).setHeader("Acciones").setAutoWidth(true);
+
+        grid.setItems(almacenService.findAllLotes());
+
+        com.vaadin.flow.component.html.Div gridContainer = new com.vaadin.flow.component.html.Div(grid);
+        gridContainer.addClassNames("w-full", "h-96", "overflow-hidden", "flex", "flex-col");
+        grid.setHeightFull();
+
+         // Add Button
+        Button addBtn = new Button("Nuevo Lote", VaadinIcon.PLUS.create());
+        addBtn.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow", "mb-4", "w-fit");
+        addBtn.addClickListener(e -> {
+             TailwindModal addModal = new TailwindModal("Nuevo Lote");
+             
+             ComboBox<InvProductoVariante> variantField = new ComboBox<>("Variante de Producto");
+             variantField.setItems(service.findAllVariantes());
+             variantField.setItemLabelGenerator(v -> v.getProducto().getNombre() + " - " + v.getNombreVariante());
+             variantField.addClassName("w-full");
+
+             TextField codeField = new TextField("Código Lote");
+             codeField.addClassName("w-full");
+             
+             TailwindDatePicker expiryField = new TailwindDatePicker("Fecha Caducidad");
+             expiryField.addClassName("w-full");
+
+             TextArea obsField = new TextArea("Observaciones");
+             obsField.addClassName("w-full");
+             
+             FormLayout layout = new FormLayout(variantField, codeField, expiryField, obsField);
+             layout.addClassName("w-full");
+             layout.setColspan(obsField, 2);
+             addModal.addContent(layout);
+             
+             Button saveAddBtn = new Button("Guardar", event -> {
+                 if (variantField.getValue() == null) {
+                     TailwindNotification.show("La variante es obligatoria", TailwindNotification.Type.ERROR);
+                     return;
+                 }
+                 if (codeField.isEmpty()) {
+                     TailwindNotification.show("El código es obligatorio", TailwindNotification.Type.ERROR);
+                     return;
+                 }
+                 
+                 InvLote newLote = new InvLote();
+                 newLote.setProductoVariante(variantField.getValue());
+                 newLote.setCodigoLote(codeField.getValue());
+                 if (expiryField.getValue() != null) {
+                    newLote.setFechaCaducidad(expiryField.getValue().atStartOfDay());
+                 }
+                 newLote.setObservaciones(obsField.getValue());
+                 
+                 try {
+                     almacenService.saveLote(newLote);
+                     grid.setItems(almacenService.findAllLotes());
+                     TailwindNotification.show("Lote creado", TailwindNotification.Type.SUCCESS);
+                     addModal.close();
+                 } catch (Exception ex) {
+                     TailwindNotification.show("Error al guardar", TailwindNotification.Type.ERROR);
+                 }
+             });
+             saveAddBtn.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
+             
+             Button cancelAddBtn = new Button("Cancelar", event -> addModal.close());
+             cancelAddBtn.addClassNames("bg-[var(--color-bg-secondary)]", "text-[var(--color-text-main)]", "font-medium", "py-2", "px-4", "rounded-lg");
+             
+             addModal.addFooterButton(cancelAddBtn);
+             addModal.addFooterButton(saveAddBtn);
+             add(addModal);
+             addModal.open();
+        });
+
+        // Add layout with button and grid
+        VerticalLayout content = new VerticalLayout(addBtn, gridContainer);
+        content.setPadding(false);
+        content.setSpacing(true);
+        content.addClassNames("w-full", "h-full");
+
+        modal.addContent(content);
+
+        Button closeBtn = new Button("Cerrar", e -> modal.close());
+        closeBtn.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
+        modal.addFooterButton(closeBtn);
+
+        add(modal);
+        modal.open();
+    }
+    
+    private String result(java.time.LocalDateTime date) {
+        return date != null ? date.toLocalDate().toString() : "-";
     }
 }
