@@ -42,6 +42,10 @@ public class ProductsView extends VerticalLayout {
     private final CatalogoService catalogoService;
     private final AlmacenService almacenService;
     private final Grid<InvProducto> grid = new Grid<>(InvProducto.class);
+    
+    private ComboBox<InvCategoria> filterCategory;
+    private ComboBox<InvUnidadMedida> filterUOM;
+    private ComboBox<String> filterActive;
 
     public ProductsView(ProductoService service, CatalogoService catalogoService, AlmacenService almacenService) {
         this.service = service;
@@ -79,7 +83,11 @@ public class ProductsView extends VerticalLayout {
         HorizontalLayout header = new HorizontalLayout(new AppLabel("view.products.title"), buttons);
         header.addClassNames("w-full", "justify-between", "items-center");
 
-        add(header, grid);
+        header.addClassNames("w-full", "justify-between", "items-center");
+
+        HorizontalLayout filters = configureFilters();
+
+        add(header, filters, grid);
         updateList();
     }
 
@@ -122,8 +130,35 @@ public class ProductsView extends VerticalLayout {
         grid.getColumns().forEach(col -> col.setAutoWidth(true));
     }
 
+    private HorizontalLayout configureFilters() {
+        filterCategory = new ComboBox<>("Categoría");
+        filterCategory.setItems(catalogoService.findAllCategorias());
+        filterCategory.setItemLabelGenerator(InvCategoria::getNombre);
+        filterCategory.setClearButtonVisible(true);
+        filterCategory.addValueChangeListener(e -> updateList());
+
+        filterUOM = new ComboBox<>("Unidad");
+        filterUOM.setItems(catalogoService.findAllUnidadesMedida());
+        filterUOM.setItemLabelGenerator(InvUnidadMedida::getNombre);
+        filterUOM.setClearButtonVisible(true);
+        filterUOM.addValueChangeListener(e -> updateList());
+
+        filterActive = new ComboBox<>("Estado");
+        filterActive.setItems("Activo", "Inactivo");
+        filterActive.setClearButtonVisible(true);
+        filterActive.addValueChangeListener(e -> updateList());
+        
+        HorizontalLayout layout = new HorizontalLayout(filterCategory, filterUOM, filterActive);
+        layout.addClassNames("w-full", "items-end", "mb-4");
+        return layout;
+    }
+
     private void updateList() {
-        grid.setItems(service.findAll());
+        Boolean activeStatus = null;
+        if (filterActive.getValue() != null) {
+            activeStatus = "Activo".equals(filterActive.getValue());
+        }
+        grid.setItems(service.search(filterCategory.getValue(), filterUOM.getValue(), activeStatus));
     }
 
     private void openProductDialog() {

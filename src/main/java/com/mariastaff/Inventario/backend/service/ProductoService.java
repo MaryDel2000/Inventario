@@ -28,6 +28,12 @@ public class ProductoService {
         return repository.findAll();
     }
     
+    public List<InvProducto> search(com.mariastaff.Inventario.backend.data.entity.InvCategoria categoria, 
+                                    com.mariastaff.Inventario.backend.data.entity.InvUnidadMedida uom, 
+                                    Boolean activo) {
+        return repository.search(categoria, uom, activo);
+    }
+    
     public InvProducto save(InvProducto producto) {
         return repository.save(producto);
     }
