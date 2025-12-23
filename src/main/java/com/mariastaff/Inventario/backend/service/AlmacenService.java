@@ -40,6 +40,9 @@ public class AlmacenService {
     public List<InvLote> findAllLotes() { return loteRepository.findAll(); }
     public InvLote saveLote(InvLote entity) { return loteRepository.save(entity); }
     public void deleteLote(InvLote entity) { loteRepository.delete(entity); }
+    public List<InvLote> findLotesByVariante(com.mariastaff.Inventario.backend.data.entity.InvProductoVariante variante) {
+        return loteRepository.findByProductoVariante(variante);
+    }
     
     public long countAlmacenes() { return almacenRepository.count(); }
     public long countExistencias() { return existenciaRepository.count(); }

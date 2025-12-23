@@ -20,13 +20,14 @@
 - **Estructura**: `ui/views` (Vistas), `ui/layouts` (Layouts), `ui/components/base` (Componentes UI reutilizables).
 - **Estado Actual**: 
   - **Inventario**:
-    - `CategoriesView` independiente **ELIMINADA**. Gestión integrada en `ProductsView`.
-    - `UOMView` independiente **ELIMINADA**. Gestión integrada en `ProductsView`.
+    - `CategoriesView`, `UOMView`, `BatchesView` independientes **ELIMINADAS**. Gestión integrada en `ProductsView`.
     - `ProductsView`: 
       - Formularios permiten crear categorías y unidades dinámicamente ("AllowCustomValue").
-      - Botón "Ver Categorías" abre diálogo de gestión (listar, crear, editar, toggle activo, eliminar).
-      - Botón "Ver Unidades" abre diálogo de gestión de Unidades de Medida (listar, crear, editar, toggle activo, eliminar).
+      - Botones de acción ("Ver Categorías", "Ver Unidades", "Ver Variantes", "Ver Lotes") abren diálogos de gestión CRUD completos.
+      - **Creación de Producto**:
+        - Soporta creación inline de Lote inicial.
+        - Si se ingresa información de lote, el sistema auto-crea una Variante default y el Lote asociado al guardar.
       - Selectores filtran solo ítems activos.
-    - Vistas restantes (Almacenes, etc.) refactorizadas con componentes Tailwind.
-  - **Pendiente**: Lógica de persistencia compleja de Productos (Stocks iniciales, Lotes).
+    - Vistas restantes (Almacenes, Movimientos, Ubicaciones) refactorizadas con componentes Tailwind.
+  - **Pendiente**: Lógica de stocks iniciales (InvExistencia) completa en creación de productos.
 - **Ejecutar**: `./run-dev.sh`.

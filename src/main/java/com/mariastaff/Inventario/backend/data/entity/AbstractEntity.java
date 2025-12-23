@@ -34,8 +34,8 @@ public abstract class AbstractEntity implements Serializable {
 
     @Override
     public int hashCode() {
-        if (id != null) {
-            return id.hashCode();
+        if (getId() != null) {
+            return getId().hashCode();
         }
         return super.hashCode();
     }
@@ -47,8 +47,8 @@ public abstract class AbstractEntity implements Serializable {
         }
         AbstractEntity other = (AbstractEntity) obj;
 
-        if (id != null) {
-            return id.equals(other.id);
+        if (getId() != null) {
+            return getId().equals(other.getId());
         }
         return super.equals(other);
     }

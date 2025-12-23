@@ -93,7 +93,32 @@ public class ProductsView extends VerticalLayout {
         
         grid.addColumn(p -> p.getCategoria() != null ? p.getCategoria().getNombre() : "-").setHeader(getTranslation("view.products.grid.category"));
         grid.addColumn(p -> p.getUnidadMedida() != null ? p.getUnidadMedida().getNombre() : "-").setHeader(getTranslation("view.products.grid.uom"));
-        grid.addColumn(p -> p.getActivo() ? getTranslation("common.yes") : getTranslation("common.no")).setHeader(getTranslation("view.products.grid.active"));
+        grid.addColumn(new ComponentRenderer<>(producto -> {
+            TailwindToggle toggle = new TailwindToggle("");
+            toggle.getStyle().set("margin-top", "0");
+            toggle.setValue(Boolean.TRUE.equals(producto.getActivo()));
+            
+            toggle.addValueChangeListener(event -> {
+                producto.setActivo(event.getValue());
+                try {
+                    service.save(producto);
+                    TailwindNotification.show("Estado actualizado", TailwindNotification.Type.SUCCESS);
+                } catch (Exception e) {
+                    toggle.setValue(event.getOldValue());
+                    TailwindNotification.show("Error al actualizar estado", TailwindNotification.Type.ERROR);
+                }
+            });
+            return toggle;
+        })).setHeader(getTranslation("view.products.grid.active")).setAutoWidth(true);
+
+        grid.addComponentColumn(producto -> {
+            Button editBtn = new Button(VaadinIcon.EDIT.create());
+            editBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+            editBtn.addClassNames("text-primary", "hover:text-blue-700", "mr-2");
+            editBtn.addClickListener(e -> openEditProductDialog(producto));
+
+            return editBtn;
+        }).setHeader("Acciones").setAutoWidth(true);
         grid.getColumns().forEach(col -> col.setAutoWidth(true));
     }
 
@@ -240,6 +265,186 @@ public class ProductsView extends VerticalLayout {
                 }
                 
                 TailwindNotification.show("Producto guardado correctamente", TailwindNotification.Type.SUCCESS);
+                updateList();
+                modal.close();
+            } catch (ValidationException ex) {
+                TailwindNotification.show("Por favor revise los campos requeridos", TailwindNotification.Type.ERROR);
+            }
+        });
+        saveButton.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
+
+        Button cancelButton = new Button("Cancelar", e -> {
+            TailwindNotification.show("Cambios descartados", TailwindNotification.Type.INFO);
+            modal.close();
+        });
+        cancelButton.addClassNames("bg-[var(--color-bg-secondary)]", "text-[var(--color-text-main)]", "font-medium", "py-2", "px-4", "rounded-lg");
+
+        modal.addFooterButton(cancelButton);
+        modal.addFooterButton(saveButton);
+        
+        add(modal);
+        modal.open();
+    }
+
+    private void openEditProductDialog(InvProducto originalProduct) {
+        // Reload product to ensure we have the latest state and full relationships
+        InvProducto product = service.findById(originalProduct.getId()).orElse(originalProduct);
+        TailwindModal modal = new TailwindModal("Editar Producto");
+        
+        Binder<InvProducto> binder = new Binder<>(InvProducto.class);
+
+        FormLayout formLayout = new FormLayout();
+        formLayout.addClassNames("w-full");
+        formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1),
+                                      new FormLayout.ResponsiveStep("600px", 2));
+        
+        TextField nombre = new TextField("Nombre");
+        nombre.addClassName("w-full");
+        
+        TextField codigo = new TextField("Código Interno");
+        codigo.addClassName("w-full");
+        
+        TextField descripcion = new TextField("Descripción");
+        descripcion.addClassName("w-full");
+        
+        ComboBox<InvCategoria> categoria = new ComboBox<>("Categoría");
+        categoria.setItems(catalogoService.findAllCategorias());
+        categoria.setItemLabelGenerator(InvCategoria::getNombre);
+        categoria.addClassName("w-full");
+        
+        ComboBox<InvUnidadMedida> unidadMedida = new ComboBox<>("Unidad de Medida");
+        unidadMedida.setItems(catalogoService.findAllUnidadesMedida());
+        unidadMedida.setItemLabelGenerator(InvUnidadMedida::getNombre);
+        unidadMedida.addClassName("w-full");
+
+        TailwindToggle activo = new TailwindToggle("Activo");
+
+        // Lotes Logic
+        // Lotes Logic - Grid
+        Grid<InvLote> lotesGrid = new Grid<>(InvLote.class, false);
+        lotesGrid.addClassNames("bg-bg-surface", "rounded-lg", "shadow", "border", "border-gray-200");
+        lotesGrid.setHeight("200px"); // Set a fixed height
+        
+        lotesGrid.addColumn(l -> l.getProductoVariante() != null ? l.getProductoVariante().getNombreVariante() : "-")
+                 .setHeader("Variante").setAutoWidth(true);
+        lotesGrid.addColumn(InvLote::getCodigoLote).setHeader("Cód. Lote").setAutoWidth(true);
+        lotesGrid.addColumn(l -> l.getFechaCaducidad() != null ? l.getFechaCaducidad().toLocalDate().toString() : "-")
+                 .setHeader("Caducidad").setAutoWidth(true);
+                 
+        lotesGrid.addComponentColumn(lote -> {
+            Button editLoteBtn = new Button(VaadinIcon.EDIT.create());
+            editLoteBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+            editLoteBtn.addClassNames("text-primary", "hover:text-blue-700");
+            
+            editLoteBtn.addClickListener(e -> {
+                 TailwindModal editLoteModal = new TailwindModal("Editar Lote");
+                 // Use a reasonable width
+                 editLoteModal.setDialogMaxWidth("max-w-2xl");
+                 
+                 ComboBox<InvProductoVariante> variantField = new ComboBox<>("Variante de Producto");
+                 variantField.setItems(service.findVariantesByProducto(product)); // Restrict to current product's variants
+                 variantField.setItemLabelGenerator(v -> v.getNombreVariante());
+                 variantField.setValue(lote.getProductoVariante());
+                 variantField.addClassName("w-full");
+
+                 TextField codeField = new TextField("Código Lote");
+                 codeField.addClassName("w-full");
+                 codeField.setValue(lote.getCodigoLote() != null ? lote.getCodigoLote() : "");
+                 
+                 TailwindDatePicker expiryField = new TailwindDatePicker("Fecha Caducidad");
+                 expiryField.addClassName("w-full");
+                 if (lote.getFechaCaducidad() != null) {
+                     expiryField.setValue(lote.getFechaCaducidad().toLocalDate());
+                 }
+
+                 TextArea obsField = new TextArea("Observaciones");
+                 obsField.addClassName("w-full");
+                 if (lote.getObservaciones() != null) obsField.setValue(lote.getObservaciones());
+                 
+                 FormLayout editLoteLayout = new FormLayout(variantField, codeField, expiryField, obsField);
+                 editLoteLayout.addClassName("w-full");
+                 editLoteLayout.setColspan(obsField, 2);
+                 editLoteModal.addContent(editLoteLayout);
+                 
+                 Button saveLoteBtn = new Button("Guardar", event -> {
+                     if (variantField.getValue() == null) {
+                         TailwindNotification.show("La variante es obligatoria", TailwindNotification.Type.ERROR);
+                         return;
+                     }
+                     if (codeField.isEmpty()) {
+                         TailwindNotification.show("El código es obligatorio", TailwindNotification.Type.ERROR);
+                         return;
+                     }
+
+                     lote.setProductoVariante(variantField.getValue());
+                     lote.setCodigoLote(codeField.getValue());
+                     if (expiryField.getValue() != null) {
+                        lote.setFechaCaducidad(expiryField.getValue().atStartOfDay());
+                     } else {
+                        lote.setFechaCaducidad(null);
+                     }
+                     lote.setObservaciones(obsField.getValue());
+
+                     try {
+                         almacenService.saveLote(lote);
+                         // Refresh inner grid
+                         java.util.List<InvLote> refreshedBatches = new java.util.ArrayList<>();
+                         for (InvProductoVariante var : service.findVariantesByProducto(product)) {
+                             refreshedBatches.addAll(almacenService.findLotesByVariante(var));
+                         }
+                         lotesGrid.setItems(refreshedBatches);
+                         
+                         TailwindNotification.show("Lote actualizado", TailwindNotification.Type.SUCCESS);
+                         editLoteModal.close();
+                     } catch (Exception ex) {
+                         TailwindNotification.show("Error al guardar", TailwindNotification.Type.ERROR);
+                     }
+                 });
+                 saveLoteBtn.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
+                 
+                 Button cancelLoteBtn = new Button("Cancelar", event -> editLoteModal.close());
+                 cancelLoteBtn.addClassNames("bg-[var(--color-bg-secondary)]", "text-[var(--color-text-main)]", "font-medium", "py-2", "px-4", "rounded-lg");
+                 
+                 editLoteModal.addFooterButton(cancelLoteBtn);
+                 editLoteModal.addFooterButton(saveLoteBtn);
+                 add(editLoteModal);
+                 editLoteModal.open();
+            });
+            return editLoteBtn;
+        }).setHeader("Editar").setAutoWidth(true);
+
+        java.util.List<InvLote> productBatches = new java.util.ArrayList<>();
+        java.util.List<InvProductoVariante> variantes = service.findVariantesByProducto(product);
+        for (InvProductoVariante var : variantes) {
+            productBatches.addAll(almacenService.findLotesByVariante(var));
+        }
+        lotesGrid.setItems(productBatches);
+
+        // Add fields to layout
+        formLayout.add(nombre, codigo, categoria, unidadMedida, descripcion, lotesGrid, activo);
+        
+        // Layout tweak: description full width
+        formLayout.setColspan(descripcion, 2);
+        formLayout.setColspan(lotesGrid, 2);
+        formLayout.setColspan(nombre, 2);
+        
+        modal.addContent(formLayout);
+
+        // Binding
+        binder.forField(nombre).asRequired("El nombre es obligatorio").bind(InvProducto::getNombre, InvProducto::setNombre);
+        binder.forField(codigo).bind(InvProducto::getCodigoInterno, InvProducto::setCodigoInterno);
+        binder.forField(categoria).asRequired("La categoría es obligatoria").bind(InvProducto::getCategoria, InvProducto::setCategoria);
+        binder.forField(unidadMedida).asRequired("La unidad es obligatoria").bind(InvProducto::getUnidadMedida, InvProducto::setUnidadMedida);
+        binder.forField(descripcion).bind(InvProducto::getDescripcion, InvProducto::setDescripcion);
+        binder.forField(activo).bind(InvProducto::getActivo, InvProducto::setActivo);
+        
+        binder.readBean(product);
+
+        Button saveButton = new Button("Guardar", e -> {
+            try {
+                binder.writeBean(product);
+                service.save(product);
+                TailwindNotification.show("Producto actualizado correctamente", TailwindNotification.Type.SUCCESS);
                 updateList();
                 modal.close();
             } catch (ValidationException ex) {
