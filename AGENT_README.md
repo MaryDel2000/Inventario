@@ -33,8 +33,10 @@
       - **Edición de Producto**:
         - Diálogo de edición carga datos frescos (`findById`) para evitar problemas de proxy.
         - **Grid Interactiva de Lotes**: Dentro del diálogo de edición de producto, se muestra una tabla con los lotes asociados. Permite editar lotes (código, caducidad, variante) directamente sin salir de la vista.
-      - **Grid Principal**:
-        - Toggle de "Activo" editable directamente desde la lista.
+        - **Grid Principal**:
+          - Nueva columna "Variantes" muestra lista de variantes asociadas para mayor visibilidad.
+          - Actualización automática de la lista y filtros al cerrar los diálogos de gestión (Categorías, Variantes, etc.).
+
         - Botón de "Eliminar" retirado de la UI principal (lógica backend soporta borrado en cascada de variantes y lotes).
     - Vistas restantes (Almacenes, Movimientos, Ubicaciones) refactorizadas con componentes Tailwind.
   - **Pendiente**: Lógica de stocks iniciales (InvExistencia) completa en creación de productos.

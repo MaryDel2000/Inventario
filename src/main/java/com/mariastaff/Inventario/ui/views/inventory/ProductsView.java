@@ -101,23 +101,11 @@ public class ProductsView extends VerticalLayout {
         
         grid.addColumn(p -> p.getCategoria() != null ? p.getCategoria().getNombre() : "-").setHeader(getTranslation("view.products.grid.category"));
         grid.addColumn(p -> p.getUnidadMedida() != null ? p.getUnidadMedida().getNombre() : "-").setHeader(getTranslation("view.products.grid.uom"));
-        grid.addColumn(new ComponentRenderer<>(producto -> {
-            TailwindToggle toggle = new TailwindToggle("");
-            toggle.getStyle().set("margin-top", "0");
-            toggle.setValue(Boolean.TRUE.equals(producto.getActivo()));
-            
-            toggle.addValueChangeListener(event -> {
-                producto.setActivo(event.getValue());
-                try {
-                    service.save(producto);
-                    TailwindNotification.show("Estado actualizado", TailwindNotification.Type.SUCCESS);
-                } catch (Exception e) {
-                    toggle.setValue(event.getOldValue());
-                    TailwindNotification.show("Error al actualizar estado", TailwindNotification.Type.ERROR);
-                }
-            });
-            return toggle;
-        })).setHeader(getTranslation("view.products.grid.active")).setAutoWidth(true);
+        grid.addColumn(p -> service.findVariantesByProducto(p).stream()
+                .map(com.mariastaff.Inventario.backend.data.entity.InvProductoVariante::getNombreVariante)
+                .collect(java.util.stream.Collectors.joining(", ")))
+                .setHeader("Variantes").setAutoWidth(true);
+
 
         grid.addComponentColumn(producto -> {
             Button editBtn = new Button(VaadinIcon.EDIT.create());
@@ -659,6 +647,10 @@ public class ProductsView extends VerticalLayout {
         closeBtn.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
         modal.addFooterButton(closeBtn);
 
+        modal.addDetachListener(event -> {
+            updateList();
+            filterCategory.setItems(catalogoService.findAllCategorias());
+        });
         add(modal);
         modal.open();
     }
@@ -817,6 +809,10 @@ public class ProductsView extends VerticalLayout {
         closeBtn.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
         modal.addFooterButton(closeBtn);
 
+        modal.addDetachListener(event -> {
+            updateList();
+            filterUOM.setItems(catalogoService.findAllUnidadesMedida());
+        });
         add(modal);
         modal.open();
     }
@@ -841,6 +837,15 @@ public class ProductsView extends VerticalLayout {
             toggle.addValueChangeListener(event -> {
                 v.setActivo(event.getValue());
                 try {
+                    if (Boolean.TRUE.equals(event.getValue())) {
+                         InvProducto parent = v.getProducto();
+                         if (parent != null && !Boolean.TRUE.equals(parent.getActivo())) {
+                             parent.setActivo(true);
+                             service.save(parent);
+                             TailwindNotification.show("Producto activado automáticamente", TailwindNotification.Type.SUCCESS);
+                             updateList();
+                         }
+                    }
                     service.saveVariante(v);
                     TailwindNotification.show("Estado actualizado", TailwindNotification.Type.SUCCESS);
                 } catch (Exception e) {
@@ -1002,6 +1007,9 @@ public class ProductsView extends VerticalLayout {
         closeBtn.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
         modal.addFooterButton(closeBtn);
 
+        modal.addDetachListener(event -> {
+            updateList();
+        });
         add(modal);
         modal.open();
     }
@@ -1191,6 +1199,9 @@ public class ProductsView extends VerticalLayout {
         closeBtn.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
         modal.addFooterButton(closeBtn);
 
+        modal.addDetachListener(event -> {
+            updateList();
+        });
         add(modal);
         modal.open();
     }
