@@ -18,6 +18,10 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.binder.ValidationException;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import jakarta.annotation.security.PermitAll;
 
 @PageTitle("Ubicaciones | Inventario")
@@ -34,12 +38,9 @@ public class LocationsView extends VerticalLayout {
         
         configureGrid();
         
-        configureGrid();
-        
-        
         Button addBtn = new Button("Nueva Ubicación", VaadinIcon.PLUS.create());
         addBtn.addClassNames("bg-primary", "text-white", "text-sm", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow", "hover:shadow-md", "transition-all");
-        addBtn.addClickListener(e -> openLocationDialog());
+        addBtn.addClickListener(e -> openLocationDialog(new InvUbicacion()));
 
         HorizontalLayout header = new HorizontalLayout(new AppLabel("Ubicaciones"), addBtn);
         header.addClassNames("w-full", "justify-between", "items-center");
@@ -49,11 +50,43 @@ public class LocationsView extends VerticalLayout {
     }
 
     private void configureGrid() {
-        grid.addClassNames( "bg-bg-surface", "rounded-lg", "shadow");
+        grid.addClassNames("bg-bg-surface", "rounded-lg", "shadow");
         grid.setSizeFull();
         grid.setColumns("codigo", "descripcion");
         grid.addColumn(u -> u.getAlmacen() != null ? u.getAlmacen().getNombre() : "-").setHeader("Almacén");
-        grid.addColumn(u -> u.getActivo() ? "Sí" : "No").setHeader("Activo");
+        
+        // Active Toggle Column
+        grid.addColumn(new ComponentRenderer<>(ubicacion -> {
+            TailwindToggle toggle = new TailwindToggle("");
+            toggle.setValue(Boolean.TRUE.equals(ubicacion.getActivo()));
+            toggle.addValueChangeListener(e -> {
+                ubicacion.setActivo(e.getValue());
+                try {
+                    service.saveUbicacion(ubicacion);
+                    TailwindNotification.show("Estado actualizado", TailwindNotification.Type.SUCCESS);
+                } catch (Exception ex) {
+                    toggle.setValue(e.getOldValue());
+                    TailwindNotification.show("Error al actualizar estado", TailwindNotification.Type.ERROR);
+                }
+            });
+            return toggle;
+        })).setHeader("Activo").setAutoWidth(true);
+
+        // Actions Column
+        grid.addComponentColumn(ubicacion -> {
+            Button editBtn = new Button(VaadinIcon.EDIT.create());
+            editBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+            editBtn.addClassNames("text-primary", "hover:text-blue-700", "mr-2");
+            editBtn.addClickListener(e -> openLocationDialog(ubicacion));
+
+            Button deleteBtn = new Button(VaadinIcon.TRASH.create());
+            deleteBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
+            deleteBtn.addClassNames("text-red-500", "hover:text-red-700");
+            deleteBtn.addClickListener(e -> deleteUbicacion(ubicacion));
+
+            return new HorizontalLayout(editBtn, deleteBtn);
+        }).setHeader("Acciones").setAutoWidth(true);
+
         grid.getColumns().forEach(col -> col.setAutoWidth(true));
     }
 
@@ -61,14 +94,28 @@ public class LocationsView extends VerticalLayout {
         grid.setItems(service.findAllUbicaciones());
     }
 
-    private void openLocationDialog() {
-        TailwindModal modal = new TailwindModal("Nueva Ubicación");
+    private void deleteUbicacion(InvUbicacion ubicacion) {
+        try {
+            service.deleteUbicacion(ubicacion);
+            updateList();
+            TailwindNotification.show("Ubicación eliminada", TailwindNotification.Type.SUCCESS);
+        } catch (Exception e) {
+            TailwindNotification.show("No se puede eliminar (posiblemente en uso)", TailwindNotification.Type.ERROR);
+        }
+    }
+
+    private void openLocationDialog(InvUbicacion ubicacion) {
+        boolean isNew = ubicacion.getId() == null;
+        TailwindModal modal = new TailwindModal(isNew ? "Nueva Ubicación" : "Editar Ubicación");
         
+        Binder<InvUbicacion> binder = new Binder<>(InvUbicacion.class);
+
         FormLayout formLayout = new FormLayout();
         formLayout.addClassNames("w-full", "max-w-lg");
         
         TextField codigo = new TextField("Código");
         codigo.addClassName("w-full");
+        
         TextField descripcion = new TextField("Descripción");
         descripcion.addClassName("w-full");
         
@@ -78,21 +125,35 @@ public class LocationsView extends VerticalLayout {
         almacen.addClassName("w-full");
         
         TailwindToggle activo = new TailwindToggle("Activo");
-        activo.setValue(true);
+        
+        // Binding
+        binder.forField(codigo).asRequired("Requerido").bind(InvUbicacion::getCodigo, InvUbicacion::setCodigo);
+        binder.forField(descripcion).bind(InvUbicacion::getDescripcion, InvUbicacion::setDescripcion);
+        binder.forField(almacen).asRequired("Requerido").bind(InvUbicacion::getAlmacen, InvUbicacion::setAlmacen);
+        binder.forField(activo).bind(InvUbicacion::getActivo, InvUbicacion::setActivo);
+        
+        binder.readBean(ubicacion);
+        if (isNew) activo.setValue(true);
 
         formLayout.add(codigo, descripcion, almacen, activo);
         modal.addContent(formLayout);
         
         Button saveButton = new Button("Guardar", e -> {
-            TailwindNotification.show("Nueva Ubicación guardada correctamente", TailwindNotification.Type.SUCCESS);
-            modal.close();
+            try {
+                binder.writeBean(ubicacion);
+                service.saveUbicacion(ubicacion);
+                updateList();
+                TailwindNotification.show("Ubicación guardada correctamente", TailwindNotification.Type.SUCCESS);
+                modal.close();
+            } catch (ValidationException ex) {
+                TailwindNotification.show("Revise los datos", TailwindNotification.Type.ERROR);
+            } catch (Exception ex) {
+                TailwindNotification.show("Error al guardar", TailwindNotification.Type.ERROR);
+            }
         });
         saveButton.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
 
-        Button cancelButton = new Button("Cancelar", e -> {
-            TailwindNotification.show("Cambios descartados", TailwindNotification.Type.INFO);
-            modal.close();
-        });
+        Button cancelButton = new Button("Cancelar", e -> modal.close());
         cancelButton.addClassNames("bg-[var(--color-bg-secondary)]", "text-[var(--color-text-main)]", "font-medium", "py-2", "px-4", "rounded-lg");
 
         modal.addFooterButton(cancelButton);

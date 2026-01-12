@@ -14,6 +14,7 @@ import jakarta.annotation.security.PermitAll;
 
 @PageTitle("Dashboard Inventario | Inventario")
 @Route(value = "inventory/dashboard", layout = MainLayout.class)
+@com.vaadin.flow.router.RouteAlias(value = "", layout = MainLayout.class)
 @PermitAll
 public class InventoryDashboardView extends VerticalLayout {
 

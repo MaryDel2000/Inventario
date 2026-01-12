@@ -16,6 +16,10 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.data.binder.Binder;
+import com.vaadin.flow.data.binder.ValidationException;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import jakarta.annotation.security.PermitAll;
 
 @PageTitle("Almacenes | Inventario")
@@ -32,12 +36,9 @@ public class WarehousesView extends VerticalLayout {
         
         configureGrid();
         
-        configureGrid();
-        
-        
         Button addBtn = new Button("Nuevo Almacén", VaadinIcon.PLUS.create());
         addBtn.addClassNames("bg-primary", "text-white", "text-sm", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow", "hover:shadow-md", "transition-all");
-        addBtn.addClickListener(e -> openWarehouseDialog());
+        addBtn.addClickListener(e -> openWarehouseDialog(new InvAlmacen()));
 
         HorizontalLayout header = new HorizontalLayout(new AppLabel("Listado de Almacenes"), addBtn);
         header.addClassNames("w-full", "justify-between", "items-center");
@@ -47,11 +48,43 @@ public class WarehousesView extends VerticalLayout {
     }
 
     private void configureGrid() {
-        grid.addClassNames( "bg-bg-surface", "rounded-lg", "shadow");
+        grid.addClassNames("bg-bg-surface", "rounded-lg", "shadow");
         grid.setSizeFull();
         grid.setColumns("nombre", "codigo", "tipoAlmacen", "direccion");
         grid.addColumn(a -> a.getSucursal() != null ? a.getSucursal().getNombre() : "Global").setHeader("Sucursal");
-        grid.addColumn(a -> a.getActivo() ? "Sí" : "No").setHeader("Activo");
+        
+        // Active Status Column
+        grid.addColumn(new ComponentRenderer<>(almacen -> {
+            TailwindToggle toggle = new TailwindToggle("");
+            toggle.setValue(Boolean.TRUE.equals(almacen.getActivo()));
+            toggle.addValueChangeListener(e -> {
+                almacen.setActivo(e.getValue());
+                try {
+                    service.saveAlmacen(almacen);
+                    TailwindNotification.show("Estado actualizado", TailwindNotification.Type.SUCCESS);
+                } catch (Exception ex) {
+                    toggle.setValue(e.getOldValue());
+                    TailwindNotification.show("Error al actualizar estado", TailwindNotification.Type.ERROR);
+                }
+            });
+            return toggle;
+        })).setHeader("Activo").setAutoWidth(true);
+
+        // Actions Column
+        grid.addComponentColumn(almacen -> {
+            Button editBtn = new Button(VaadinIcon.EDIT.create());
+            editBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+            editBtn.addClassNames("text-primary", "hover:text-blue-700", "mr-2");
+            editBtn.addClickListener(e -> openWarehouseDialog(almacen));
+
+            Button deleteBtn = new Button(VaadinIcon.TRASH.create());
+            deleteBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
+            deleteBtn.addClassNames("text-red-500", "hover:text-red-700");
+            deleteBtn.addClickListener(e -> deleteAlmacen(almacen));
+
+            return new HorizontalLayout(editBtn, deleteBtn);
+        }).setHeader("Acciones").setAutoWidth(true);
+        
         grid.getColumns().forEach(col -> col.setAutoWidth(true));
     }
 
@@ -59,36 +92,68 @@ public class WarehousesView extends VerticalLayout {
         grid.setItems(service.findAllAlmacenes());
     }
 
-    private void openWarehouseDialog() {
-        TailwindModal modal = new TailwindModal("Nuevo Almacén");
+    private void deleteAlmacen(InvAlmacen almacen) {
+        try {
+            service.deleteAlmacen(almacen);
+            updateList();
+            TailwindNotification.show("Almacén eliminado", TailwindNotification.Type.SUCCESS);
+        } catch (Exception e) {
+            TailwindNotification.show("No se puede eliminar (posiblemente en uso)", TailwindNotification.Type.ERROR);
+        }
+    }
+
+    private void openWarehouseDialog(InvAlmacen almacen) {
+        boolean isNew = almacen.getId() == null;
+        TailwindModal modal = new TailwindModal(isNew ? "Nuevo Almacén" : "Editar Almacén");
         
+        Binder<InvAlmacen> binder = new Binder<>(InvAlmacen.class);
+
         FormLayout formLayout = new FormLayout();
         formLayout.addClassNames("w-full", "max-w-lg");
         
         TextField nombre = new TextField("Nombre");
         nombre.addClassName("w-full");
+        
         TextField codigo = new TextField("Código");
         codigo.addClassName("w-full");
+        
         TextField tipoAlmacen = new TextField("Tipo Almacén");
         tipoAlmacen.addClassName("w-full");
+        
         TextField direccion = new TextField("Dirección");
         direccion.addClassName("w-full");
+        
         TailwindToggle activo = new TailwindToggle("Activo");
-        activo.setValue(true);
+        
+        // Binding
+        binder.forField(nombre).asRequired("Requerido").bind(InvAlmacen::getNombre, InvAlmacen::setNombre);
+        binder.forField(codigo).bind(InvAlmacen::getCodigo, InvAlmacen::setCodigo);
+        binder.forField(tipoAlmacen).bind(InvAlmacen::getTipoAlmacen, InvAlmacen::setTipoAlmacen);
+        binder.forField(direccion).bind(InvAlmacen::getDireccion, InvAlmacen::setDireccion);
+        binder.forField(activo).bind(InvAlmacen::getActivo, InvAlmacen::setActivo);
+        
+        binder.readBean(almacen);
+        if (isNew) activo.setValue(true);
 
         formLayout.add(nombre, codigo, tipoAlmacen, direccion, activo);
         modal.addContent(formLayout);
         
         Button saveButton = new Button("Guardar", e -> {
-            TailwindNotification.show("Nuevo Almacén guardado correctamente", TailwindNotification.Type.SUCCESS);
-            modal.close();
+            try {
+                binder.writeBean(almacen);
+                service.saveAlmacen(almacen);
+                updateList();
+                TailwindNotification.show("Almacén guardado correctamente", TailwindNotification.Type.SUCCESS);
+                modal.close();
+            } catch (ValidationException ex) {
+                TailwindNotification.show("Revise los datos", TailwindNotification.Type.ERROR);
+            } catch (Exception ex) {
+                TailwindNotification.show("Error al guardar", TailwindNotification.Type.ERROR);
+            }
         });
         saveButton.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
 
-        Button cancelButton = new Button("Cancelar", e -> {
-            TailwindNotification.show("Cambios descartados", TailwindNotification.Type.INFO);
-            modal.close();
-        });
+        Button cancelButton = new Button("Cancelar", e -> modal.close());
         cancelButton.addClassNames("bg-[var(--color-bg-secondary)]", "text-[var(--color-text-main)]", "font-medium", "py-2", "px-4", "rounded-lg");
 
         modal.addFooterButton(cancelButton);

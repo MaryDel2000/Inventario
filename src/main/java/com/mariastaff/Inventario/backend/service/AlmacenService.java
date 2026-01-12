@@ -46,4 +46,9 @@ public class AlmacenService {
     
     public long countAlmacenes() { return almacenRepository.count(); }
     public long countExistencias() { return existenciaRepository.count(); }
+    
+    public java.math.BigDecimal getStockTotal(Long productoId) {
+        java.math.BigDecimal total = existenciaRepository.sumStockByProducto(productoId);
+        return total != null ? total : java.math.BigDecimal.ZERO;
+    }
 }

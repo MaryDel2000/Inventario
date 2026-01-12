@@ -152,7 +152,8 @@ vaadin-email-field::part(input-field),
 vaadin-password-field::part(input-field),
 vaadin-date-picker::part(input-field),
 vaadin-combo-box::part(input-field),
-vaadin-text-area::part(input-field) {
+vaadin-text-area::part(input-field),
+vaadin-big-decimal-field::part(input-field) {
     background-color: var(--color-bg-surface);
     color: var(--color-text-main);
     border: 1px solid var(--color-border);
@@ -164,7 +165,8 @@ vaadin-text-field::part(label),
 vaadin-number-field::part(label),
 vaadin-email-field::part(label),
 vaadin-combo-box::part(label),
-vaadin-date-picker::part(label) {
+vaadin-date-picker::part(label),
+vaadin-big-decimal-field::part(label) {
     color: var(--color-text-secondary);
 }
 

@@ -8,13 +8,21 @@ import java.util.List;
 @Service
 public class MovimientoService {
 
-    private final InvMovimientoRepository movimientoRepository;
 
-    public MovimientoService(InvMovimientoRepository movimientoRepository) {
+    private final InvMovimientoRepository movimientoRepository;
+    private final com.mariastaff.Inventario.backend.data.repository.InvMovimientoDetalleRepository detalleRepository;
+    private final com.mariastaff.Inventario.backend.data.repository.InvExistenciaRepository existenciaRepository;
+
+    public MovimientoService(InvMovimientoRepository movimientoRepository,
+                             com.mariastaff.Inventario.backend.data.repository.InvMovimientoDetalleRepository detalleRepository,
+                             com.mariastaff.Inventario.backend.data.repository.InvExistenciaRepository existenciaRepository) {
         this.movimientoRepository = movimientoRepository;
+        this.detalleRepository = detalleRepository;
+        this.existenciaRepository = existenciaRepository;
     }
 
     public List<InvMovimiento> findAllMovimientos() { return movimientoRepository.findAll(); }
+    public List<com.mariastaff.Inventario.backend.data.entity.InvMovimientoDetalle> findDetallesByMovimiento(InvMovimiento m) { return detalleRepository.findByMovimiento(m); }
     public InvMovimiento saveMovimiento(InvMovimiento entity) { return movimientoRepository.save(entity); }
     public void deleteMovimiento(InvMovimiento entity) { movimientoRepository.delete(entity); }
     public long countMovimientos() { return movimientoRepository.count(); }
@@ -25,5 +33,66 @@ public class MovimientoService {
                 row -> (java.time.LocalDate) row[0],
                 row -> (Long) row[1]
             ));
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public void crearMovimiento(InvMovimiento movimiento, List<com.mariastaff.Inventario.backend.data.entity.InvMovimientoDetalle> detalles) {
+        // 1. Save Header
+        movimiento = movimientoRepository.save(movimiento);
+
+        // 2. Process Details
+        for (com.mariastaff.Inventario.backend.data.entity.InvMovimientoDetalle detalle : detalles) {
+            detalle.setMovimiento(movimiento);
+            detalleRepository.save(detalle);
+
+            // 3. Update Inventory (Existencia)
+            String tipo = movimiento.getTipoMovimiento();
+            
+            if ("ENTRADA".equals(tipo) && movimiento.getAlmacenDestino() != null) {
+                updateStock(movimiento.getAlmacenDestino(), detalle.getProductoVariante(), detalle.getUbicacionDestino(), detalle.getLote(), detalle.getCantidad());
+            } else if ("SALIDA".equals(tipo) && movimiento.getAlmacenOrigen() != null) {
+                updateStock(movimiento.getAlmacenOrigen(), detalle.getProductoVariante(), detalle.getUbicacionOrigen(), detalle.getLote(), detalle.getCantidad().negate());
+            } else if ("TRASPASO".equals(tipo) && movimiento.getAlmacenOrigen() != null && movimiento.getAlmacenDestino() != null) {
+                // Out from Origin
+                updateStock(movimiento.getAlmacenOrigen(), detalle.getProductoVariante(), detalle.getUbicacionOrigen(), detalle.getLote(), detalle.getCantidad().negate());
+                // In to Destination
+                updateStock(movimiento.getAlmacenDestino(), detalle.getProductoVariante(), detalle.getUbicacionDestino(), detalle.getLote(), detalle.getCantidad());
+            }
+        }
+    }
+
+    private void updateStock(com.mariastaff.Inventario.backend.data.entity.InvAlmacen almacen,
+                             com.mariastaff.Inventario.backend.data.entity.InvProductoVariante variante,
+                             com.mariastaff.Inventario.backend.data.entity.InvUbicacion ubicacion,
+                             com.mariastaff.Inventario.backend.data.entity.InvLote lote,
+                             java.math.BigDecimal cantidadDelta) {
+        
+        com.mariastaff.Inventario.backend.data.entity.InvExistencia existencia = existenciaRepository
+            .findByAlmacenAndProductoVarianteAndUbicacionAndLote(almacen, variante, ubicacion, lote)
+            .orElse(null);
+
+        if (existencia == null) {
+            if (cantidadDelta.compareTo(java.math.BigDecimal.ZERO) < 0) {
+                 // Trying to subtract from non-existing stock. For now, allow it (negative stock) or create new starting at negative.
+                 // Ideally throw error, but for flexibility:
+                 existencia = new com.mariastaff.Inventario.backend.data.entity.InvExistencia();
+                 existencia.setAlmacen(almacen);
+                 existencia.setProductoVariante(variante);
+                 existencia.setUbicacion(ubicacion);
+                 existencia.setLote(lote);
+                 existencia.setCantidadDisponible(java.math.BigDecimal.ZERO);
+            } else {
+                 existencia = new com.mariastaff.Inventario.backend.data.entity.InvExistencia();
+                 existencia.setAlmacen(almacen);
+                 existencia.setProductoVariante(variante);
+                 existencia.setUbicacion(ubicacion);
+                 existencia.setLote(lote);
+                 existencia.setCantidadDisponible(java.math.BigDecimal.ZERO);
+            }
+        }
+
+        existencia.setCantidadDisponible(existencia.getCantidadDisponible().add(cantidadDelta));
+        existencia.setFechaUltimaActualizacion(java.time.LocalDateTime.now());
+        existenciaRepository.save(existencia);
     }
 }
