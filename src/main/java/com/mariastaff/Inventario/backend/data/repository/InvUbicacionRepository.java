@@ -4,4 +4,5 @@ import com.mariastaff.Inventario.backend.data.entity.InvUbicacion;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface InvUbicacionRepository extends JpaRepository<InvUbicacion, Long> {
+    java.util.List<InvUbicacion> findByAlmacen(com.mariastaff.Inventario.backend.data.entity.InvAlmacen almacen);
 }

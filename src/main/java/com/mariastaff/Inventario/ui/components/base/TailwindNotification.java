@@ -10,7 +10,8 @@ public class TailwindNotification extends Div {
     public enum Type {
         SUCCESS,
         INFO,
-        ERROR
+        ERROR,
+        WARNING
     }
 
     private TailwindNotification(String message, Type type) {
@@ -27,6 +28,9 @@ public class TailwindNotification extends Div {
                 break;
             case ERROR:
                 getStyle().set("background-color", "#dc2626"); // Red 600
+                break;
+            case WARNING:
+                getStyle().set("background-color", "#ca8a04"); // Yellow 600
                 break;
             case INFO:
             default:

@@ -17,4 +17,5 @@ public class UserService {
     public List<SysUsuario> findAll() { return usuarioRepository.findAll(); }
     public SysUsuario save(SysUsuario entity) { return usuarioRepository.save(entity); }
     public void delete(SysUsuario entity) { usuarioRepository.delete(entity); }
+    public SysUsuario findByUsername(String username) { return usuarioRepository.findByUsername(username); }
 }

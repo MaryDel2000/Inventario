@@ -13,6 +13,6 @@ public interface InvExistenciaRepository extends JpaRepository<InvExistencia, Lo
         com.mariastaff.Inventario.backend.data.entity.InvAlmacen almacen,
         com.mariastaff.Inventario.backend.data.entity.InvProductoVariante productoVariante,
         com.mariastaff.Inventario.backend.data.entity.InvUbicacion ubicacion,
-        com.mariastaff.Inventario.backend.data.entity.InvLote lote
-    );
+        com.mariastaff.Inventario.backend.data.entity.InvLote lote);
+    java.util.List<InvExistencia> findByProductoVariante(com.mariastaff.Inventario.backend.data.entity.InvProductoVariante variante);
 }

@@ -15,16 +15,19 @@ public class ProductoService {
     private final InvProductoRepository repository;
     private final com.mariastaff.Inventario.backend.data.repository.InvProductoVarianteRepository varianteRepository;
     private final com.mariastaff.Inventario.backend.data.repository.InvLoteRepository loteRepository;
+    private final com.mariastaff.Inventario.backend.data.repository.InvPrecioVentaRepository precioVentaRepository;
     private final com.mariastaff.Inventario.backend.data.repository.InvExistenciaRepository existenciaRepository;
 
     public ProductoService(InvProductoRepository repository, 
                            com.mariastaff.Inventario.backend.data.repository.InvProductoVarianteRepository varianteRepository,
                            com.mariastaff.Inventario.backend.data.repository.InvLoteRepository loteRepository,
-                           com.mariastaff.Inventario.backend.data.repository.InvExistenciaRepository existenciaRepository) {
+                           com.mariastaff.Inventario.backend.data.repository.InvExistenciaRepository existenciaRepository,
+                           com.mariastaff.Inventario.backend.data.repository.InvPrecioVentaRepository precioVentaRepository) {
         this.repository = repository;
         this.varianteRepository = varianteRepository;
         this.loteRepository = loteRepository;
         this.existenciaRepository = existenciaRepository;
+        this.precioVentaRepository = precioVentaRepository;
     }
 
     public java.util.Optional<InvProducto> findById(Long id) {
@@ -114,5 +117,22 @@ public class ProductoService {
         List<com.mariastaff.Inventario.backend.data.entity.InvLote> lotes = loteRepository.findByProductoVariante(variante);
         loteRepository.deleteAll(lotes);
         varianteRepository.delete(variante);
+    }
+
+    public java.math.BigDecimal getStockTotal(com.mariastaff.Inventario.backend.data.entity.InvProductoVariante variante) {
+        List<com.mariastaff.Inventario.backend.data.entity.InvExistencia> existencias = existenciaRepository.findByProductoVariante(variante);
+        return existencias.stream()
+                .map(com.mariastaff.Inventario.backend.data.entity.InvExistencia::getCantidadDisponible)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+    }
+
+    public java.math.BigDecimal getPrecioVentaActual(com.mariastaff.Inventario.backend.data.entity.InvProductoVariante variante) {
+        List<com.mariastaff.Inventario.backend.data.entity.InvPrecioVenta> precios = precioVentaRepository.findByProductoVariante(variante);
+        // Logic to pick the best price (e.g., active, recent). For now, return the first active one or ZERO.
+        return precios.stream()
+                .filter(p -> p.getListaPrecio().getActivo()) // Assuming ListaPrecio is loaded or check
+                .map(com.mariastaff.Inventario.backend.data.entity.InvPrecioVenta::getPrecioVenta)
+                .findFirst()
+                .orElse(java.math.BigDecimal.ZERO);
     }
 }

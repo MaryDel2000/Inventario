@@ -53,6 +53,20 @@ public class PosVenta extends AuditableEntity {
     @JoinColumn(name = "movimiento_id")
     private InvMovimiento movimiento;
 
+    @jakarta.persistence.OneToMany(mappedBy = "venta", cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<PosVentaDetalle> detalles = new java.util.ArrayList<>();
+
+    public java.util.List<PosVentaDetalle> getDetalles() { return detalles; }
+    public void setDetalles(java.util.List<PosVentaDetalle> detalles) { this.detalles = detalles; }
+    public void addDetalle(PosVentaDetalle detalle) {
+        detalles.add(detalle);
+        detalle.setVenta(this);
+    }
+    public void removeDetalle(PosVentaDetalle detalle) {
+        detalles.remove(detalle);
+        detalle.setVenta(null);
+    }
+
     public GenSucursal getSucursal() { return sucursal; }
     public void setSucursal(GenSucursal sucursal) { this.sucursal = sucursal; }
     
