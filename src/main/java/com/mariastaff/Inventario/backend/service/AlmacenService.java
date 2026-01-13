@@ -33,6 +33,7 @@ public class AlmacenService {
     public List<InvUbicacion> findAllUbicaciones() { return ubicacionRepository.findAll(); }
     public InvUbicacion saveUbicacion(InvUbicacion entity) { return ubicacionRepository.save(entity); }
     public void deleteUbicacion(InvUbicacion entity) { ubicacionRepository.delete(entity); }
+    public List<InvUbicacion> findUbicacionesByAlmacen(InvAlmacen almacen) { return ubicacionRepository.findByAlmacen(almacen); }
 
     public List<InvExistencia> findAllExistencias() { return existenciaRepository.findAll(); }
     public InvExistencia saveExistencia(InvExistencia entity) { return existenciaRepository.save(entity); }

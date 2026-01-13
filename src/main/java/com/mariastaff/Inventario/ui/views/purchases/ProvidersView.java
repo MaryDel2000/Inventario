@@ -127,8 +127,8 @@ public class ProvidersView extends VerticalLayout {
         Button saveButton = new Button("Guardar", e -> {
             try {
                 binder.writeBean(item);
-                // service.save(item);
-                TailwindNotification.show("Proveedor guardado (Simulación)", TailwindNotification.Type.SUCCESS);
+                service.saveProveedor(item);
+                TailwindNotification.show("Proveedor guardado", TailwindNotification.Type.SUCCESS);
                 updateList();
                 modal.close();
             } catch (ValidationException ex) {

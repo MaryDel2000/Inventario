@@ -35,11 +35,22 @@
   - Contiene datos de ejemplo: Aceites, Frenos, Baterías, etc.
 - **i18n**: Internacionalización extendida a cabeceras de grids, filtros y formularios de movimientos (`messages.properties`).
 
+### Módulo Compras y Ventas (NUEVO - COMPLETADO)
+- **POS (Punto de Venta)**: `POSView` plenamente operativa.
+  - **Validación de Stock**: Impide ventas si no hay existencias suficientes.
+  - **Seguridad**: Asigna automáticamente el usuario logueado (OAuth2/Database) a la venta.
+  - **Pago**: Soporte para múltiples métodos de pago (Efectivo, Tarjeta, etc.).
+- **Compras (`NewPurchaseView`)**:
+  - **Flujo Completo**: Registro de compra -> Generación de Lote -> Entrada de Stock (Movimiento).
+  - **Requisito**: Requiere tener **Proveedores** registrados previamente.
+  - **UI/UX**: Solucionado centrado de modales y superposición de DatePicker/ComboBox (z-index). Estado persistente (@UIScope).
+
 ## 4. Notas de Desarrollo
 - **Fix Rutas**: `HomeView` eliminado. `InventoryDashboardView` tiene el alias de ruta raíz.
-- **Fix Data Integrity**: `DataGenerator` maneja limpieza total de tablas con `create-drop` (temporal) para evitar conflictos de FK al regenerar.
-- **Ejecución**: `./run-dev.sh`. (Si falla por puerto ocupado, matar procesos java).
+- **DataGenerator**: Activo. Genera datos de repuestos automotrices al inicio. **Nota**: No crea Proveedores ni Usuarios; estos deben gestionarse o existir previamente.
+- **Ejecución**: `./run-dev.sh`.
 
 ## 5. Pendientes / Próximos Pasos
-- **POS (Punto de Venta)**: Integrar con el nuevo sistema de precios y stock. Actualmente es un esqueleto.
-- **Compras**: Completar vista `NewPurchaseView` para que alimente el inventario (similar a Movimientos de Entrada).
+- **Reportes**: Validar que los reportes de ventas y compras reflejen correctamente los nuevos datos transaccionales.
+- **Impresión**: Implementar generación de tickets/facturas PDF desde el POS.
+- **UI**: Refinar dashboard principal para incluir KPIs de ventas recientes.

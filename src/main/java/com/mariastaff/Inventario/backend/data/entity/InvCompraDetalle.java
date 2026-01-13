@@ -41,4 +41,10 @@ public class InvCompraDetalle extends AbstractEntity {
     
     public LocalDateTime getFechaCaducidad() { return fechaCaducidad; }
     public void setFechaCaducidad(LocalDateTime fechaCaducidad) { this.fechaCaducidad = fechaCaducidad; }
+
+    @jakarta.persistence.Transient
+    private InvUbicacion targetLocation;
+
+    public InvUbicacion getTargetLocation() { return targetLocation; }
+    public void setTargetLocation(InvUbicacion targetLocation) { this.targetLocation = targetLocation; }
 }

@@ -160,76 +160,93 @@ public class NewPurchaseView extends VerticalLayout {
             return;
         }
 
-        TailwindModal modal = new TailwindModal("Agregar Producto");
-        modal.setWidth("600px");
-        
-        ComboBox<InvProductoVariante> variantSelect = new ComboBox<>("Producto");
-        List<InvProductoVariante> allVariants = new ArrayList<>();
-        productoService.findAll().forEach(p -> allVariants.addAll(productoService.findVariantesByProducto(p)));
-        variantSelect.setItems(allVariants);
-        variantSelect.setItemLabelGenerator(v -> v.getProducto().getNombre() + " - " + v.getNombreVariante());
-        variantSelect.setWidthFull();
-        
-        BigDecimalField qtyField = new BigDecimalField("Cantidad");
-        BigDecimalField costField = new BigDecimalField("Costo Unitario");
-        
-        DatePicker expiryDate = new DatePicker("Fecha Caducidad (Si aplica)");
-        
-        ComboBox<InvUbicacion> locationSelect = new ComboBox<>("Ubicación en Almacén");
-        List<InvUbicacion> locs = almacenService.findAllUbicaciones().stream()
-                .filter(u -> u.getAlmacen().getId().equals(almacenDestino.getValue().getId()))
-                .collect(Collectors.toList());
-        locationSelect.setItems(locs);
-        locationSelect.setItemLabelGenerator(InvUbicacion::getCodigo);
-        locationSelect.setWidthFull();
-
-        Button addBtn = new Button("Agregar", e -> {
-            if (variantSelect.getValue() != null && qtyField.getValue() != null && costField.getValue() != null) {
-                 // Warning if location is missing but we proceed (service might handle default)
-                 if (locationSelect.getValue() == null && !locs.isEmpty()) {
-                      TailwindNotification.show("Seleccione una ubicación", TailwindNotification.Type.WARNING);
-                      return;
-                 }
-
-                InvCompraDetalle detalle = new InvCompraDetalle();
-                detalle.setProductoVariante(variantSelect.getValue());
-                detalle.setCantidad(qtyField.getValue());
-                detalle.setCostoUnitario(costField.getValue());
-                detalle.setSubtotal(qtyField.getValue().multiply(costField.getValue()));
-                if (expiryDate.getValue() != null) {
-                    detalle.setFechaCaducidad(expiryDate.getValue().atStartOfDay());
-                }
-                
-                // We use a transient object or DTO to pass specific location for this line item?
-                // Since InvCompraDetalle doesn't have Ubicacion, we'll piggyback on Observaciones for now
-                // OR we can rely on CompraService to use a default for the warehouse if we don't modify entity.
-                // CURRENT DECISION: If location is selected, append to Observaciones formatted "LOC:ID"
-                if (locationSelect.getValue() != null) {
-                     // This is a hack but effective without changing DB entity structure right now.
-                     // The clean way is adding 'InvUbicacion' to 'InvCompraDetalle'.
-                     // Given user constraints, I will do this hack to pass data to Service.
-                     // Service will parse it.
-                     // Better: We are adding Purchase, then Movement. Movement needs Location.
-                     // We will modify CompraService to accept a Map<Detail, Location> or similar.
-                }
-                                
-                detalles.add(detalle);
-                refreshGrid();
-                modal.close();
-                
-                // Keep track of location for this detail in a transient map in the View?
-                // For this turning, implementing 'saveCompraWithDetails' in service will assume standard location logic
-                // or we will add the location to the detail entity if possible. 
-                // Let's modify InvCompraDetalle to include transient location? No.
-            } else {
-                TailwindNotification.show("Complete todos los campos requeridos", TailwindNotification.Type.ERROR);
+        try {
+            TailwindModal modal = new TailwindModal("Agregar Producto");
+            // width removed to avoid breaking fixed overlay layout
+            
+            ComboBox<InvProductoVariante> variantSelect = new ComboBox<>("Producto");
+            
+            // Optimized loading using join fetch to avoid LazyInitException
+            List<InvProductoVariante> allVariants;
+            try {
+                allVariants = productoService.findAllVariantesWithProducto();
+            } catch (Exception e) {
+                e.printStackTrace();
+                TailwindNotification.show("Error cargando productos: " + e.getMessage(), TailwindNotification.Type.ERROR);
+                return;
             }
-        });
-        addBtn.addClassNames("bg-primary", "text-white", "w-full", "mt-4");
-        
-        VerticalLayout layout = new VerticalLayout(variantSelect, new HorizontalLayout(qtyField, costField), expiryDate, locationSelect, addBtn);
-        modal.addContent(layout);
-        modal.open();
+            
+            variantSelect.setItems(allVariants);
+            variantSelect.setItemLabelGenerator(v -> {
+                try {
+                   String pName = (v.getProducto() != null) ? v.getProducto().getNombre() : "Producto Desconocido";
+                   String vName = (v.getNombreVariante() != null) ? v.getNombreVariante() : "Variante";
+                   return pName + " - " + vName;
+                } catch (Exception e) {
+                   return "Error: " + v.getId();
+                }
+            });
+            variantSelect.setWidthFull();
+            
+            BigDecimalField qtyField = new BigDecimalField("Cantidad");
+            BigDecimalField costField = new BigDecimalField("Costo Unitario");
+            
+            DatePicker expiryDate = new DatePicker("Fecha Caducidad (Si aplica)");
+            
+            ComboBox<InvUbicacion> locationSelect = new ComboBox<>("Ubicación en Almacén");
+            List<InvUbicacion> locs = almacenService.findUbicacionesByAlmacen(almacenDestino.getValue());
+
+            locationSelect.setItems(locs);
+            locationSelect.setItemLabelGenerator(InvUbicacion::getCodigo);
+            locationSelect.setWidthFull();
+
+            Button addBtn = new Button("Agregar", e -> {
+                try {
+                    if (variantSelect.getValue() != null && qtyField.getValue() != null && costField.getValue() != null) {
+                         // Warning if location is missing but we proceed (service might handle default)
+                         if (locationSelect.getValue() == null && !locs.isEmpty()) {
+                              TailwindNotification.show("Seleccione una ubicación", TailwindNotification.Type.WARNING);
+                              return;
+                         }
+
+                        InvCompraDetalle detalle = new InvCompraDetalle();
+                        detalle.setProductoVariante(variantSelect.getValue());
+                        detalle.setCantidad(qtyField.getValue());
+                        detalle.setCostoUnitario(costField.getValue());
+                        detalle.setSubtotal(qtyField.getValue().multiply(costField.getValue()));
+                        if (expiryDate.getValue() != null) {
+                            detalle.setFechaCaducidad(expiryDate.getValue().atStartOfDay());
+                        }
+                        
+                        // Set the specific target location
+                        if (locationSelect.getValue() != null) {
+                             detalle.setTargetLocation(locationSelect.getValue());
+                        }
+                                        
+                        detalles.add(detalle);
+                        refreshGrid();
+                        modal.close();
+                    } else {
+                        TailwindNotification.show("Complete todos los campos requeridos", TailwindNotification.Type.ERROR);
+                    }
+                } catch (Exception ex) {
+                    TailwindNotification.show("Error al agregar producto: " + ex.getMessage(), TailwindNotification.Type.ERROR);
+                    ex.printStackTrace();
+                }
+            });
+            addBtn.addClassNames("bg-primary", "text-white", "w-full", "mt-4");
+            
+            Button cancelBtn = new Button("Cancelar", e -> modal.close());
+            cancelBtn.addClassNames("w-full", "bg-gray-200", "text-gray-800", "mt-2", "rounded-lg", "shadow-sm");
+
+            VerticalLayout layout = new VerticalLayout(variantSelect, new HorizontalLayout(qtyField, costField), expiryDate, locationSelect, addBtn, cancelBtn);
+            modal.addContent(layout);
+            add(modal);
+            modal.open();
+        } catch (Exception e) {
+             TailwindNotification.show("Error al abrir diálogo: " + e.getMessage(), TailwindNotification.Type.ERROR);
+             e.printStackTrace();
+        }
     }
     
     private void refreshGrid() {

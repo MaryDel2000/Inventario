@@ -10,8 +10,12 @@ import java.time.LocalDateTime;
 @Table(name = "inv_lista_precio")
 public class InvListaPrecio extends AuditableEntity {
 
+    private String codigo;
     private String nombre;
     private String descripcion;
+    
+    public String getCodigo() { return codigo; }
+    public void setCodigo(String codigo) { this.codigo = codigo; }
     
     @ManyToOne
     @JoinColumn(name = "sucursal_id")

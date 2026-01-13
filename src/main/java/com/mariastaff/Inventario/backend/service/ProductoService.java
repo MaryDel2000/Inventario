@@ -1,33 +1,35 @@
 package com.mariastaff.Inventario.backend.service;
 
-import com.mariastaff.Inventario.backend.data.entity.InvProducto;
-import com.mariastaff.Inventario.backend.data.repository.InvProductoRepository;
+import com.mariastaff.Inventario.backend.data.entity.*;
+import com.mariastaff.Inventario.backend.data.repository.*;
 import java.util.List;
+import java.math.BigDecimal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.mariastaff.Inventario.backend.data.entity.InvLote;
-import com.mariastaff.Inventario.backend.data.entity.InvProductoVariante;
 
 
 @Service
 public class ProductoService {
 
     private final InvProductoRepository repository;
-    private final com.mariastaff.Inventario.backend.data.repository.InvProductoVarianteRepository varianteRepository;
-    private final com.mariastaff.Inventario.backend.data.repository.InvLoteRepository loteRepository;
-    private final com.mariastaff.Inventario.backend.data.repository.InvPrecioVentaRepository precioVentaRepository;
-    private final com.mariastaff.Inventario.backend.data.repository.InvExistenciaRepository existenciaRepository;
+    private final InvProductoVarianteRepository varianteRepository;
+    private final InvLoteRepository loteRepository;
+    private final InvPrecioVentaRepository precioVentaRepository;
+    private final InvExistenciaRepository existenciaRepository;
+    private final InvListaPrecioRepository listaPrecioRepository;
 
     public ProductoService(InvProductoRepository repository, 
-                           com.mariastaff.Inventario.backend.data.repository.InvProductoVarianteRepository varianteRepository,
-                           com.mariastaff.Inventario.backend.data.repository.InvLoteRepository loteRepository,
-                           com.mariastaff.Inventario.backend.data.repository.InvExistenciaRepository existenciaRepository,
-                           com.mariastaff.Inventario.backend.data.repository.InvPrecioVentaRepository precioVentaRepository) {
+                           InvProductoVarianteRepository varianteRepository,
+                           InvLoteRepository loteRepository,
+                           InvExistenciaRepository existenciaRepository,
+                           InvPrecioVentaRepository precioVentaRepository,
+                           InvListaPrecioRepository listaPrecioRepository) {
         this.repository = repository;
         this.varianteRepository = varianteRepository;
         this.loteRepository = loteRepository;
         this.existenciaRepository = existenciaRepository;
         this.precioVentaRepository = precioVentaRepository;
+        this.listaPrecioRepository = listaPrecioRepository;
     }
 
     public java.util.Optional<InvProducto> findById(Long id) {
@@ -38,9 +40,7 @@ public class ProductoService {
         return repository.findAll();
     }
     
-    public List<InvProducto> search(com.mariastaff.Inventario.backend.data.entity.InvCategoria categoria, 
-                                    com.mariastaff.Inventario.backend.data.entity.InvUnidadMedida uom, 
-                                    Boolean activo) {
+    public List<InvProducto> search(InvCategoria categoria, InvUnidadMedida uom, Boolean activo) {
         return repository.search(categoria, uom, activo);
     }
     
@@ -49,7 +49,7 @@ public class ProductoService {
     }
 
     @Transactional
-    public InvProducto createProductWithInitialBatch(InvProducto product, com.mariastaff.Inventario.backend.data.entity.InvUbicacion location, java.math.BigDecimal initialStock, String batchCode, java.time.LocalDateTime expiryDate, String batchObservations) {
+    public InvProducto createProductWithInitialBatch(InvProducto product, InvUbicacion location, BigDecimal initialStock, String batchCode, java.time.LocalDateTime expiryDate, String batchObservations, BigDecimal initialPrice) {
         // 1. Save Product
         InvProducto savedProduct = repository.save(product);
 
@@ -60,6 +60,11 @@ public class ProductoService {
         defaultVariant.setCodigoInternoVariante(savedProduct.getCodigoInterno());
         defaultVariant.setActivo(true);
         InvProductoVariante savedVariant = varianteRepository.save(defaultVariant);
+        
+        // 2.1 Create Initial Price if provided
+        if (initialPrice != null && initialPrice.compareTo(BigDecimal.ZERO) > 0) {
+            updatePrecioVenta(savedVariant, initialPrice);
+        }
 
         InvLote newLote = null;
         // 3. Create Initial Batch (if code provided)
@@ -74,14 +79,12 @@ public class ProductoService {
 
         // 4. Create Initial Stock (if location provided)
         if (location != null) {
-            com.mariastaff.Inventario.backend.data.entity.InvExistencia existencia = new com.mariastaff.Inventario.backend.data.entity.InvExistencia();
+            InvExistencia existencia = new InvExistencia();
             existencia.setAlmacen(location.getAlmacen());
             existencia.setUbicacion(location);
             existencia.setProductoVariante(savedVariant);
-            existencia.setLote(newLote); // Can be null if no batch created
-            existencia.setCantidadDisponible(initialStock != null ? initialStock : java.math.BigDecimal.ZERO); 
-            // Usually initial stock is 0 unless specified. The prompt says "create a stock register".
-            // It says "The product is born with stock 0". So setting to 0 is fine, but the record must exist.
+            existencia.setLote(newLote); 
+            existencia.setCantidadDisponible(initialStock != null ? initialStock : BigDecimal.ZERO); 
             existencia.setFechaUltimaActualizacion(java.time.LocalDateTime.now());
             existenciaRepository.save(existencia);
         }
@@ -89,10 +92,15 @@ public class ProductoService {
         return savedProduct;
     }
     
+    // Kept for backward compatibility if needed, but updated to call the main method with null price
+    public InvProducto createProductWithInitialBatch(InvProducto product, InvUbicacion location, BigDecimal initialStock, String batchCode, java.time.LocalDateTime expiryDate, String batchObservations) {
+        return createProductWithInitialBatch(product, location, initialStock, batchCode, expiryDate, batchObservations, null);
+    }
+    
     public void deleteProducto(InvProducto entity) {
         // Find all variants
-        List<com.mariastaff.Inventario.backend.data.entity.InvProductoVariante> variantes = varianteRepository.findByProducto(entity);
-        for (com.mariastaff.Inventario.backend.data.entity.InvProductoVariante variante : variantes) {
+        List<InvProductoVariante> variantes = varianteRepository.findByProducto(entity);
+        for (InvProductoVariante variante : variantes) {
             deleteVariante(variante);
         }
         repository.delete(entity);
@@ -100,39 +108,71 @@ public class ProductoService {
     public long countProductos() { return repository.count(); }
 
     // Variantes
-    public List<com.mariastaff.Inventario.backend.data.entity.InvProductoVariante> findAllVariantes() {
+    public List<InvProductoVariante> findAllVariantes() {
         return varianteRepository.findAll();
     }
     
-    public List<com.mariastaff.Inventario.backend.data.entity.InvProductoVariante> findVariantesByProducto(InvProducto producto) {
+    public List<InvProductoVariante> findAllVariantesWithProducto() {
+        return varianteRepository.findAllWithProducto();
+    }
+    
+    public List<InvProductoVariante> findVariantesByProducto(InvProducto producto) {
         return varianteRepository.findByProducto(producto);
     }
 
-    public com.mariastaff.Inventario.backend.data.entity.InvProductoVariante saveVariante(com.mariastaff.Inventario.backend.data.entity.InvProductoVariante variante) {
+    public InvProductoVariante saveVariante(InvProductoVariante variante) {
         return varianteRepository.save(variante);
     }
 
-    public void deleteVariante(com.mariastaff.Inventario.backend.data.entity.InvProductoVariante variante) {
+    public void deleteVariante(InvProductoVariante variante) {
         // Find all batches (lotes) for this variant
-        List<com.mariastaff.Inventario.backend.data.entity.InvLote> lotes = loteRepository.findByProductoVariante(variante);
+        List<InvLote> lotes = loteRepository.findByProductoVariante(variante);
         loteRepository.deleteAll(lotes);
         varianteRepository.delete(variante);
     }
 
-    public java.math.BigDecimal getStockTotal(com.mariastaff.Inventario.backend.data.entity.InvProductoVariante variante) {
-        List<com.mariastaff.Inventario.backend.data.entity.InvExistencia> existencias = existenciaRepository.findByProductoVariante(variante);
+    public BigDecimal getStockTotal(InvProductoVariante variante) {
+        List<InvExistencia> existencias = existenciaRepository.findByProductoVariante(variante);
         return existencias.stream()
-                .map(com.mariastaff.Inventario.backend.data.entity.InvExistencia::getCantidadDisponible)
-                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+                .map(InvExistencia::getCantidadDisponible)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    public java.math.BigDecimal getPrecioVentaActual(com.mariastaff.Inventario.backend.data.entity.InvProductoVariante variante) {
-        List<com.mariastaff.Inventario.backend.data.entity.InvPrecioVenta> precios = precioVentaRepository.findByProductoVariante(variante);
+    public BigDecimal getPrecioVentaActual(InvProductoVariante variante) {
+        List<InvPrecioVenta> precios = precioVentaRepository.findByProductoVariante(variante);
         // Logic to pick the best price (e.g., active, recent). For now, return the first active one or ZERO.
         return precios.stream()
-                .filter(p -> p.getListaPrecio().getActivo()) // Assuming ListaPrecio is loaded or check
-                .map(com.mariastaff.Inventario.backend.data.entity.InvPrecioVenta::getPrecioVenta)
+                .filter(p -> p.getListaPrecio() != null && p.getListaPrecio().getActivo()) 
+                .map(InvPrecioVenta::getPrecioVenta)
                 .findFirst()
-                .orElse(java.math.BigDecimal.ZERO);
+                .orElse(BigDecimal.ZERO);
+    }
+    
+    @Transactional
+    public void updatePrecioVenta(InvProductoVariante variante, BigDecimal precio) {
+        InvListaPrecio listaGeneral = listaPrecioRepository.findByCodigo("GENERAL");
+        if (listaGeneral == null) {
+            listaGeneral = new InvListaPrecio();
+            listaGeneral.setCodigo("GENERAL");
+            listaGeneral.setNombre("Lista General de Precios");
+            listaGeneral.setActivo(true);
+            listaGeneral = listaPrecioRepository.save(listaGeneral);
+        }
+        
+        final InvListaPrecio listaFinal = listaGeneral;
+        
+        // 2. Check if price exists for this variant and list
+        List<InvPrecioVenta> precios = precioVentaRepository.findByProductoVariante(variante);
+        InvPrecioVenta precioVenta = precios.stream()
+            .filter(p -> p.getListaPrecio().getId().equals(listaFinal.getId()))
+            .findFirst()
+            .orElse(new InvPrecioVenta());
+            
+        precioVenta.setProductoVariante(variante);
+        precioVenta.setListaPrecio(listaFinal);
+        precioVenta.setPrecioVenta(precio);
+        precioVenta.setFechaInicioVigencia(java.time.LocalDateTime.now());
+        
+        precioVentaRepository.save(precioVenta);
     }
 }

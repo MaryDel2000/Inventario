@@ -7,6 +7,7 @@ import com.mariastaff.Inventario.backend.data.entity.InvMovimiento;
 import com.mariastaff.Inventario.backend.data.entity.InvMovimientoDetalle;
 import com.mariastaff.Inventario.backend.data.entity.InvProveedor;
 import com.mariastaff.Inventario.backend.data.entity.InvUbicacion;
+import com.mariastaff.Inventario.backend.data.repository.GenEntidadRepository;
 import com.mariastaff.Inventario.backend.data.repository.InvCompraDetalleRepository;
 import com.mariastaff.Inventario.backend.data.repository.InvCompraRepository;
 import com.mariastaff.Inventario.backend.data.repository.InvLoteRepository;
@@ -25,6 +26,7 @@ public class CompraService {
     private final InvCompraRepository compraRepository;
     private final InvCompraDetalleRepository compraDetalleRepository;
     private final InvProveedorRepository proveedorRepository;
+    private final GenEntidadRepository entidadRepository;
     private final InvLoteRepository loteRepository;
     private final MovimientoService movimientoService;
     private final InvUbicacionRepository ubicacionRepository;
@@ -32,12 +34,14 @@ public class CompraService {
     public CompraService(InvCompraRepository compraRepository, 
                          InvCompraDetalleRepository compraDetalleRepository,
                          InvProveedorRepository proveedorRepository,
+                         GenEntidadRepository entidadRepository,
                          InvLoteRepository loteRepository,
                          MovimientoService movimientoService,
                          InvUbicacionRepository ubicacionRepository) {
         this.compraRepository = compraRepository;
         this.compraDetalleRepository = compraDetalleRepository;
         this.proveedorRepository = proveedorRepository;
+        this.entidadRepository = entidadRepository;
         this.loteRepository = loteRepository;
         this.movimientoService = movimientoService;
         this.ubicacionRepository = ubicacionRepository;
@@ -48,7 +52,16 @@ public class CompraService {
     public void deleteCompra(InvCompra entity) { compraRepository.delete(entity); }
 
     public List<InvProveedor> findAllProveedores() { return proveedorRepository.findAll(); }
-    public InvProveedor saveProveedor(InvProveedor entity) { return proveedorRepository.save(entity); }
+    
+    @Transactional
+    public InvProveedor saveProveedor(InvProveedor entity) {
+        if (entity.getEntidad() != null) {
+            // Save GenEntidad first to avoid Transient errors if cascade is not set
+            entity.setEntidad(entidadRepository.save(entity.getEntidad()));
+        }
+        return proveedorRepository.save(entity); 
+    }
+    
     public void deleteProveedor(InvProveedor entity) { proveedorRepository.delete(entity); }
     
     @Transactional
@@ -95,7 +108,12 @@ public class CompraService {
             movDet.setLote(savedLote);
             // Use default location if we can't get specific one from UI yet (UI passed it? No, we skipped it in entity)
             // Ideally we should pass it. For now, use default.
-            movDet.setUbicacionDestino(defaultLocation);
+            // Use specific location from UI if available, otherwise default
+            if (det.getTargetLocation() != null) {
+                movDet.setUbicacionDestino(det.getTargetLocation());
+            } else {
+                movDet.setUbicacionDestino(defaultLocation);
+            }
             
             movDetalles.add(movDet);
         }

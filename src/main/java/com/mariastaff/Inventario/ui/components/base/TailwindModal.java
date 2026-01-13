@@ -23,14 +23,14 @@ public class TailwindModal extends Div {
         
         // Modal Panel Container (Centering)
         Div panelContainer = new Div();
-        // Added w-full to ensure justify-center works relative to full width
-        // Also ensure pointer-events-none is handled if needed, but for now strict centering
-        panelContainer.addClassNames("flex", "min-h-full", "w-full", "items-center", "justify-center", "p-4", "text-center");
+        // Changed min-h-full to min-h-screen to ensure full viewport height for centering
+        // Using min-h-screen makes the flex container fill the window, allowing items-center to work correctly.
+        panelContainer.addClassNames("flex", "min-h-screen", "w-full", "items-center", "justify-center", "p-4", "text-center");
 
         // Modal Content Card
         // Increased max-width to max-w-2xl
         modalContent = new Div();
-        modalContent.addClassNames("relative", "transform", "rounded-xl", "text-left", "shadow-2xl", "transition-all", "w-full", "max-w-2xl", "border", "overflow-hidden");
+        modalContent.addClassNames("relative", "transform", "rounded-xl", "text-left", "shadow-2xl", "transition-all", "w-full", "max-w-2xl", "border", "overflow-hidden", "bg-white");
         modalContent.getStyle().set("background-color", "var(--color-bg-surface)");
         modalContent.getStyle().set("color", "var(--color-text-main)");
         modalContent.getStyle().set("border-color", "var(--color-border)");

@@ -21,11 +21,13 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.textfield.BigDecimalField;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,11 +47,12 @@ public class ProductFormDialog extends TailwindModal {
     private TextField descripcion;
     private ComboBox<InvCategoria> categoria;
     private ComboBox<InvUnidadMedida> unidadMedida;
+    private BigDecimalField precioVenta; // New Field
     private TailwindToggle activo;
 
     // New Product Fields
     private ComboBox<InvUbicacion> ubicacion;
-    private com.vaadin.flow.component.textfield.BigDecimalField cantidadInicial;
+    private BigDecimalField cantidadInicial;
     private TextField lote;
     private TailwindDatePicker fechaCaducidad;
     private TextArea observacionesLote;
@@ -79,6 +82,9 @@ public class ProductFormDialog extends TailwindModal {
         
         descripcion = new TextField(getTranslation("field.description", "Descripción"));
         descripcion.addClassName("w-full");
+        
+        precioVenta = new BigDecimalField("Precio de Venta (Referencial)");
+        precioVenta.addClassName("w-full");
         
         categoria = new ComboBox<>(getTranslation("view.products.grid.category"));
         categoria.setItems(catalogoService.findCategoriasActivas());
@@ -128,7 +134,7 @@ public class ProductFormDialog extends TailwindModal {
         ubicacion.setItemLabelGenerator(u -> u.getCodigo() + " - " + u.getDescripcion());
         ubicacion.addClassName("w-full");
         
-        cantidadInicial = new com.vaadin.flow.component.textfield.BigDecimalField(getTranslation("field.stock.initial", "Cantidad Inicial"));
+        cantidadInicial = new BigDecimalField(getTranslation("field.stock.initial", "Cantidad Inicial"));
         cantidadInicial.addClassName("w-full");
 
         lote = new TextField(getTranslation("field.batch.initial", "Lote (Inicial)"));
@@ -255,13 +261,25 @@ public class ProductFormDialog extends TailwindModal {
         if (isNew) {
             categoria.setItems(catalogoService.findCategoriasActivas());
             activo.setValue(true);
-            formLayout.add(nombre, codigo, categoria, unidadMedida, ubicacion, cantidadInicial, lote, fechaCaducidad, descripcion, observacionesLote, activo);
+            precioVenta.clear();
+            formLayout.add(nombre, codigo, categoria, unidadMedida, precioVenta, ubicacion, cantidadInicial, lote, fechaCaducidad, descripcion, observacionesLote, activo);
             formLayout.setColspan(descripcion, 2);
             formLayout.setColspan(observacionesLote, 2);
         } else {
             categoria.setItems(catalogoService.findAllCategorias());
             refreshLotesGrid();
-            formLayout.add(nombre, codigo, categoria, unidadMedida, descripcion, lotesGrid, activo);
+            
+            // Try load initial price (simplified)
+            // Ideally we need to fetch the price from service.
+            // Since we can't easily fetch it here without variante ID (product has many variants),
+            // We just leave it empty or fetch the first one.
+            if (!service.findVariantesByProducto(product).isEmpty()) {
+                 InvProductoVariante v = service.findVariantesByProducto(product).get(0);
+                 BigDecimal price = service.getPrecioVentaActual(v);
+                 precioVenta.setValue(price);
+            }
+            
+            formLayout.add(nombre, codigo, categoria, unidadMedida, precioVenta, descripcion, lotesGrid, activo);
             formLayout.setColspan(descripcion, 2);
             formLayout.setColspan(lotesGrid, 2);
         }
@@ -290,10 +308,18 @@ public class ProductFormDialog extends TailwindModal {
                     cantidadInicial.getValue(),
                     lote.getValue(),
                     fechaCaducidad.getValue() != null ? fechaCaducidad.getValue().atStartOfDay() : null,
-                    observacionesLote.getValue()
+                    observacionesLote.getValue(),
+                    precioVenta.getValue() // Updated signature
                 );
             } else {
                 service.save(currentProduct);
+                // Update price if changed
+                if (precioVenta.getValue() != null) {
+                     List<InvProductoVariante> vars = service.findVariantesByProducto(currentProduct);
+                     for(InvProductoVariante v : vars) {
+                         service.updatePrecioVenta(v, precioVenta.getValue());
+                     }
+                }
             }
             
             TailwindNotification.show(isNew ? getTranslation("msg.product.created", "Producto creado") : getTranslation("msg.product.updated", "Producto actualizado"), TailwindNotification.Type.SUCCESS);
