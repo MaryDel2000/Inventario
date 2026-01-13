@@ -41,7 +41,11 @@ public class ProductoService {
     }
     
     public List<InvProducto> search(InvCategoria categoria, InvUnidadMedida uom, Boolean activo) {
-        return repository.search(categoria, uom, activo);
+        return search(categoria, uom, activo, null);
+    }
+
+    public List<InvProducto> search(InvCategoria categoria, InvUnidadMedida uom, Boolean activo, InvAlmacen almacen) {
+        return repository.search(categoria, uom, activo, almacen);
     }
     
     public InvProducto save(InvProducto producto) {

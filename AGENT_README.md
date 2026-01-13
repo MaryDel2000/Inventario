@@ -23,8 +23,10 @@
   - Gestión integral de Categorías, UOM, Variantes y Lotes mediante diálogos modales.
   - **Creación**: Permite definir **Stock Inicial** (Cantidad, Ubicación, Lote).
   - **Visualización**: Grid principal muestra Stocks Totales calculados en tiempo real.
+  - **Filtros**: Se agregó filtro por **Almacén** para ver productos con existencia en una ubicación específica.
 - **Movimientos (`MovementsView`)**:
   - Refactorizado para alta precisión.
+  - **Lógica Estricta**: `MovimientoService` ahora valida obligatoriedad de almacenes (Origen/Destino) según tipo de movimiento y **prohíbe stocks negativos**.
   - Permite movimientos (Entrada/Salida/Traspaso) seleccionando **Lote** y **Ubicación específica** por cada línea de detalle.
   - Filtros dinámicos de ubicación según almacén seleccionado.
 - **Almacenes y Ubicaciones**: Vistas CRUD completas y funcionales.
@@ -33,7 +35,7 @@
 - **DataGenerator**: Implementado para tienda de repuestos automotrices.
   - *Estado*: Desactivado (`// @Component`) para evitar reinicios de datos accidentales.
   - Contiene datos de ejemplo: Aceites, Frenos, Baterías, etc.
-- **i18n**: Internacionalización extendida a cabeceras de grids, filtros y formularios de movimientos (`messages.properties`).
+- **i18n**: Internacionalización extendida a cabeceras de grids, filtros y formularios de movimientos (`messages.properties`). Corregido bug de etiquetas faltantes (`###`).
 
 ### Módulo Compras y Ventas (NUEVO - COMPLETADO)
 - **POS (Punto de Venta)**: `POSView` plenamente operativa.

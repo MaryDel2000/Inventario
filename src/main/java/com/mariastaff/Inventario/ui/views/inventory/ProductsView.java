@@ -40,6 +40,7 @@ public class ProductsView extends VerticalLayout {
     private ComboBox<InvCategoria> filterCategory;
     private ComboBox<InvUnidadMedida> filterUOM;
     private ComboBox<String> filterActive;
+    private ComboBox<com.mariastaff.Inventario.backend.data.entity.InvAlmacen> filterWarehouse;
 
     public ProductsView(ProductoService service, CatalogoService catalogoService, AlmacenService almacenService) {
         this.service = service;
@@ -130,7 +131,13 @@ public class ProductsView extends VerticalLayout {
         filterActive.setClearButtonVisible(true);
         filterActive.addValueChangeListener(e -> updateList());
         
-        HorizontalLayout layout = new HorizontalLayout(filterCategory, filterUOM, filterActive);
+        filterWarehouse = new ComboBox<>(getTranslation("filter.warehouse", "Almacén"));
+        filterWarehouse.setItems(almacenService.findAllAlmacenes());
+        filterWarehouse.setItemLabelGenerator(com.mariastaff.Inventario.backend.data.entity.InvAlmacen::getNombre);
+        filterWarehouse.setClearButtonVisible(true);
+        filterWarehouse.addValueChangeListener(e -> updateList());
+        
+        HorizontalLayout layout = new HorizontalLayout(filterCategory, filterUOM, filterActive, filterWarehouse);
         layout.addClassNames("w-full", "items-end", "mb-4");
         return layout;
     }
@@ -140,7 +147,7 @@ public class ProductsView extends VerticalLayout {
         if (filterActive.getValue() != null) {
             activeStatus = getTranslation("status.active").equals(filterActive.getValue());
         }
-        grid.setItems(service.search(filterCategory.getValue(), filterUOM.getValue(), activeStatus));
+        grid.setItems(service.search(filterCategory.getValue(), filterUOM.getValue(), activeStatus, filterWarehouse.getValue()));
     }
 
     private void openProductDialog() {
