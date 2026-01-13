@@ -43,7 +43,7 @@
 - **Compras (`NewPurchaseView`)**:
   - **Flujo Completo**: Registro de compra -> Generación de Lote -> Entrada de Stock (Movimiento).
   - **Requisito**: Requiere tener **Proveedores** registrados previamente.
-  - **UI/UX**: Solucionado centrado de modales y superposición de DatePicker/ComboBox (z-index). Estado persistente (@UIScope).
+  - **UI/UX**: Solucionado centrado de modales y superposición de DatePicker/ComboBox (z-index). Estado persistente (@UIScope). Reemplazo de DatePickers nativos por `TailwindDatePicker` para consistencia visual.
 
 ## 4. Notas de Desarrollo
 - **Fix Rutas**: `HomeView` eliminado. `InventoryDashboardView` tiene el alias de ruta raíz.

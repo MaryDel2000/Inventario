@@ -152,6 +152,7 @@ public class NewPurchaseView extends VerticalLayout {
         binder.forField(almacenDestino).asRequired("Requerido").bind(InvCompra::getAlmacenDestino, InvCompra::setAlmacenDestino);
         binder.forField(tipoDocumento).bind(InvCompra::getTipoDocumento, InvCompra::setTipoDocumento);
         binder.forField(numeroDocumento).asRequired("Requerido").bind(InvCompra::getNumeroDocumento, InvCompra::setNumeroDocumento);
+        binder.setBean(new InvCompra());
     }
 
     private void openAddItemDialog() {
@@ -263,18 +264,26 @@ public class NewPurchaseView extends VerticalLayout {
     
     private void save() {
         if (binder.validate().isOk() && !detalles.isEmpty()) {
-            InvCompra compra = binder.getBean();
-            compra.setFechaCompra(fechaCompra.getValue().atStartOfDay());
-            compra.setTotalCompra(detailsTotal());
-            compra.setEstado("COMPLETADO");
-            
-            // Link details
-            detalles.forEach(d -> d.setCompra(compra));
-            
+            if (fechaCompra.getValue() == null) {
+                TailwindNotification.show("La fecha de compra es requerida", TailwindNotification.Type.WARNING);
+                return;
+            }
+
             try {
+                InvCompra compra = binder.getBean();
+                compra.setFechaCompra(fechaCompra.getValue().atStartOfDay());
+                compra.setTotalCompra(detailsTotal());
+                compra.setEstado("COMPLETADO");
+                
+                // Link details
+                detalles.forEach(d -> d.setCompra(compra));
+            
                 compraService.saveCompraWithDetails(compra, detalles); 
                 TailwindNotification.show("Compra registrada con éxito", TailwindNotification.Type.SUCCESS);
+                
+                // Reset form
                 binder.setBean(new InvCompra());
+                fechaCompra.setValue(java.time.LocalDate.now());
                 detalles.clear();
                 refreshGrid();
             } catch (Exception e) {
