@@ -15,7 +15,7 @@ import com.mariastaff.Inventario.ui.components.base.TailwindNotification;
 import com.mariastaff.Inventario.ui.layouts.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
-import com.vaadin.flow.component.datepicker.DatePicker;
+import com.mariastaff.Inventario.ui.components.base.TailwindDatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -51,7 +51,7 @@ public class NewPurchaseView extends VerticalLayout {
     // Form fields
     private final ComboBox<InvProveedor> proveedor = new ComboBox<>("Proveedor");
     private final ComboBox<InvAlmacen> almacenDestino = new ComboBox<>("Almacén Destino");
-    private final DatePicker fechaCompra = new DatePicker("Fecha Compra");
+    private final TailwindDatePicker fechaCompra = new TailwindDatePicker("Fecha Compra");
     private final TextField tipoDocumento = new TextField("Tipo Doc.");
     private final TextField numeroDocumento = new TextField("Nº Documento");
 
@@ -191,7 +191,7 @@ public class NewPurchaseView extends VerticalLayout {
             BigDecimalField qtyField = new BigDecimalField("Cantidad");
             BigDecimalField costField = new BigDecimalField("Costo Unitario");
             
-            DatePicker expiryDate = new DatePicker("Fecha Caducidad (Si aplica)");
+            TailwindDatePicker expiryDate = new TailwindDatePicker("Fecha Caducidad (Si aplica)");
             
             ComboBox<InvUbicacion> locationSelect = new ComboBox<>("Ubicación en Almacén");
             List<InvUbicacion> locs = almacenService.findUbicacionesByAlmacen(almacenDestino.getValue());
