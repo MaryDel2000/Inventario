@@ -42,7 +42,10 @@
 - **POS (Punto de Venta)**: `POSView` plenamente operativa.
   - **Validación de Stock**: Impide ventas si no hay existencias suficientes.
   - **Seguridad**: Asigna automáticamente el usuario logueado (OAuth2/Database) a la venta.
-  - **Pago**: Soporte para múltiples métodos de pago (Efectivo, Tarjeta, etc.).
+  - **Pago**: Soporte para múltiples métodos de pago (Efectivo, Tarjeta, Transferencia) con **captura detallada** (Núm. Tarjeta, Titular, Ref. Transferencia, Banco).
+  - **Clientes**: Creación rápida de clientes ("on-the-fly") escribiendo el nombre en el selector.
+  - **Multi-moneda**: Precios en USD con conversión automática y visualización de total en C$ (NIO) según tasa de cambio.
+  - **UX**: Modal de cobro centrado y responsive. Filtro de búsqueda solo muestra productos activos.
 - **Compras (`NewPurchaseView`)**:
   - **Flujo Completo**: Registro de compra -> Generación de Lote -> Entrada de Stock (Movimiento).
   - **Creación Rápida de Productos**: Implementado botón (+) para registrar nuevos productos directamente desde la vista de compra sin salir del flujo.

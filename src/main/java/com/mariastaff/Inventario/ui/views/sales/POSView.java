@@ -19,6 +19,8 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification.Position;
@@ -44,6 +46,8 @@ public class POSView extends VerticalLayout {
     private final PosService posService;
     private final ProductoService productoService;
     private final com.mariastaff.Inventario.backend.data.repository.InvAlmacenRepository almacenRepository;
+    private final com.mariastaff.Inventario.backend.data.repository.GenMonedaTasaRepository monedaTasaRepository;
+    private final com.mariastaff.Inventario.backend.data.repository.GenEntidadRepository genEntidadRepository;
     private final UserService userService;
     
     private final ComboBox<PosCliente> clienteSelect = new ComboBox<>();
@@ -52,13 +56,18 @@ public class POSView extends VerticalLayout {
     private final Grid<PosVentaDetalle> cartGrid = new Grid<>();
     private final List<PosVentaDetalle> cartItems = new ArrayList<>();
     private final Span totalSpan = new Span();
+    private final Span totalNioSpan = new Span();
     
     public POSView(PosService posService, ProductoService productoService,
                    com.mariastaff.Inventario.backend.data.repository.InvAlmacenRepository almacenRepository,
+                   com.mariastaff.Inventario.backend.data.repository.GenMonedaTasaRepository monedaTasaRepository,
+                   com.mariastaff.Inventario.backend.data.repository.GenEntidadRepository genEntidadRepository,
                    UserService userService) {
         this.posService = posService;
         this.productoService = productoService;
         this.almacenRepository = almacenRepository;
+        this.monedaTasaRepository = monedaTasaRepository;
+        this.genEntidadRepository = genEntidadRepository;
         this.userService = userService;
         
         addClassNames("w-full", "h-full", "bg-bg-secondary", "p-6");
@@ -96,7 +105,9 @@ public class POSView extends VerticalLayout {
         rightPanel.setWidth("350px");
         rightPanel.setSpacing(true);
         
-        totalSpan.addClassNames("text-4xl", "font-bold", "text-primary", "block", "mb-4", "text-right");
+        totalSpan.addClassNames("text-4xl", "font-bold", "text-primary", "block", "text-right");
+        totalNioSpan.addClassNames("text-2xl", "font-semibold", "text-secondary", "block", "mb-4", "text-right"); // Secondary color, smaller
+
         
         Button payButton = new Button("COBRAR", e -> openPaymentDialog());
         payButton.addClassNames("bg-green-600", "text-white", "rounded-lg", "shadow", "hover:bg-green-700", "font-bold", "text-2xl", "py-6");
@@ -107,7 +118,7 @@ public class POSView extends VerticalLayout {
         clearButton.addClassNames("bg-red-100", "text-red-600", "rounded-lg", "hover:bg-red-200", "font-medium");
         clearButton.setWidthFull();
 
-        rightPanel.add(new Span("Total a Pagar:"), totalSpan, payButton, clearButton);
+        rightPanel.add(new Span("Total a Pagar:"), totalSpan, totalNioSpan, payButton, clearButton);
         
         mainLayout.add(leftPanel, rightPanel);
         mainLayout.setFlexGrow(1, leftPanel);
@@ -118,13 +129,36 @@ public class POSView extends VerticalLayout {
         clienteSelect.setLabel(getTranslation("view.pos.client"));
         clienteSelect.setItems(posService.findAllClientes());
         clienteSelect.setItemLabelGenerator(c -> c.getEntidad() != null ? c.getEntidad().getNombreCompleto() : "Cliente " + c.getId());
+        clienteSelect.setAllowCustomValue(true);
+        clienteSelect.addCustomValueSetListener(e -> {
+            String name = e.getDetail();
+            if (name == null || name.trim().isEmpty()) return;
+            
+            try {
+                com.mariastaff.Inventario.backend.data.entity.GenEntidad entidad = new com.mariastaff.Inventario.backend.data.entity.GenEntidad();
+                entidad.setNombreCompleto(name);
+                entidad.setTipoEntidad("PERSONA"); 
+                entidad = genEntidadRepository.save(entidad);
+                
+                PosCliente cliente = new PosCliente();
+                cliente.setEntidad(entidad);
+                cliente = posService.saveCliente(cliente);
+                
+                clienteSelect.setItems(posService.findAllClientes());
+                clienteSelect.setValue(cliente);
+                
+                TailwindNotification.show("Cliente '" + name + "' registrado exitosamente.", TailwindNotification.Type.SUCCESS);
+            } catch (Exception ex) {
+                TailwindNotification.show("Error al registrar cliente: " + ex.getMessage(), TailwindNotification.Type.ERROR);
+            }
+        });
 
         almacenSelect.setLabel("Almacén de Salida");
         almacenSelect.setItems(almacenRepository.findAll());
         almacenSelect.setItemLabelGenerator(InvAlmacen::getNombre);
 
         productoSelect.setLabel(getTranslation("view.pos.search_product"));
-        productoSelect.setItems(productoService.findAll());
+        productoSelect.setItems(productoService.search(null, null, true));
         productoSelect.setItemLabelGenerator(InvProducto::getNombre);
         productoSelect.addValueChangeListener(e -> {
             if (e.getValue() != null) {
@@ -133,7 +167,8 @@ public class POSView extends VerticalLayout {
             }
         });
         
-        totalSpan.setText(getTranslation("view.pos.total") + " $0.00");
+        totalSpan.setText("$0.00");
+        totalNioSpan.setText("C$0.00");
     }
 
     private void configureGrid() {
@@ -149,6 +184,7 @@ public class POSView extends VerticalLayout {
         
         cartGrid.addColumn(new ComponentRenderer<>(item -> {
             NumberField quantityField = new NumberField();
+            quantityField.setValueChangeMode(ValueChangeMode.EAGER);
             quantityField.setValue(item.getCantidad() != null ? item.getCantidad().doubleValue() : 1.0);
             quantityField.setMin(1);
             quantityField.setStep(1);
@@ -171,10 +207,11 @@ public class POSView extends VerticalLayout {
                 .setHeader("Subtotal").setKey("subtotal").setTextAlign(com.vaadin.flow.component.grid.ColumnTextAlign.END);
         
         cartGrid.addComponentColumn(item -> {
-            Button remove = new Button(VaadinIcon.CLOSE_SMALL.create(), e -> removeFromCart(item));
-            remove.addClassNames("bg-red-500", "text-white", "rounded", "px-2", "py-1", "hover:bg-red-600", "text-xs");
+            Button remove = new Button(VaadinIcon.TRASH.create(), e -> removeFromCart(item));
+            remove.addThemeVariants(ButtonVariant.LUMO_ICON, ButtonVariant.LUMO_ERROR, ButtonVariant.LUMO_SMALL);
+            remove.addClassName("bg-white"); // Optional contrast if needed, but native error variant is cleaner
             return remove;
-        }).setWidth("60px").setFlexGrow(0);
+        }).setWidth("60px").setFlexGrow(0).setTextAlign(com.vaadin.flow.component.grid.ColumnTextAlign.CENTER);
     }
 
     private void checkAndAddToCart(InvProducto product) {
@@ -199,7 +236,7 @@ public class POSView extends VerticalLayout {
         grid.setItems(variants);
         grid.addColumn(InvProductoVariante::getNombreVariante).setHeader("Variante");
         grid.addColumn(v -> productoService.getStockTotal(v)).setHeader("Stock");
-        grid.addColumn(v -> "$" + productoService.getPrecioVentaActual(v)).setHeader("Precio");
+        grid.addColumn(v -> "$" + productoService.getPrecioVentaActual(v, "USD")).setHeader("Precio");
         
         grid.addItemClickListener(e -> {
             addVariantToCart(e.getItem());
@@ -213,7 +250,7 @@ public class POSView extends VerticalLayout {
 
     private void addVariantToCart(InvProductoVariante variant) {
         BigDecimal stock = productoService.getStockTotal(variant);
-        BigDecimal price = productoService.getPrecioVentaActual(variant);
+        BigDecimal price = productoService.getPrecioVentaActual(variant, "USD");
         
         // Stock Validation
         if (stock.compareTo(BigDecimal.ZERO) <= 0) {
@@ -271,10 +308,22 @@ public class POSView extends VerticalLayout {
     }
     
     private void refreshTotals() {
-        BigDecimal total = cartItems.stream()
+        BigDecimal totalUSD = cartItems.stream()
                 .map(PosVentaDetalle::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        totalSpan.setText("$" + total.toString());
+        
+        totalSpan.setText("$" + totalUSD.toString());
+        
+        // Calculate Cordobas
+        BigDecimal tasa = getTasaCambioUSDtoNIO();
+        BigDecimal totalNIO = totalUSD.multiply(tasa).setScale(2, java.math.RoundingMode.HALF_UP);
+        totalNioSpan.setText("C$" + totalNIO.toString());
+    }
+    
+    private BigDecimal getTasaCambioUSDtoNIO() {
+        return monedaTasaRepository.findTopByMonedaOrigenCodigoAndMonedaDestinoCodigoOrderByFechaActualizacionDesc("USD", "NIO")
+                .map(com.mariastaff.Inventario.backend.data.entity.GenMonedaTasa::getTasaConversion)
+                .orElse(new BigDecimal("36.62")); // Fallback default rate if not set in DB
     }
 
     private void openPaymentDialog() {
@@ -299,14 +348,80 @@ public class POSView extends VerticalLayout {
         paymentMethod.setItems("EFECTIVO", "TARJETA", "TRANSFERENCIA");
         paymentMethod.setValue("EFECTIVO");
         paymentMethod.setWidthFull();
+
+        // Card Details Section (Hidden by default)
+        VerticalLayout cardDetails = new VerticalLayout();
+        cardDetails.setPadding(false);
+        cardDetails.setSpacing(true);
+        cardDetails.setVisible(false);
+        
+        com.vaadin.flow.component.textfield.TextField cardNumber = new com.vaadin.flow.component.textfield.TextField("Número de Tarjeta");
+        cardNumber.setWidthFull();
+        cardNumber.setPlaceholder("0000 0000 0000 0000");
+        
+        HorizontalLayout cardExtra = new HorizontalLayout();
+        cardExtra.setWidthFull();
+        
+        com.vaadin.flow.component.textfield.TextField cardHolder = new com.vaadin.flow.component.textfield.TextField("Titular");
+        cardHolder.setWidthFull();
+        
+        com.vaadin.flow.component.textfield.TextField cardExpiry = new com.vaadin.flow.component.textfield.TextField("Vencimiento (MM/YY)");
+        cardExpiry.setWidth("150px");
+        
+        cardExtra.add(cardHolder, cardExpiry);
+        cardDetails.add(cardNumber, cardExtra);
+
+        // Transfer Details Section (Hidden by default)
+        VerticalLayout transferDetails = new VerticalLayout();
+        transferDetails.setPadding(false);
+        transferDetails.setSpacing(true);
+        transferDetails.setVisible(false);
+        
+        com.vaadin.flow.component.textfield.TextField transferReference = new com.vaadin.flow.component.textfield.TextField("Número de Referencia");
+        transferReference.setWidthFull();
+        
+        com.vaadin.flow.component.textfield.TextField transferBank = new com.vaadin.flow.component.textfield.TextField("Banco");
+        transferBank.setWidthFull();
+
+        transferDetails.add(transferReference, transferBank);
+
+        paymentMethod.addValueChangeListener(e -> {
+            cardDetails.setVisible("TARJETA".equals(e.getValue()));
+            transferDetails.setVisible("TRANSFERENCIA".equals(e.getValue()));
+        });
         
         Button confirmBtn = new Button("CONFIRMAR PAGO", e -> {
-            processSale(paymentMethod.getValue());
+            String methodKey = paymentMethod.getValue();
+            String detailedMethod = methodKey;
+
+            if ("TARJETA".equals(methodKey)) {
+                if (cardNumber.isEmpty() || cardHolder.isEmpty()) {
+                     TailwindNotification.show("Ingrese los datos de la tarjeta.", TailwindNotification.Type.WARNING);
+                     return;
+                }
+                String safeCard = cardNumber.getValue().length() > 4 ? cardNumber.getValue().substring(cardNumber.getValue().length() - 4) : cardNumber.getValue();
+                detailedMethod += " (Titular: " + cardHolder.getValue() + ", **** " + safeCard + ")";
+            } else if ("TRANSFERENCIA".equals(methodKey)) {
+                if (transferReference.isEmpty()) {
+                     TailwindNotification.show("Ingrese el número de referencia.", TailwindNotification.Type.WARNING);
+                     return;
+                }
+                String bankInfo = transferBank.isEmpty() ? "" : ", Banco: " + transferBank.getValue();
+                detailedMethod += " (Ref: " + transferReference.getValue() + bankInfo + ")";
+            }
+            processSale(detailedMethod);
             modal.close();
         });
-        confirmBtn.addClassNames("bg-green-600", "text-white", "w-full", "py-4", "text-xl", "font-bold", "mt-4", "rounded-lg");
+        confirmBtn.addClassNames("bg-green-600", "text-white", "flex-1", "py-4", "text-xl", "font-bold", "rounded-lg");
         
-        modal.addContent(new VerticalLayout(amount, paymentMethod, confirmBtn));
+        Button cancelBtn = new Button("CANCELAR", e -> modal.close());
+        cancelBtn.addClassNames("bg-gray-300", "text-gray-800", "flex-1", "py-4", "text-xl", "font-bold", "rounded-lg", "hover:bg-gray-400");
+
+        HorizontalLayout buttonsLayout = new HorizontalLayout(cancelBtn, confirmBtn);
+        buttonsLayout.setWidthFull();
+        buttonsLayout.setSpacing(true);
+        
+        modal.addContent(new VerticalLayout(amount, paymentMethod, cardDetails, transferDetails, buttonsLayout));
         modal.open();
     }
 

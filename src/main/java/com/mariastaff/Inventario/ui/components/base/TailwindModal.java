@@ -18,14 +18,18 @@ public class TailwindModal extends Div {
         
         // Backdrop with blur effect and dark overlay
         // Using bg-gray-900 with clear opacity class and explicit full viewport dimensions
+        // Backdrop with blur effect and dark overlay
+        // z-40 to be behind the panelContainer (z-50)
         Div backdrop = new Div();
-        backdrop.addClassNames("fixed", "inset-0", "h-screen", "w-screen", "bg-gray-900", "bg-opacity-75", "backdrop-blur-sm", "transition-opacity");
+        backdrop.addClassNames("fixed", "inset-0", "h-screen", "w-screen", "bg-gray-900", "bg-opacity-75", "backdrop-blur-sm", "transition-opacity", "z-40");
         
         // Modal Panel Container (Centering)
         Div panelContainer = new Div();
-        // Changed min-h-full to min-h-screen to ensure full viewport height for centering
-        // Using min-h-screen makes the flex container fill the window, allowing items-center to work correctly.
-        panelContainer.addClassNames("flex", "min-h-screen", "w-full", "items-center", "justify-center", "p-4", "text-center");
+        // Fully decoupled fixed overlay for centering
+        panelContainer.addClassNames("fixed", "inset-0", "z-50", "flex", "items-center", "justify-center", "p-4", "sm:p-0");
+        // Actually, panelContainer is on top of backdrop. We want clicks on panelContainer (empty space) to close? 
+        // For now, let's just center.
+        panelContainer.getStyle().remove("pointer-events"); // revert
 
         // Modal Content Card
         // Increased max-width to max-w-2xl
@@ -41,10 +45,19 @@ public class TailwindModal extends Div {
         header.getStyle().set("background-color", "var(--color-bg-surface)");
         header.getStyle().set("border-color", "var(--color-border)");
         
+        Div headerContent = new Div();
+        headerContent.addClassNames("flex", "items-center", "justify-between");
+        
         H3 titleComponent = new H3(title);
         titleComponent.addClassNames("text-xl", "font-bold", "m-0");
         titleComponent.getStyle().set("color", "var(--color-text-main)");
-        header.add(titleComponent);
+        
+        Button closeButton = new Button(com.vaadin.flow.component.icon.VaadinIcon.CLOSE.create());
+        closeButton.addThemeVariants(com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY);
+        closeButton.addClickListener(e -> close());
+        
+        headerContent.add(titleComponent, closeButton);
+        header.add(headerContent);
         
         // Body
         bodyLayout = new VerticalLayout();
@@ -74,14 +87,20 @@ public class TailwindModal extends Div {
     }
 
     public void open() {
-        // In Vaadin, strictly speaking, we are just a component. 
-        // We assume the caller adds us to the layout.
-        // But to mimic Dialog, we can't easily auto-attach to UI body without UI access.
-        // It's safer to rely on the caller to 'add(modal)'
+        // Automatically attach to the current UI if not already attached
+        if (!getParent().isPresent()) {
+            com.vaadin.flow.component.UI ui = com.vaadin.flow.component.UI.getCurrent();
+            if (ui != null) {
+                ui.add(this);
+            } else {
+                throw new IllegalStateException("UI.getCurrent() is null. Cannot open modal.");
+            }
+        }
         super.setVisible(true);
     }
 
     public void close() {
+        super.setVisible(false);
         getElement().removeFromParent();
     }
 

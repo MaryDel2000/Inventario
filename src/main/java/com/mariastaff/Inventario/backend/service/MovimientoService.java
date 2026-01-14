@@ -91,7 +91,7 @@ public class MovimientoService {
         if (existencia == null) {
             if (cantidadDelta.compareTo(BigDecimal.ZERO) < 0) {
                  // Check if user allows negative stock. Assuming STRICT correctness for now.
-                 throw new IllegalArgumentException("No existe registro de inventario para este producto/lote/ubicación en el almacén especificado. No se puede descontar stock.");
+                 throw new IllegalArgumentException("Stock no encontrado para este producto en la ubicación seleccionada. Verifique el inventario.");
             } else {
                  existencia = new com.mariastaff.Inventario.backend.data.entity.InvExistencia();
                  existencia.setAlmacen(almacen);
