@@ -18,7 +18,12 @@ import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.PermitAll;
+import com.mariastaff.Inventario.backend.data.entity.PosCaja;
+import com.mariastaff.Inventario.backend.data.entity.SysUsuario;
+import com.mariastaff.Inventario.backend.service.UserService;
+import org.springframework.security.core.context.SecurityContextHolder;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @PageTitle("Turnos y Cierres | Ventas")
 @Route(value = "sales/shifts", layout = MainLayout.class)
@@ -26,10 +31,12 @@ import java.time.LocalDateTime;
 public class ShiftView extends VerticalLayout {
 
     private final PosService service;
+    private final UserService userService;
     private final Grid<PosTurno> grid = new Grid<>(PosTurno.class);
 
-    public ShiftView(PosService service) {
+    public ShiftView(PosService service, UserService userService) {
         this.service = service;
+        this.userService = userService;
         addClassNames("w-full", "h-full", "bg-bg-secondary", "p-6");
         
         configureGrid();
@@ -38,7 +45,10 @@ public class ShiftView extends VerticalLayout {
         addBtn.addClassNames("bg-primary", "text-white", "text-sm", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow", "hover:shadow-md", "transition-all");
         addBtn.addClickListener(e -> openDialog());
 
-        HorizontalLayout header = new HorizontalLayout(new AppLabel("Turnos de Caja"), addBtn);
+        Button generateBtn = new Button("Simular Datos", e -> generateData());
+        generateBtn.addClassNames("bg-green-600", "text-white", "text-sm", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow", "hover:shadow-md", "transition-all", "mr-2");
+
+        HorizontalLayout header = new HorizontalLayout(new AppLabel("Turnos de Caja"), generateBtn, addBtn);
         header.addClassNames("w-full", "justify-between", "items-center");
 
         add(header, grid);
@@ -80,7 +90,23 @@ public class ShiftView extends VerticalLayout {
         Button saveButton = new Button("Abrir", e -> {
             try {
                 binder.writeBean(item);
-                TailwindNotification.show("Turno abierto (Simulación)", TailwindNotification.Type.SUCCESS);
+                
+                String username = SecurityContextHolder.getContext().getAuthentication().getName();
+                SysUsuario user = userService.findByUsername(username);
+                item.setUsuarioCajero(user);
+                
+                List<PosCaja> cajas = service.findAllCajas();
+                if (cajas.isEmpty()) {
+                    PosCaja c = new PosCaja();
+                    c.setNombre("Caja Principal");
+                    c = service.saveCaja(c);
+                    item.setCaja(c);
+                } else {
+                    item.setCaja(cajas.get(0));
+                }
+                
+                service.saveTurno(item);
+                TailwindNotification.show("Turno abierto exitosamente", TailwindNotification.Type.SUCCESS);
                 updateList();
                 modal.close();
             } catch (ValidationException ex) {
@@ -100,5 +126,17 @@ public class ShiftView extends VerticalLayout {
         
         add(modal);
         modal.open();
+    }
+    private void generateData() {
+        try {
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
+            SysUsuario user = userService.findByUsername(username);
+            service.generateDemoData(user);
+            updateList();
+            TailwindNotification.show("Datos de prueba generados (Clientes, Ventas, Turnos)", TailwindNotification.Type.SUCCESS);
+        } catch (Exception e) {
+             e.printStackTrace();
+             TailwindNotification.show("Error generando datos: " + e.getMessage(), TailwindNotification.Type.ERROR);
+        }
     }
 }

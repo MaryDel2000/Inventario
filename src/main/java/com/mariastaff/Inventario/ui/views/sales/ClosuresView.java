@@ -33,9 +33,15 @@ public class ClosuresView extends VerticalLayout {
     private void configureGrid() {
         grid.addClassNames( "bg-bg-surface", "rounded-lg", "shadow");
         grid.setSizeFull();
-        grid.setColumns("fechaHoraCierre", "montoFinalEfectivoDeclarado", "diferencia", "estado");
-        grid.addColumn(t -> t.getUsuarioCajero() != null ? t.getUsuarioCajero().getUsername() : "-").setHeader("Cajero");
-        grid.getColumns().forEach(col -> col.setAutoWidth(true));
+        grid.setColumns(); // Clear default columns
+        grid.addColumn(PosTurno::getFechaHoraCierre).setHeader("Fecha/Hora Cierre").setAutoWidth(true);
+        grid.addColumn(t -> t.getCaja() != null ? t.getCaja().getNombre() : "-").setHeader("Caja").setAutoWidth(true);
+        grid.addColumn(t -> t.getUsuarioCajero() != null ? t.getUsuarioCajero().getUsername() : "-").setHeader("Cajero").setAutoWidth(true);
+        grid.addColumn(PosTurno::getMontoInicialEfectivo).setHeader("Monto Inicial").setAutoWidth(true);
+        grid.addColumn(PosTurno::getMontoFinalEfectivoCalculado).setHeader("Calc. (Sistema)").setAutoWidth(true);
+        grid.addColumn(PosTurno::getMontoFinalEfectivoDeclarado).setHeader("Declarado").setAutoWidth(true);
+        grid.addColumn(PosTurno::getDiferencia).setHeader("Diferencia").setAutoWidth(true);
+        grid.addColumn(PosTurno::getEstado).setHeader("Estado").setAutoWidth(true);
     }
 
     private void updateList() {
