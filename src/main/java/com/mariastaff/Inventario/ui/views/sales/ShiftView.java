@@ -41,14 +41,12 @@ public class ShiftView extends VerticalLayout {
         
         configureGrid();
         
+
         Button addBtn = new Button("Abrir Turno", VaadinIcon.PLUS.create());
         addBtn.addClassNames("bg-primary", "text-white", "text-sm", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow", "hover:shadow-md", "transition-all");
         addBtn.addClickListener(e -> openDialog());
 
-        Button generateBtn = new Button("Simular Datos", e -> generateData());
-        generateBtn.addClassNames("bg-green-600", "text-white", "text-sm", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow", "hover:shadow-md", "transition-all", "mr-2");
-
-        HorizontalLayout header = new HorizontalLayout(new AppLabel("Turnos de Caja"), generateBtn, addBtn);
+        HorizontalLayout header = new HorizontalLayout(new AppLabel("Turnos de Caja"), addBtn);
         header.addClassNames("w-full", "justify-between", "items-center");
 
         add(header, grid);
@@ -126,17 +124,5 @@ public class ShiftView extends VerticalLayout {
         
         add(modal);
         modal.open();
-    }
-    private void generateData() {
-        try {
-            String username = SecurityContextHolder.getContext().getAuthentication().getName();
-            SysUsuario user = userService.findByUsername(username);
-            service.generateDemoData(user);
-            updateList();
-            TailwindNotification.show("Datos de prueba generados (Clientes, Ventas, Turnos)", TailwindNotification.Type.SUCCESS);
-        } catch (Exception e) {
-             e.printStackTrace();
-             TailwindNotification.show("Error generando datos: " + e.getMessage(), TailwindNotification.Type.ERROR);
-        }
     }
 }

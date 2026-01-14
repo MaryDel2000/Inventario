@@ -109,16 +109,16 @@ public class POSView extends VerticalLayout {
         totalNioSpan.addClassNames("text-2xl", "font-semibold", "text-secondary", "block", "mb-4", "text-right"); // Secondary color, smaller
 
         
-        Button payButton = new Button("COBRAR", e -> openPaymentDialog());
+        Button payButton = new Button(getTranslation("view.pos.action.pay"), e -> openPaymentDialog());
         payButton.addClassNames("bg-green-600", "text-white", "rounded-lg", "shadow", "hover:bg-green-700", "font-bold", "text-2xl", "py-6");
         payButton.setWidthFull();
         payButton.setHeight("100px");
         
-        Button clearButton = new Button("Limpiar", e -> clearCart());
+        Button clearButton = new Button(getTranslation("view.pos.action.clear"), e -> clearCart());
         clearButton.addClassNames("bg-red-100", "text-red-600", "rounded-lg", "hover:bg-red-200", "font-medium");
         clearButton.setWidthFull();
 
-        rightPanel.add(new Span("Total a Pagar:"), totalSpan, totalNioSpan, payButton, clearButton);
+        rightPanel.add(new Span(getTranslation("view.pos.total_pay")), totalSpan, totalNioSpan, payButton, clearButton);
         
         mainLayout.add(leftPanel, rightPanel);
         mainLayout.setFlexGrow(1, leftPanel);
@@ -147,13 +147,13 @@ public class POSView extends VerticalLayout {
                 clienteSelect.setItems(posService.findAllClientes());
                 clienteSelect.setValue(cliente);
                 
-                TailwindNotification.show("Cliente '" + name + "' registrado exitosamente.", TailwindNotification.Type.SUCCESS);
+                TailwindNotification.show(getTranslation("view.pos.msg.client.registered"), TailwindNotification.Type.SUCCESS);
             } catch (Exception ex) {
-                TailwindNotification.show("Error al registrar cliente: " + ex.getMessage(), TailwindNotification.Type.ERROR);
+                TailwindNotification.show(getTranslation("view.pos.msg.client.error") + ex.getMessage(), TailwindNotification.Type.ERROR);
             }
         });
 
-        almacenSelect.setLabel("Almacén de Salida");
+        almacenSelect.setLabel(getTranslation("view.pos.warehouse.select"));
         almacenSelect.setItems(almacenRepository.findAll());
         almacenSelect.setItemLabelGenerator(InvAlmacen::getNombre);
 
@@ -179,32 +179,17 @@ public class POSView extends VerticalLayout {
                return d.getProductoVariante().getProducto().getNombre() + 
                       (d.getProductoVariante().getNombreVariante().equals(d.getProductoVariante().getProducto().getNombre()) ? "" : " - " + d.getProductoVariante().getNombreVariante());
             }
-            return "Producto";
-        }).setHeader("Producto").setFlexGrow(2); 
+            return getTranslation("view.pos.grid.product");
+        }).setHeader(getTranslation("view.pos.grid.product")).setFlexGrow(2); 
         
-        cartGrid.addColumn(new ComponentRenderer<>(item -> {
-            NumberField quantityField = new NumberField();
-            quantityField.setValueChangeMode(ValueChangeMode.EAGER);
-            quantityField.setValue(item.getCantidad() != null ? item.getCantidad().doubleValue() : 1.0);
-            quantityField.setMin(1);
-            quantityField.setStep(1);
-            quantityField.setWidth("80px");
-            quantityField.addValueChangeListener(e -> {
-                if (e.getValue() != null && e.getValue() > 0) {
-                     item.setCantidad(BigDecimal.valueOf(e.getValue()));
-                     updateItemSubtotal(item);
-                     cartGrid.getDataProvider().refreshItem(item); 
-                     refreshTotals();
-                }
-            });
-            return quantityField;
-        })).setHeader("Cant").setWidth("100px").setFlexGrow(0);
+        cartGrid.addColumn(createQuantityFieldRenderer())
+                .setHeader(getTranslation("view.pos.grid.qty")).setWidth("100px").setFlexGrow(0);
 
         cartGrid.addColumn(d -> d.getPrecioUnitario() != null ? "$" + d.getPrecioUnitario() : "$0.00")
-                .setHeader("Precio").setTextAlign(com.vaadin.flow.component.grid.ColumnTextAlign.END);
+                .setHeader(getTranslation("view.pos.grid.price")).setTextAlign(com.vaadin.flow.component.grid.ColumnTextAlign.END);
         
         cartGrid.addColumn(d -> d.getSubtotal() != null ? "$" + d.getSubtotal() : "$0.00")
-                .setHeader("Subtotal").setKey("subtotal").setTextAlign(com.vaadin.flow.component.grid.ColumnTextAlign.END);
+                .setHeader(getTranslation("view.pos.grid.subtotal")).setKey("subtotal").setTextAlign(com.vaadin.flow.component.grid.ColumnTextAlign.END);
         
         cartGrid.addComponentColumn(item -> {
             Button remove = new Button(VaadinIcon.TRASH.create(), e -> removeFromCart(item));
@@ -253,8 +238,9 @@ public class POSView extends VerticalLayout {
         BigDecimal price = productoService.getPrecioVentaActual(variant, "USD");
         
         // Stock Validation
+        // Stock Validation
         if (stock.compareTo(BigDecimal.ZERO) <= 0) {
-            TailwindNotification.show("¡Stock insuficiente! Disponible: " + stock, TailwindNotification.Type.ERROR);
+            TailwindNotification.show(getTranslation("view.pos.msg.stock_insufficient") + stock, TailwindNotification.Type.ERROR);
             return; 
         }
         
@@ -266,7 +252,7 @@ public class POSView extends VerticalLayout {
         if (existing.isPresent()) {
             PosVentaDetalle item = existing.get();
             if (item.getCantidad().add(BigDecimal.ONE).compareTo(stock) > 0) {
-                 TailwindNotification.show("No hay más stock disponible", TailwindNotification.Type.WARNING);
+                 TailwindNotification.show(getTranslation("view.pos.msg.stock_limit"), TailwindNotification.Type.WARNING);
                  return;
             }
             item.setCantidad(item.getCantidad().add(BigDecimal.ONE));
@@ -326,17 +312,37 @@ public class POSView extends VerticalLayout {
                 .orElse(new BigDecimal("36.62")); // Fallback default rate if not set in DB
     }
 
+    private ComponentRenderer<NumberField, PosVentaDetalle> createQuantityFieldRenderer() {
+        return new ComponentRenderer<>(item -> {
+            NumberField quantityField = new NumberField();
+            quantityField.setValueChangeMode(ValueChangeMode.EAGER);
+            quantityField.setValue(item.getCantidad() != null ? item.getCantidad().doubleValue() : 1.0);
+            quantityField.setMin(1);
+            quantityField.setStep(1);
+            quantityField.setWidth("80px");
+            quantityField.addValueChangeListener(e -> {
+                if (e.getValue() != null && e.getValue() > 0) {
+                    item.setCantidad(BigDecimal.valueOf(e.getValue()));
+                    updateItemSubtotal(item);
+                    cartGrid.getDataProvider().refreshItem(item);
+                    refreshTotals();
+                }
+            });
+            return quantityField;
+        });
+    }
+
     private void openPaymentDialog() {
         if (cartItems.isEmpty()) {
-            TailwindNotification.show("El carrito está vacío", TailwindNotification.Type.WARNING);
+            TailwindNotification.show(getTranslation("view.pos.msg.empty_cart"), TailwindNotification.Type.WARNING);
             return;
         }
         if (almacenSelect.getValue() == null) {
-            TailwindNotification.show("Seleccione un almacén de salida", TailwindNotification.Type.WARNING);
+            TailwindNotification.show(getTranslation("view.pos.msg.warehouse_select"), TailwindNotification.Type.WARNING);
             return;
         }
 
-        TailwindModal modal = new TailwindModal("Procesar Pago");
+        TailwindModal modal = new TailwindModal(getTranslation("view.pos.pay.dialog.title"));
         modal.setWidth("400px");
         
         BigDecimal total = cartItems.stream().map(PosVentaDetalle::getSubtotal).reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -344,8 +350,14 @@ public class POSView extends VerticalLayout {
         Span amount = new Span("$" + total);
         amount.addClassNames("text-4xl", "font-bold", "text-center", "block", "mb-6");
         
-        ComboBox<String> paymentMethod = new ComboBox<>("Método de Pago");
+        ComboBox<String> paymentMethod = new ComboBox<>(getTranslation("view.pos.pay.method"));
         paymentMethod.setItems("EFECTIVO", "TARJETA", "TRANSFERENCIA");
+        paymentMethod.setItemLabelGenerator(item -> switch (item) {
+            case "EFECTIVO" -> getTranslation("view.pos.pay.method.cash");
+            case "TARJETA" -> getTranslation("view.pos.pay.method.card");
+            case "TRANSFERENCIA" -> getTranslation("view.pos.pay.method.transfer");
+            default -> item;
+        });
         paymentMethod.setValue("EFECTIVO");
         paymentMethod.setWidthFull();
 
@@ -355,17 +367,17 @@ public class POSView extends VerticalLayout {
         cardDetails.setSpacing(true);
         cardDetails.setVisible(false);
         
-        com.vaadin.flow.component.textfield.TextField cardNumber = new com.vaadin.flow.component.textfield.TextField("Número de Tarjeta");
+        com.vaadin.flow.component.textfield.TextField cardNumber = new com.vaadin.flow.component.textfield.TextField(getTranslation("view.pos.pay.card.number"));
         cardNumber.setWidthFull();
         cardNumber.setPlaceholder("0000 0000 0000 0000");
         
         HorizontalLayout cardExtra = new HorizontalLayout();
         cardExtra.setWidthFull();
         
-        com.vaadin.flow.component.textfield.TextField cardHolder = new com.vaadin.flow.component.textfield.TextField("Titular");
+        com.vaadin.flow.component.textfield.TextField cardHolder = new com.vaadin.flow.component.textfield.TextField(getTranslation("view.pos.pay.card.holder"));
         cardHolder.setWidthFull();
         
-        com.vaadin.flow.component.textfield.TextField cardExpiry = new com.vaadin.flow.component.textfield.TextField("Vencimiento (MM/YY)");
+        com.vaadin.flow.component.textfield.TextField cardExpiry = new com.vaadin.flow.component.textfield.TextField(getTranslation("view.pos.pay.card.expiry"));
         cardExpiry.setWidth("150px");
         
         cardExtra.add(cardHolder, cardExpiry);
@@ -377,10 +389,10 @@ public class POSView extends VerticalLayout {
         transferDetails.setSpacing(true);
         transferDetails.setVisible(false);
         
-        com.vaadin.flow.component.textfield.TextField transferReference = new com.vaadin.flow.component.textfield.TextField("Número de Referencia");
+        com.vaadin.flow.component.textfield.TextField transferReference = new com.vaadin.flow.component.textfield.TextField(getTranslation("view.pos.pay.transfer.ref"));
         transferReference.setWidthFull();
         
-        com.vaadin.flow.component.textfield.TextField transferBank = new com.vaadin.flow.component.textfield.TextField("Banco");
+        com.vaadin.flow.component.textfield.TextField transferBank = new com.vaadin.flow.component.textfield.TextField(getTranslation("view.pos.pay.transfer.bank"));
         transferBank.setWidthFull();
 
         transferDetails.add(transferReference, transferBank);
@@ -390,20 +402,20 @@ public class POSView extends VerticalLayout {
             transferDetails.setVisible("TRANSFERENCIA".equals(e.getValue()));
         });
         
-        Button confirmBtn = new Button("CONFIRMAR PAGO", e -> {
+        Button confirmBtn = new Button(getTranslation("view.pos.pay.confirm"), e -> {
             String methodKey = paymentMethod.getValue();
             String detailedMethod = methodKey;
 
             if ("TARJETA".equals(methodKey)) {
                 if (cardNumber.isEmpty() || cardHolder.isEmpty()) {
-                     TailwindNotification.show("Ingrese los datos de la tarjeta.", TailwindNotification.Type.WARNING);
+                     TailwindNotification.show(getTranslation("view.pos.msg.card_data"), TailwindNotification.Type.WARNING);
                      return;
                 }
                 String safeCard = cardNumber.getValue().length() > 4 ? cardNumber.getValue().substring(cardNumber.getValue().length() - 4) : cardNumber.getValue();
                 detailedMethod += " (Titular: " + cardHolder.getValue() + ", **** " + safeCard + ")";
             } else if ("TRANSFERENCIA".equals(methodKey)) {
                 if (transferReference.isEmpty()) {
-                     TailwindNotification.show("Ingrese el número de referencia.", TailwindNotification.Type.WARNING);
+                     TailwindNotification.show(getTranslation("view.pos.msg.transfer_ref"), TailwindNotification.Type.WARNING);
                      return;
                 }
                 String bankInfo = transferBank.isEmpty() ? "" : ", Banco: " + transferBank.getValue();
@@ -414,7 +426,7 @@ public class POSView extends VerticalLayout {
         });
         confirmBtn.addClassNames("bg-green-600", "text-white", "flex-1", "py-4", "text-xl", "font-bold", "rounded-lg");
         
-        Button cancelBtn = new Button("CANCELAR", e -> modal.close());
+        Button cancelBtn = new Button(getTranslation("view.pos.pay.cancel"), e -> modal.close());
         cancelBtn.addClassNames("bg-gray-300", "text-gray-800", "flex-1", "py-4", "text-xl", "font-bold", "rounded-lg", "hover:bg-gray-400");
 
         HorizontalLayout buttonsLayout = new HorizontalLayout(cancelBtn, confirmBtn);
@@ -456,11 +468,11 @@ public class POSView extends VerticalLayout {
             }
             
             posService.saveVenta(venta);
-            TailwindNotification.show("Venta procesada correctamente", TailwindNotification.Type.SUCCESS);
+            TailwindNotification.show(getTranslation("view.pos.msg.success"), TailwindNotification.Type.SUCCESS);
             clearCart();
             
         } catch (Exception e) {
-            TailwindNotification.show("Error al guardar venta: " + e.getMessage(), TailwindNotification.Type.ERROR);
+            TailwindNotification.show(getTranslation("view.pos.msg.sale.error") + e.getMessage(), TailwindNotification.Type.ERROR);
             e.printStackTrace();
         }
     }

@@ -32,9 +32,7 @@
 - **Almacenes y Ubicaciones**: Vistas CRUD completas y funcionales.
 
 ### Datos y Configuración
-- **DataGenerator**: Implementado para tienda de repuestos automotrices.
-  - *Estado*: Desactivado (`// @Component`) para evitar reinicios de datos accidentales.
-  - Contiene datos de ejemplo: Aceites, Frenos, Baterías, etc.
+
 - **i18n**: Internacionalización extendida a cabeceras de grids, filtros y formularios de movimientos (`messages.properties`). Corregido bug de etiquetas faltantes (`###`).
 
 ### Módulo Compras y Ventas (NUEVO - COMPLETADO)
@@ -58,11 +56,19 @@
 - **Formulario Producto**:
   - Layout mejorado con precios side-by-side para fácil comparación.
   - "Modo Compra": Oculta campos de stock inicial (Ubicación, Lote) cuando se crea desde una Compra, delegando la entrada de stock al proceso de compra.
-- **Migración V1000**: Solucionado conflicto `ON CONFLICT` en script Flyway para inserción de monedas default.
+- **Migración V1000 & V1003**: 
+  - V1000: Solucionado conflicto `ON CONFLICT` en inserción de monedas.
+  - V1003: Inyección de datos de prueba para Turnos y Cierres (Histórico Enero 2026) directamente vía SQL (Reemplaza generadores Java).
+
+### Refactorización y Limpieza
+- **POSView (Punto de Venta)**:
+  - **I18N Completo**: Todos los textos de la interfaz ahora utilizan `messages.properties` (claves `view.pos.*`).
+  - **Clean Code**: Extracción de renderers y simplificación de métodos. Eliminación de strings harcodeados.
+- **Generadores de Datos**: Eliminados `PosShiftLoader` y `PosDataGenerator`. La inicialización de datos crítica se maneja exclusivamente por migraciones Flyway (`src/main/resources/db/migration`).
 
 ## 4. Notas de Desarrollo
 - **Fix Rutas**: `HomeView` eliminado. `InventoryDashboardView` tiene el alias de ruta raíz.
-- **DataGenerator**: Activo. Genera datos de repuestos automotrices al inicio. **Nota**: No crea Proveedores ni Usuarios; estos deben gestionarse o existir previamente.
+
 - **Ejecución**: `./run-dev.sh`.
 
 ## 5. Pendientes / Próximos Pasos
