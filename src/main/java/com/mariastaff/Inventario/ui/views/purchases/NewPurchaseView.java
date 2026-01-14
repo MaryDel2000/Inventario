@@ -15,6 +15,7 @@ import com.mariastaff.Inventario.ui.components.base.TailwindNotification;
 import com.mariastaff.Inventario.ui.layouts.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.mariastaff.Inventario.ui.components.base.TailwindDatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
@@ -42,6 +43,7 @@ public class NewPurchaseView extends VerticalLayout {
     private final CompraService compraService;
     private final ProductoService productoService;
     private final AlmacenService almacenService;
+    private final com.mariastaff.Inventario.backend.service.CatalogoService catalogoService;
     
     private final Binder<InvCompra> binder = new Binder<>(InvCompra.class);
     private final List<InvCompraDetalle> detalles = new ArrayList<>();
@@ -55,10 +57,14 @@ public class NewPurchaseView extends VerticalLayout {
     private final TextField tipoDocumento = new TextField("Tipo Doc.");
     private final TextField numeroDocumento = new TextField("Nº Documento");
 
-    public NewPurchaseView(CompraService compraService, ProductoService productoService, AlmacenService almacenService) {
+    public NewPurchaseView(CompraService compraService, 
+                           ProductoService productoService, 
+                           AlmacenService almacenService,
+                           com.mariastaff.Inventario.backend.service.CatalogoService catalogoService) {
         this.compraService = compraService;
         this.productoService = productoService;
         this.almacenService = almacenService;
+        this.catalogoService = catalogoService;
 
         addClassNames("w-full", "h-full", "bg-bg-secondary", "p-6");
         
@@ -167,6 +173,39 @@ public class NewPurchaseView extends VerticalLayout {
             
             ComboBox<InvProductoVariante> variantSelect = new ComboBox<>("Producto");
             
+            Button newProductBtn = new Button(VaadinIcon.PLUS.create());
+            newProductBtn.addThemeVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
+            newProductBtn.setTooltipText("Crear nuevo producto");
+            HorizontalLayout productSelectionRow = new HorizontalLayout(variantSelect, newProductBtn);
+            productSelectionRow.setAlignItems(Alignment.END); // Align to bottom to match input field
+            productSelectionRow.addClassName("items-end"); // Tailwind backup
+            productSelectionRow.setWidthFull();
+            // make combo take max width
+            productSelectionRow.setFlexGrow(1, variantSelect);
+            // Add margin to button to align better
+            newProductBtn.addClassNames("mb-1"); // Small margin bottom key tweak usage 
+
+            newProductBtn.addClickListener(e -> {
+                 com.mariastaff.Inventario.ui.components.dialogs.ProductFormDialog productDialog = 
+                     new com.mariastaff.Inventario.ui.components.dialogs.ProductFormDialog(productoService, catalogoService, almacenService);
+                 productDialog.setPurchaseMode(true); // Hide initial stock fields
+                 productDialog.setProduct(new com.mariastaff.Inventario.backend.data.entity.InvProducto());
+                 productDialog.setOnSave(() -> {
+                     try {
+                         variantSelect.setItems(productoService.findAllVariantesWithProducto());
+                     } catch (Exception ex) {
+                         ex.printStackTrace();
+                     }
+                 });
+                 // IMPORTANT: Add to UI hierarchy before opening if it's not self-attached (TailwindModal usually is but let's be safe)
+                 // actually TailwindModal extends Dialog, but in Vaadin Flow you often just call open().
+                 // However, if the click listener wasn't firing, let's debug.
+                 // The issue "no muestra el formulario" implies the event fired but nothing happened OR event didn't fire.
+                 // We will explicitly add it.
+                 add(productDialog);
+                 productDialog.open();
+            });
+            
             // Optimized loading using join fetch to avoid LazyInitException
             List<InvProductoVariante> allVariants;
             try {
@@ -190,11 +229,14 @@ public class NewPurchaseView extends VerticalLayout {
             variantSelect.setWidthFull();
             
             BigDecimalField qtyField = new BigDecimalField("Cantidad");
+            qtyField.setLocale(java.util.Locale.US);
+            
             BigDecimalField costField = new BigDecimalField("Costo Unitario");
+            costField.setLocale(java.util.Locale.US);
             
             TailwindDatePicker expiryDate = new TailwindDatePicker("Fecha Caducidad (Si aplica)");
             
-            ComboBox<InvUbicacion> locationSelect = new ComboBox<>("Ubicación en Almacén");
+            ComboBox<InvUbicacion> locationSelect = new ComboBox<>("Ubicación Destino (Estante/Fila)");
             List<InvUbicacion> locs = almacenService.findUbicacionesByAlmacen(almacenDestino.getValue());
 
             locationSelect.setItems(locs);
@@ -240,7 +282,7 @@ public class NewPurchaseView extends VerticalLayout {
             Button cancelBtn = new Button("Cancelar", e -> modal.close());
             cancelBtn.addClassNames("w-full", "bg-gray-200", "text-gray-800", "mt-2", "rounded-lg", "shadow-sm");
 
-            VerticalLayout layout = new VerticalLayout(variantSelect, new HorizontalLayout(qtyField, costField), expiryDate, locationSelect, addBtn, cancelBtn);
+            VerticalLayout layout = new VerticalLayout(productSelectionRow, new HorizontalLayout(qtyField, costField), expiryDate, locationSelect, addBtn, cancelBtn);
             modal.addContent(layout);
             add(modal);
             modal.open();

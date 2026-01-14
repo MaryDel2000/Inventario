@@ -47,7 +47,10 @@ public class ProductFormDialog extends TailwindModal {
     private TextField descripcion;
     private ComboBox<InvCategoria> categoria;
     private ComboBox<InvUnidadMedida> unidadMedida;
-    private BigDecimalField precioVenta; // New Field
+    private BigDecimalField precioVentaNIO;
+    private BigDecimalField precioVentaUSD;
+    private BigDecimalField costoNIO;
+    private BigDecimalField costoUSD;
     private TailwindToggle activo;
 
     // New Product Fields
@@ -59,6 +62,8 @@ public class ProductFormDialog extends TailwindModal {
 
     // Edit Product Fields
     private Grid<InvLote> lotesGrid;
+    
+    private boolean isPurchaseMode = false;
 
     public ProductFormDialog(ProductoService service, CatalogoService catalogoService, AlmacenService almacenService) {
         super(com.vaadin.flow.component.UI.getCurrent().getTranslation("field.product"));
@@ -73,6 +78,25 @@ public class ProductFormDialog extends TailwindModal {
         this.onSaveCallback = onSaveCallback;
     }
 
+    public void setPurchaseMode(boolean isPurchaseMode) {
+        this.isPurchaseMode = isPurchaseMode;
+        if (isPurchaseMode) {
+            // Hide initial stock fields as stock comes from purchase
+            ubicacion.setVisible(false);
+            cantidadInicial.setVisible(false);
+            lote.setVisible(false);
+            fechaCaducidad.setVisible(false);
+            observacionesLote.setVisible(false);
+        }
+    }
+    
+    private void configureDecimalField(BigDecimalField field) {
+        // Force US locale to ensure '.' is used as decimal separator
+        field.setLocale(java.util.Locale.US);
+        // We can also add a value change listener to strip non-numeric if needed, 
+        // but Locale.US should handle the dot vs comma issue.
+    }
+
     private void initFields() {
         nombre = new TextField(getTranslation("view.products.grid.name"));
         nombre.addClassName("w-full");
@@ -83,8 +107,28 @@ public class ProductFormDialog extends TailwindModal {
         descripcion = new TextField(getTranslation("field.description", "Descripción"));
         descripcion.addClassName("w-full");
         
-        precioVenta = new BigDecimalField("Precio de Venta (Referencial)");
-        precioVenta.addClassName("w-full");
+        costoNIO = new BigDecimalField("Costo (C$)");
+        costoNIO.addClassName("w-full");
+        // FIX: Allow decimals
+        // Assuming locales might use comma/dot, standard BigDecimalField handles it but step is crucial for browser validation
+        // Using a safe small step.
+        // Also could add suffix div if needed but label has it.
+        // We will configure a custom formatter / step if needed in Vaadin 24+ but usually just simple config works.
+        // However, user complained "no permite agregar decimales", this strongly suggests the browser 'step' attribute default (often 1) is blocking non-integers.
+        
+        configureDecimalField(costoNIO);
+        
+        costoUSD = new BigDecimalField("Costo ($)");
+        costoUSD.addClassName("w-full");
+        configureDecimalField(costoUSD);
+        
+        precioVentaNIO = new BigDecimalField("Precio Venta (C$)");
+        precioVentaNIO.addClassName("w-full");
+        configureDecimalField(precioVentaNIO);
+        
+        precioVentaUSD = new BigDecimalField("Precio Venta ($)");
+        precioVentaUSD.addClassName("w-full");
+        configureDecimalField(precioVentaUSD);
         
         categoria = new ComboBox<>(getTranslation("view.products.grid.category"));
         categoria.setItems(catalogoService.findCategoriasActivas());
@@ -261,25 +305,61 @@ public class ProductFormDialog extends TailwindModal {
         if (isNew) {
             categoria.setItems(catalogoService.findCategoriasActivas());
             activo.setValue(true);
-            precioVenta.clear();
-            formLayout.add(nombre, codigo, categoria, unidadMedida, precioVenta, ubicacion, cantidadInicial, lote, fechaCaducidad, descripcion, observacionesLote, activo);
-            formLayout.setColspan(descripcion, 2);
-            formLayout.setColspan(observacionesLote, 2);
+            costoNIO.clear();
+            costoUSD.clear();
+            precioVentaNIO.clear();
+            precioVentaUSD.clear();
+            
+            formLayout.add(nombre, codigo, categoria, unidadMedida);
+            
+            HorizontalLayout rowPrecios = new HorizontalLayout();
+            rowPrecios.addClassName("w-full");
+            rowPrecios.add(costoNIO, precioVentaNIO);
+            formLayout.add(rowPrecios);
+            formLayout.setColspan(rowPrecios, 2);
+
+            HorizontalLayout rowPreciosUSD = new HorizontalLayout();
+            rowPreciosUSD.addClassName("w-full");
+            rowPreciosUSD.add(costoUSD, precioVentaUSD);
+            formLayout.add(rowPreciosUSD);
+            formLayout.setColspan(rowPreciosUSD, 2);
+
+            if (!isPurchaseMode) {
+                formLayout.add(ubicacion, cantidadInicial, lote, fechaCaducidad, descripcion, observacionesLote, activo);
+                formLayout.setColspan(descripcion, 2);
+                formLayout.setColspan(observacionesLote, 2);
+            } else {
+                formLayout.add(descripcion, activo);
+                formLayout.setColspan(descripcion, 2);
+            }
         } else {
             categoria.setItems(catalogoService.findAllCategorias());
             refreshLotesGrid();
             
-            // Try load initial price (simplified)
-            // Ideally we need to fetch the price from service.
-            // Since we can't easily fetch it here without variante ID (product has many variants),
-            // We just leave it empty or fetch the first one.
             if (!service.findVariantesByProducto(product).isEmpty()) {
                  InvProductoVariante v = service.findVariantesByProducto(product).get(0);
-                 BigDecimal price = service.getPrecioVentaActual(v);
-                 precioVenta.setValue(price);
+                 
+                 precioVentaNIO.setValue(service.getPrecioVentaActual(v, "NIO"));
+                 precioVentaUSD.setValue(service.getPrecioVentaActual(v, "USD"));
+                 costoNIO.setValue(service.getCostoActual(v, "NIO"));
+                 costoUSD.setValue(service.getCostoActual(v, "USD"));
             }
             
-            formLayout.add(nombre, codigo, categoria, unidadMedida, precioVenta, descripcion, lotesGrid, activo);
+            formLayout.add(nombre, codigo, categoria, unidadMedida);
+
+            HorizontalLayout rowPrecios = new HorizontalLayout();
+            rowPrecios.addClassName("w-full");
+            rowPrecios.add(costoNIO, precioVentaNIO);
+            formLayout.add(rowPrecios);
+            formLayout.setColspan(rowPrecios, 2);
+
+            HorizontalLayout rowPreciosUSD = new HorizontalLayout();
+            rowPreciosUSD.addClassName("w-full");
+            rowPreciosUSD.add(costoUSD, precioVentaUSD);
+            formLayout.add(rowPreciosUSD);
+            formLayout.setColspan(rowPreciosUSD, 2);
+
+            formLayout.add(descripcion, lotesGrid, activo);
             formLayout.setColspan(descripcion, 2);
             formLayout.setColspan(lotesGrid, 2);
         }
@@ -302,24 +382,41 @@ public class ProductFormDialog extends TailwindModal {
             binder.writeBean(currentProduct);
             
             if (isNew) {
-                service.createProductWithInitialBatch(
-                    currentProduct,
-                    ubicacion.getValue(),
-                    cantidadInicial.getValue(),
-                    lote.getValue(),
-                    fechaCaducidad.getValue() != null ? fechaCaducidad.getValue().atStartOfDay() : null,
-                    observacionesLote.getValue(),
-                    precioVenta.getValue() // Updated signature
-                );
+                // If Purchase Mode, we just save the product, NO initial stock (purchase handles it)
+                if (isPurchaseMode) {
+                    service.save(currentProduct);
+                } else {
+                    // Standard Mode: Create with initial batch
+                    service.createProductWithInitialBatch(
+                       currentProduct,
+                       ubicacion.getValue(),
+                       cantidadInicial.getValue(),
+                       lote.getValue(),
+                       fechaCaducidad.getValue() != null ? fechaCaducidad.getValue().atStartOfDay() : null,
+                       observacionesLote.getValue(),
+                       BigDecimal.ZERO // Placeholder
+                   );
+                }
+                
+                // Now update all prices
+                 List<InvProductoVariante> vars = service.findVariantesByProducto(currentProduct);
+                 for(InvProductoVariante v : vars) {
+                     service.updateCosto(v, costoNIO.getValue(), "NIO");
+                     service.updateCosto(v, costoUSD.getValue(), "USD");
+                     service.updatePrecioVenta(v, precioVentaNIO.getValue(), "NIO");
+                     service.updatePrecioVenta(v, precioVentaUSD.getValue(), "USD");
+                 }
+                 
             } else {
                 service.save(currentProduct);
                 // Update price if changed
-                if (precioVenta.getValue() != null) {
-                     List<InvProductoVariante> vars = service.findVariantesByProducto(currentProduct);
-                     for(InvProductoVariante v : vars) {
-                         service.updatePrecioVenta(v, precioVenta.getValue());
-                     }
-                }
+                 List<InvProductoVariante> vars = service.findVariantesByProducto(currentProduct);
+                 for(InvProductoVariante v : vars) {
+                     service.updateCosto(v, costoNIO.getValue(), "NIO");
+                     service.updateCosto(v, costoUSD.getValue(), "USD");
+                     service.updatePrecioVenta(v, precioVentaNIO.getValue(), "NIO");
+                     service.updatePrecioVenta(v, precioVentaUSD.getValue(), "USD");
+                 }
             }
             
             TailwindNotification.show(isNew ? getTranslation("msg.product.created", "Producto creado") : getTranslation("msg.product.updated", "Producto actualizado"), TailwindNotification.Type.SUCCESS);

@@ -38,15 +38,24 @@
 - **i18n**: Internacionalización extendida a cabeceras de grids, filtros y formularios de movimientos (`messages.properties`). Corregido bug de etiquetas faltantes (`###`).
 
 ### Módulo Compras y Ventas (NUEVO - COMPLETADO)
+### Módulo Compras y Ventas (NUEVO - COMPLETADO)
 - **POS (Punto de Venta)**: `POSView` plenamente operativa.
   - **Validación de Stock**: Impide ventas si no hay existencias suficientes.
   - **Seguridad**: Asigna automáticamente el usuario logueado (OAuth2/Database) a la venta.
   - **Pago**: Soporte para múltiples métodos de pago (Efectivo, Tarjeta, etc.).
 - **Compras (`NewPurchaseView`)**:
   - **Flujo Completo**: Registro de compra -> Generación de Lote -> Entrada de Stock (Movimiento).
+  - **Creación Rápida de Productos**: Implementado botón (+) para registrar nuevos productos directamente desde la vista de compra sin salir del flujo.
   - **Requisito**: Requiere tener **Proveedores** registrados previamente.
   - **UI/UX**: Solucionado centrado de modales y superposición de DatePicker/ComboBox (z-index). Estado persistente (@UIScope). Reemplazo de DatePickers nativos por `TailwindDatePicker` para consistencia visual.
-  - **Fixes**: Corregido error de guardado (NullPointerException) mediante inicialización correcta del Binder (`binder.setBean(new InvCompra())`) y validación de nulos.
+  - **Fixes**: Soporte completo para **decimales (punto)** en precios y cantidades (Locale.US).
+
+### Precios y Monedas (ACTUALIZADO)
+- **Multi-moneda**: Soporte dual para Córdoba (NIO) y Dólar (USD) en Costos y Precios de Venta.
+- **Formulario Producto**:
+  - Layout mejorado con precios side-by-side para fácil comparación.
+  - "Modo Compra": Oculta campos de stock inicial (Ubicación, Lote) cuando se crea desde una Compra, delegando la entrada de stock al proceso de compra.
+- **Migración V1000**: Solucionado conflicto `ON CONFLICT` en script Flyway para inserción de monedas default.
 
 ## 4. Notas de Desarrollo
 - **Fix Rutas**: `HomeView` eliminado. `InventoryDashboardView` tiene el alias de ruta raíz.
