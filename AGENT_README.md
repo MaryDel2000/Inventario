@@ -13,6 +13,7 @@
   - `TailwindModal`: Reemplaza a `Dialog`. Modal centrado, backdrop oscuro.
   - `TailwindToggle`: Switch animado para booleanos.
   - `TailwindNotification`: Toasts semánticos (Success, Error, Info).
+  - `TailwindDatePicker`: Input de fecha nativo HTML5 estilizado. Reemplaza a `vaadin-date-picker` en reportes.
 - **Global Styles (`index.css`)**: 
   - Estilos corregidos para inputs (`vaadin-big-decimal-field`), combos y grids.
 
@@ -52,7 +53,18 @@
 - **Puerto**: Configurado en 8081 (asegurarse de liberar puerto si hay conflictos).
 - **Formatos**: Precios y Cantidades manejan decimales correctamente.
 
-## 5. Pendientes / Próximos Pasos
-- **Reportes**: Validar que los reportes financieros (Balance, Resultados) cuadren con los asientos generados.
+
+## 5. Reportes y Exportación (NUEVO)
+- **Refactorización de Vistas**:
+  - Limpieza masiva de código en todas las vistas de reportes (`ReportSalesUserView`, `ReportKardexView`, etc.).
+  - Uso de imports explícitos en lugar de Fully Qualified Names para mejor legibilidad.
+  - Estandarización de componentes y estilos.
+- **Exportación a Excel**:
+  - Implementado `ExcelExporter` (Apache POI) genérico en `ui/utils`.
+  - Todos los reportes ahora incluyen un botón funcional "Exportar Excel".
+  - Generación dinámica de archivos `.xlsx` basada en los datos filtrados en pantalla.
+
+## 6. Pendientes / Próximos Pasos
 - **Impresión**: Formato de factura/ticket.
 - **Dashboard**: Agregar widgets de KPI reales conectados a los datos históricos.
+- **Tests**: Aumentar cobertura de pruebas unitarias para servicios críticos (`ProductoService`, `PosService`).

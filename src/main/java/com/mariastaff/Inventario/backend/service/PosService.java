@@ -41,6 +41,7 @@ public class PosService {
     }
 
     public List<PosVenta> findAllVentas() { return ventaRepository.findAll(); }
+    public List<PosVenta> findAllVentasWithDetails() { return ventaRepository.findAllWithDetails(); }
     public void deleteVenta(PosVenta entity) { ventaRepository.delete(entity); }
     public List<PosVenta> findVentasPorCobrar() { return ventaRepository.findByEstadoPagoNot("PAGADO"); }
 

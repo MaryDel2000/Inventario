@@ -24,6 +24,9 @@ public class MovimientoService {
 
     public List<InvMovimiento> findAllMovimientos() { return movimientoRepository.findAll(); }
     public List<com.mariastaff.Inventario.backend.data.entity.InvMovimientoDetalle> findDetallesByMovimiento(InvMovimiento m) { return detalleRepository.findByMovimiento(m); }
+    public List<com.mariastaff.Inventario.backend.data.entity.InvMovimientoDetalle> findDetallesByDateRange(java.time.LocalDateTime start, java.time.LocalDateTime end) {
+        return detalleRepository.findDetallesByDateRange(start, end);
+    }
     public InvMovimiento saveMovimiento(InvMovimiento entity) { return movimientoRepository.save(entity); }
     public void deleteMovimiento(InvMovimiento entity) { movimientoRepository.delete(entity); }
     public long countMovimientos() { return movimientoRepository.count(); }

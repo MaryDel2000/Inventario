@@ -81,4 +81,55 @@ public class ContabilidadService {
     public List<ContPeriodo> findAllPeriodos() { return periodoRepository.findAll(); }
     public ContPeriodo savePeriodo(ContPeriodo entity) { return periodoRepository.save(entity); }
     public void deletePeriodo(ContPeriodo entity) { periodoRepository.delete(entity); }
+
+    public java.util.List<AccountBalanceDTO> getAccountBalances(java.time.LocalDate start, java.time.LocalDate end) {
+        List<ContAsiento> asientos = asientoRepository.findAll();
+        java.util.Map<Long, AccountBalanceDTO> map = new java.util.HashMap<>();
+        
+        // Initialize all accounts with 0
+        List<ContCuenta> cuentas = cuentaRepository.findAll();
+        for (ContCuenta c : cuentas) {
+            map.put(c.getId(), new AccountBalanceDTO(c, BigDecimal.ZERO, BigDecimal.ZERO));
+        }
+        
+        for (ContAsiento asiento : asientos) {
+            java.time.LocalDate date = asiento.getFecha().toLocalDate();
+            if (date.isBefore(start) || date.isAfter(end)) continue;
+            
+            List<ContAsientoDetalle> detalles = asientoDetalleRepository.findByAsiento(asiento);
+            for (ContAsientoDetalle d : detalles) {
+                if (d.getCuenta() == null) continue;
+                
+                AccountBalanceDTO dto = map.get(d.getCuenta().getId());
+                if (dto != null) {
+                    BigDecimal debe = d.getDebe() != null ? d.getDebe() : BigDecimal.ZERO;
+                    BigDecimal haber = d.getHaber() != null ? d.getHaber() : BigDecimal.ZERO;
+                    
+                    dto.setDebe(dto.getDebe().add(debe));
+                    dto.setHaber(dto.getHaber().add(haber));
+                }
+            }
+        }
+        
+        return new java.util.ArrayList<>(map.values());
+    }
+    
+    public static class AccountBalanceDTO {
+        private ContCuenta cuenta;
+        private BigDecimal debe;
+        private BigDecimal haber;
+        
+        public AccountBalanceDTO(ContCuenta c, BigDecimal d, BigDecimal h) {
+            this.cuenta = c;
+            this.debe = d;
+            this.haber = h;
+        }
+        
+        public ContCuenta getCuenta() { return cuenta; }
+        public BigDecimal getDebe() { return debe; }
+        public void setDebe(BigDecimal d) { this.debe = d; }
+        public BigDecimal getHaber() { return haber; }
+        public void setHaber(BigDecimal h) { this.haber = h; }
+        public BigDecimal getSaldo() { return debe.subtract(haber); } // Simple logic: Debit is positive
+    }
 }

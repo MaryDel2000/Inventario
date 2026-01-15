@@ -46,6 +46,10 @@ public class ProductoService {
         return repository.findAll();
     }
     
+    public List<InvExistencia> findAllExistencias() {
+        return existenciaRepository.findAll();
+    }
+    
     public List<InvProducto> search(InvCategoria categoria, InvUnidadMedida uom, Boolean activo) {
         return search(categoria, uom, activo, null);
     }
