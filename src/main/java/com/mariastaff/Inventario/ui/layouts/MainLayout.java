@@ -196,10 +196,10 @@ public class MainLayout extends AppLayout {
         com.mariastaff.Inventario.ui.components.base.ExpandableSidebarNavItem accountingItem = 
             new com.mariastaff.Inventario.ui.components.base.ExpandableSidebarNavItem("nav.module.accounting", new VaadinAppIcon(VaadinIcon.CHART), FinancialDashboardView.class);
         accountingItem.addSubItem(new SidebarNavItem("nav.accounting.dashboard", new VaadinAppIcon(VaadinIcon.CHART), FinancialDashboardView.class));
-        accountingItem.addSubItem(new SidebarNavItem("nav.accounting.journal", new VaadinAppIcon(VaadinIcon.BOOK), JournalView.class));
+        accountingItem.addSubItem(new SidebarNavItem("nav.accounting.journal", new VaadinAppIcon(VaadinIcon.BOOK), JournalEntriesView.class));
         accountingItem.addSubItem(new SidebarNavItem("nav.accounting.chart", new VaadinAppIcon(VaadinIcon.LIST), ChartOfAccountsView.class));
         accountingItem.addSubItem(new SidebarNavItem("nav.accounting.periods", new VaadinAppIcon(VaadinIcon.CALENDAR), FiscalPeriodsView.class));
-        accountingItem.addSubItem(new SidebarNavItem("nav.accounting.manual", new VaadinAppIcon(VaadinIcon.EDIT), ManualEntriesView.class));
+        // accountingItem.addSubItem(new SidebarNavItem("nav.accounting.manual", new VaadinAppIcon(VaadinIcon.EDIT), ManualEntriesView.class)); // Removed
         sidebar.addExpandableItem(accountingItem);
         
         // Reports module
@@ -316,17 +316,17 @@ public class MainLayout extends AppLayout {
     }
 
     private boolean isAccountingView(Class<?> view) {
-        return view.equals(FinancialDashboardView.class) || view.equals(JournalView.class) || 
-               view.equals(ChartOfAccountsView.class) || view.equals(FiscalPeriodsView.class) || 
-               view.equals(ManualEntriesView.class);
+        return view.equals(FinancialDashboardView.class) || view.equals(JournalEntriesView.class) || 
+               view.equals(ChartOfAccountsView.class) || view.equals(FiscalPeriodsView.class);
+               // || view.equals(ManualEntriesView.class);
     }
 
     private void addAccountingHeaderItems() {
         header.addNavigationItem(new HeaderNavItem("nav.accounting.dashboard", new VaadinAppIcon(VaadinIcon.CHART), FinancialDashboardView.class));
-        header.addNavigationItem(new HeaderNavItem("nav.accounting.journal", new VaadinAppIcon(VaadinIcon.BOOK), JournalView.class));
+        header.addNavigationItem(new HeaderNavItem("nav.accounting.journal", new VaadinAppIcon(VaadinIcon.BOOK), JournalEntriesView.class));
         header.addNavigationItem(new HeaderNavItem("nav.accounting.chart", new VaadinAppIcon(VaadinIcon.LIST), ChartOfAccountsView.class));
         header.addNavigationItem(new HeaderNavItem("nav.accounting.periods", new VaadinAppIcon(VaadinIcon.CALENDAR), FiscalPeriodsView.class));
-        header.addNavigationItem(new HeaderNavItem("nav.accounting.manual", new VaadinAppIcon(VaadinIcon.EDIT), ManualEntriesView.class));
+        // header.addNavigationItem(new HeaderNavItem("nav.accounting.manual", new VaadinAppIcon(VaadinIcon.EDIT), ManualEntriesView.class));
     }
 
     private boolean isReportsView(Class<?> view) {
@@ -386,10 +386,10 @@ public class MainLayout extends AppLayout {
         
         // Accounting
         if (view.equals(FinancialDashboardView.class)) return new ViewInfo("nav.accounting.dashboard", new VaadinAppIcon(VaadinIcon.CHART));
-        if (view.equals(JournalView.class)) return new ViewInfo("nav.accounting.journal", new VaadinAppIcon(VaadinIcon.BOOK));
+        if (view.equals(JournalEntriesView.class)) return new ViewInfo("nav.accounting.journal", new VaadinAppIcon(VaadinIcon.BOOK));
         if (view.equals(ChartOfAccountsView.class)) return new ViewInfo("nav.accounting.chart", new VaadinAppIcon(VaadinIcon.LIST));
         if (view.equals(FiscalPeriodsView.class)) return new ViewInfo("nav.accounting.periods", new VaadinAppIcon(VaadinIcon.CALENDAR));
-        if (view.equals(ManualEntriesView.class)) return new ViewInfo("nav.accounting.manual", new VaadinAppIcon(VaadinIcon.EDIT));
+        // if (view.equals(ManualEntriesView.class)) return new ViewInfo("nav.accounting.manual", new VaadinAppIcon(VaadinIcon.EDIT));
         
         // Reports
         if (view.equals(ReportSalesUserView.class)) return new ViewInfo("nav.reports.sales_user", new VaadinAppIcon(VaadinIcon.USER));

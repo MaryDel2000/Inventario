@@ -202,7 +202,7 @@ public class POSView extends VerticalLayout {
     private void checkAndAddToCart(InvProducto product) {
         List<InvProductoVariante> variants = productoService.findVariantesByProducto(product);
         if (variants.isEmpty()) {
-            TailwindNotification.show("Error: Producto sin variantes.", TailwindNotification.Type.ERROR);
+            TailwindNotification.show(getTranslation("msg.error.no_variants"), TailwindNotification.Type.ERROR);
             return;
         }
 
@@ -215,13 +215,13 @@ public class POSView extends VerticalLayout {
     
     private void showVariantSelectionDialog(List<InvProductoVariante> variants) {
         Dialog dialog = new Dialog();
-        dialog.setHeaderTitle("Seleccionar Variante");
+        dialog.setHeaderTitle(getTranslation("dialog.select_variant.title"));
         
         Grid<InvProductoVariante> grid = new Grid<>();
         grid.setItems(variants);
-        grid.addColumn(InvProductoVariante::getNombreVariante).setHeader("Variante");
-        grid.addColumn(v -> productoService.getStockTotal(v)).setHeader("Stock");
-        grid.addColumn(v -> "$" + productoService.getPrecioVentaActual(v, "USD")).setHeader("Precio");
+        grid.addColumn(InvProductoVariante::getNombreVariante).setHeader(getTranslation("grid.header.variant"));
+        grid.addColumn(v -> productoService.getStockTotal(v)).setHeader(getTranslation("grid.header.stock"));
+        grid.addColumn(v -> "$" + productoService.getPrecioVentaActual(v, "USD")).setHeader(getTranslation("grid.header.price"));
         
         grid.addItemClickListener(e -> {
             addVariantToCart(e.getItem());

@@ -31,8 +31,16 @@ public class ReceivablesView extends VerticalLayout {
     private void configureGrid() {
         grid.addClassNames( "bg-bg-surface", "rounded-lg", "shadow");
         grid.setSizeFull();
-        grid.setColumns("numeroDocumento", "fechaHora", "totalNeto", "estadoPago");
-        grid.addColumn(v -> v.getCliente() != null ? v.getCliente().getEntidad().getNombreCompleto() : "Anónimo").setHeader("Cliente");
+        grid.setColumns();
+        
+        grid.addColumn(PosVenta::getNumeroDocumento).setHeader(getTranslation("grid.header.document"));
+        grid.addColumn(PosVenta::getFechaHora).setHeader(getTranslation("grid.header.date"));
+        grid.addColumn(PosVenta::getTotalNeto).setHeader(getTranslation("grid.header.amount"));
+        grid.addColumn(PosVenta::getEstadoPago).setHeader(getTranslation("grid.header.status"));
+        
+        grid.addColumn(v -> v.getCliente() != null ? v.getCliente().getEntidad().getNombreCompleto() : getTranslation("client.anonymous"))
+            .setHeader(getTranslation("grid.header.client"));
+            
         grid.getColumns().forEach(col -> col.setAutoWidth(true));
     }
 

@@ -17,61 +17,42 @@
   - Estilos corregidos para inputs (`vaadin-big-decimal-field`), combos y grids.
 
 ## 3. Estado del Proyecto
+
+### Base de Datos y Migraciones (ACTUALIZADO)
+- **Consolidación**: Se han reorganizado las migraciones en dos archivos maestros para simplificar el mantenimiento y asegurar consistencia:
+  - `V1__Esquema_inicial.sql`: Estructura completa de la base de datos (Entidades, Inventario, POS, Contabilidad).
+  - `V2__Datos_Ejemplo.sql`: Script unificado que:
+    1. Limpia datos previos (`TRUNCATE`).
+    2. Carga datos semilla (Monedas, Sucursales, Usuarios).
+    3. Simula operaciones históricas (Compras y Ventas de hace 60 días).
+    4. Genera Turnos de caja cerrados y Periodos contables.
+    5. Carga cuentas por cobrar y abonos parciales.
+
 ### Módulo Inventario (COMPLETO)
-- **Dashboard**: `InventoryDashboardView` es ahora la vista principal (`@Route("")`).
-- **Productos (`ProductsView`)**: 
-  - Gestión integral de Categorías, UOM, Variantes y Lotes mediante diálogos modales.
-  - **Creación**: Permite definir **Stock Inicial** (Cantidad, Ubicación, Lote).
-  - **Visualización**: Grid principal muestra Stocks Totales calculados en tiempo real.
-  - **Filtros**: Se agregó filtro por **Almacén** para ver productos con existencia en una ubicación específica.
-- **Movimientos (`MovementsView`)**:
-  - Refactorizado para alta precisión.
-  - **Lógica Estricta**: `MovimientoService` ahora valida obligatoriedad de almacenes (Origen/Destino) según tipo de movimiento y **prohíbe stocks negativos**.
-  - Permite movimientos (Entrada/Salida/Traspaso) seleccionando **Lote** y **Ubicación específica** por cada línea de detalle.
-  - Filtros dinámicos de ubicación según almacén seleccionado.
-- **Almacenes y Ubicaciones**: Vistas CRUD completas y funcionales.
+- **Visualización**: Grid principal muestra Stocks Totales calculados en tiempo real.
+- **Movimientos**: Kardex completo (`inv_movimiento`) poblado automáticamente con las operaciones simuladas.
+- **Productos**: Configuración compleja (Variantes, Lotes) soportada en V2.
 
-### Datos y Configuración
+### Módulo Compras y Ventas (COMPLETO)
+- **POS (Punto de Venta)**:
+  - **I18n**: Interfaz totalmente traducida (`messages.properties`).
+  - **Turnos**: Generación automática de turnos cerrados históricos para reportes.
+  - **Pagos**: Soporte múltiple (Efectivo, Tarjeta, Transferencia) con validaciones.
+- **Cuentas por Cobrar (`ReceivablesView`)**:
+  - **Vista Nueva**: Listado de ventas a crédito pendientes.
+  - **Funcionalidad**: Integrada con datos simulados (Facturas pendientes y pagos parciales).
+  - **I18n**: Cabeceras y estados traducidos.
 
-- **i18n**: Internacionalización extendida a cabeceras de grids, filtros y formularios de movimientos (`messages.properties`). Corregido bug de etiquetas faltantes (`###`).
-
-### Módulo Compras y Ventas (NUEVO - COMPLETADO)
-### Módulo Compras y Ventas (NUEVO - COMPLETADO)
-- **POS (Punto de Venta)**: `POSView` plenamente operativa.
-  - **Validación de Stock**: Impide ventas si no hay existencias suficientes.
-  - **Seguridad**: Asigna automáticamente el usuario logueado (OAuth2/Database) a la venta.
-  - **Pago**: Soporte para múltiples métodos de pago (Efectivo, Tarjeta, Transferencia) con **captura detallada** (Núm. Tarjeta, Titular, Ref. Transferencia, Banco).
-  - **Clientes**: Creación rápida de clientes ("on-the-fly") escribiendo el nombre en el selector.
-  - **Multi-moneda**: Precios en USD con conversión automática y visualización de total en C$ (NIO) según tasa de cambio.
-  - **UX**: Modal de cobro centrado y responsive. Filtro de búsqueda solo muestra productos activos.
-- **Compras (`NewPurchaseView`)**:
-  - **Flujo Completo**: Registro de compra -> Generación de Lote -> Entrada de Stock (Movimiento).
-  - **Creación Rápida de Productos**: Implementado botón (+) para registrar nuevos productos directamente desde la vista de compra sin salir del flujo.
-  - **Requisito**: Requiere tener **Proveedores** registrados previamente.
-  - **UI/UX**: Solucionado centrado de modales y superposición de DatePicker/ComboBox (z-index). Estado persistente (@UIScope). Reemplazo de DatePickers nativos por `TailwindDatePicker` para consistencia visual.
-  - **Fixes**: Soporte completo para **decimales (punto)** en precios y cantidades (Locale.US).
-
-### Precios y Monedas (ACTUALIZADO)
-- **Multi-moneda**: Soporte dual para Córdoba (NIO) y Dólar (USD) en Costos y Precios de Venta.
-- **Formulario Producto**:
-  - Layout mejorado con precios side-by-side para fácil comparación.
-  - "Modo Compra": Oculta campos de stock inicial (Ubicación, Lote) cuando se crea desde una Compra, delegando la entrada de stock al proceso de compra.
-- **Migración V1000 & V1003**: 
-  - V1000: Solucionado conflicto `ON CONFLICT` en inserción de monedas.
-  - V1003: Inyección de datos de prueba para Turnos y Cierres (Histórico Enero 2026) directamente vía SQL (Reemplaza generadores Java).
-
-### Refactorización y Limpieza
-- **POSView (Punto de Venta)**:
-  - **I18N Completo**: Todos los textos de la interfaz ahora utilizan `messages.properties` (claves `view.pos.*`).
-  - **Clean Code**: Extracción de renderers y simplificación de métodos. Eliminación de strings harcodeados.
-- **Generadores de Datos**: Eliminados `PosShiftLoader` y `PosDataGenerator`. La inicialización de datos crítica se maneja exclusivamente por migraciones Flyway (`src/main/resources/db/migration`).
+### Contabilidad (EN PROCESO)
+- **Integración**: Las operaciones de Compra y Venta (incluyendo Costo de Venta e Ingreso) generan automáticamente asientos en `cont_asiento`.
+- **Periodos**: Periodos contables (Nov 2025, Dic 2025, Ene 2026) generados y enlazados.
 
 ## 4. Notas de Desarrollo
-- **Fix Rutas**: `HomeView` eliminado. `InventoryDashboardView` tiene el alias de ruta raíz.
-
-- **Ejecución**: `./run-dev.sh`.
+- **Reinicio de Base de Datos**: Si Flyway reporta error de "checksum mismatch" en V1 al iniciar, es necesario limpiar la base de datos. Como estamos en entorno DEV, el script V2 se encarga de truncar tablas, pero un `DROP SCHEMA public CASCADE; CREATE SCHEMA public;` puede ser necesario si cambia la estructura de tablas.
+- **Puerto**: Configurado en 8081 (asegurarse de liberar puerto si hay conflictos).
+- **Formatos**: Precios y Cantidades manejan decimales correctamente.
 
 ## 5. Pendientes / Próximos Pasos
-- **Reportes**: Validar que los reportes de ventas y compras reflejen correctamente los nuevos datos transaccionales.
-- **Impresión**: Implementar generación de tickets/facturas PDF desde el POS.
-- **UI**: Refinar dashboard principal para incluir KPIs de ventas recientes.
+- **Reportes**: Validar que los reportes financieros (Balance, Resultados) cuadren con los asientos generados.
+- **Impresión**: Formato de factura/ticket.
+- **Dashboard**: Agregar widgets de KPI reales conectados a los datos históricos.
