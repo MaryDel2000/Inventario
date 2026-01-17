@@ -36,7 +36,7 @@ public class BranchesView extends VerticalLayout {
         
         Button addBtn = new Button("Nueva Sucursal", VaadinIcon.PLUS.create());
         addBtn.addClassNames("bg-primary", "text-white", "text-sm", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow", "hover:shadow-md", "transition-all");
-        addBtn.addClickListener(e -> openDialog());
+        addBtn.addClickListener(e -> openDialog(new GenSucursal()));
 
         HorizontalLayout header = new HorizontalLayout(new AppLabel("Sucursales"), addBtn);
         header.addClassNames("w-full", "justify-between", "items-center");
@@ -46,10 +46,18 @@ public class BranchesView extends VerticalLayout {
     }
 
     private void configureGrid() {
-        grid.addClassNames( "bg-bg-surface", "rounded-lg", "shadow");
+        grid.addClassNames("bg-bg-surface", "rounded-lg", "shadow");
         grid.setSizeFull();
         grid.setColumns("nombre", "codigo", "direccion", "telefono");
         grid.addColumn(s -> s.getActivo() ? "Sí" : "No").setHeader("Activo");
+        
+        grid.addComponentColumn(branch -> {
+            Button editBtn = new Button(VaadinIcon.EDIT.create());
+            editBtn.addClassNames("text-text-secondary", "hover:text-primary", "p-2");
+            editBtn.addClickListener(e -> openDialog(branch));
+            return editBtn;
+        }).setHeader("Acciones");
+
         grid.getColumns().forEach(col -> col.setAutoWidth(true));
     }
 
@@ -57,10 +65,12 @@ public class BranchesView extends VerticalLayout {
         grid.setItems(service.findAllSucursales());
     }
 
-    private void openDialog() {
-        TailwindModal modal = new TailwindModal("Nueva Sucursal");
+    private void openDialog(GenSucursal branchToEdit) {
+        boolean isNew = branchToEdit.getId() == null;
+        TailwindModal modal = new TailwindModal(isNew ? "Nueva Sucursal" : "Editar Sucursal");
         
-        GenSucursal item = new GenSucursal();
+        // Use the passed instance or create new one (though strict null check above handles it)
+        GenSucursal item = branchToEdit; 
         Binder<GenSucursal> binder = new Binder<>(GenSucursal.class);
 
         FormLayout formLayout = new FormLayout();
@@ -79,7 +89,8 @@ public class BranchesView extends VerticalLayout {
         telefono.addClassName("w-full");
 
         TailwindToggle activo = new TailwindToggle("Activo");
-        activo.setValue(true);
+        // Default to true for new, else use existing
+        activo.setValue(item.getActivo() != null ? item.getActivo() : true);
 
         formLayout.add(nombre, codigo, direccion, telefono, activo);
         
@@ -89,12 +100,15 @@ public class BranchesView extends VerticalLayout {
         binder.forField(codigo).bind(GenSucursal::getCodigo, GenSucursal::setCodigo);
         binder.forField(direccion).bind(GenSucursal::getDireccion, GenSucursal::setDireccion);
         binder.forField(telefono).bind(GenSucursal::getTelefono, GenSucursal::setTelefono);
-        binder.forField(activo).bind(GenSucursal::getActivo, GenSucursal::setActivo); // Assuming method exists
+        binder.forField(activo).bind(GenSucursal::getActivo, GenSucursal::setActivo);
+
+        binder.readBean(item);
 
         Button saveButton = new Button("Guardar", e -> {
             try {
                 binder.writeBean(item);
-                TailwindNotification.show("Sucursal guardada (Simulación)", TailwindNotification.Type.SUCCESS);
+                service.saveSucursal(item); // Real save
+                TailwindNotification.show("Sucursal guardada exitosamente", TailwindNotification.Type.SUCCESS);
                 updateList();
                 modal.close();
             } catch (ValidationException ex) {
@@ -104,7 +118,6 @@ public class BranchesView extends VerticalLayout {
         saveButton.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
 
         Button cancelButton = new Button("Cancelar", e -> {
-            TailwindNotification.show("Cambios descartados", TailwindNotification.Type.INFO);
             modal.close();
         });
         cancelButton.addClassNames("bg-[var(--color-bg-secondary)]", "text-[var(--color-text-main)]", "font-medium", "py-2", "px-4", "rounded-lg");

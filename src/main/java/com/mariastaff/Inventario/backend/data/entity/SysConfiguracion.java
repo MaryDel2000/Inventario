@@ -25,11 +25,28 @@ public class SysConfiguracion extends AbstractEntity { // Custom audit fields in
     private Long usuarioModificacionId;
     private LocalDateTime fechaUltimaActualizacion;
 
+    private String nombreEmpresa;
+    private String direccion;
+    private String telefono;
+    private String nit;
+
     public GenMoneda getMonedaDefault() { return monedaDefault; }
     public void setMonedaDefault(GenMoneda monedaDefault) { this.monedaDefault = monedaDefault; }
     
     public BigDecimal getIvaPorcentajeDefault() { return ivaPorcentajeDefault; }
     public void setIvaPorcentajeDefault(BigDecimal ivaPorcentajeDefault) { this.ivaPorcentajeDefault = ivaPorcentajeDefault; }
+
+    public String getNombreEmpresa() { return nombreEmpresa; }
+    public void setNombreEmpresa(String nombreEmpresa) { this.nombreEmpresa = nombreEmpresa; }
+
+    public String getDireccion() { return direccion; }
+    public void setDireccion(String direccion) { this.direccion = direccion; }
+
+    public String getTelefono() { return telefono; }
+    public void setTelefono(String telefono) { this.telefono = telefono; }
+
+    public String getNit() { return nit; }
+    public void setNit(String nit) { this.nit = nit; }
     
     public Long getUsuarioCreacionId() { return usuarioCreacionId; }
     public void setUsuarioCreacionId(Long u) { this.usuarioCreacionId = u; }

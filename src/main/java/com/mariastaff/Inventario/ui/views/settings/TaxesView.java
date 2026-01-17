@@ -37,7 +37,7 @@ public class TaxesView extends VerticalLayout {
         
         Button addBtn = new Button("Nuevo Impuesto", VaadinIcon.PLUS.create());
         addBtn.addClassNames("bg-primary", "text-white", "text-sm", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow", "hover:shadow-md", "transition-all");
-        addBtn.addClickListener(e -> openDialog());
+        addBtn.addClickListener(e -> openDialog(new InvImpuesto()));
 
         HorizontalLayout header = new HorizontalLayout(new AppLabel("Tasas de Impuesto"), addBtn);
         header.addClassNames("w-full", "justify-between", "items-center");
@@ -47,10 +47,18 @@ public class TaxesView extends VerticalLayout {
     }
 
     private void configureGrid() {
-        grid.addClassNames( "bg-bg-surface", "rounded-lg", "shadow");
+        grid.addClassNames("bg-bg-surface", "rounded-lg", "shadow");
         grid.setSizeFull();
         grid.setColumns("nombre", "porcentaje");
         grid.addColumn(i -> i.getActivo() ? "Sí" : "No").setHeader("Activo");
+        
+        grid.addComponentColumn(tax -> {
+            Button editBtn = new Button(VaadinIcon.EDIT.create());
+            editBtn.addClassNames("text-text-secondary", "hover:text-primary", "p-2");
+            editBtn.addClickListener(e -> openDialog(tax));
+            return editBtn;
+        }).setHeader("Acciones");
+
         grid.getColumns().forEach(col -> col.setAutoWidth(true));
     }
 
@@ -58,10 +66,11 @@ public class TaxesView extends VerticalLayout {
         grid.setItems(service.findAllImpuestos());
     }
 
-    private void openDialog() {
-        TailwindModal modal = new TailwindModal("Nuevo Impuesto");
+    private void openDialog(InvImpuesto taxToEdit) {
+        boolean isNew = taxToEdit.getId() == null;
+        TailwindModal modal = new TailwindModal(isNew ? "Nuevo Impuesto" : "Editar Impuesto");
         
-        InvImpuesto item = new InvImpuesto();
+        InvImpuesto item = taxToEdit;
         Binder<InvImpuesto> binder = new Binder<>(InvImpuesto.class);
 
         FormLayout formLayout = new FormLayout();
@@ -74,7 +83,7 @@ public class TaxesView extends VerticalLayout {
         porcentaje.addClassName("w-full");
 
         TailwindToggle activo = new TailwindToggle("Activo");
-        activo.setValue(true);
+        activo.setValue(item.getActivo() != null ? item.getActivo() : true);
 
         formLayout.add(nombre, porcentaje, activo);
         
@@ -82,12 +91,15 @@ public class TaxesView extends VerticalLayout {
 
         binder.forField(nombre).asRequired("El nombre es obligatorio").bind(InvImpuesto::getNombre, InvImpuesto::setNombre);
         binder.forField(porcentaje).asRequired("Porcentaje requerido").bind(InvImpuesto::getPorcentaje, InvImpuesto::setPorcentaje);
-        binder.forField(activo).bind(InvImpuesto::getActivo, InvImpuesto::setActivo); // Assuming method exists
+        binder.forField(activo).bind(InvImpuesto::getActivo, InvImpuesto::setActivo);
+
+        binder.readBean(item);
 
         Button saveButton = new Button("Guardar", e -> {
             try {
                 binder.writeBean(item);
-                TailwindNotification.show("Impuesto guardado (Simulación)", TailwindNotification.Type.SUCCESS);
+                service.saveImpuesto(item); // Real save
+                TailwindNotification.show("Impuesto guardado exitosamente", TailwindNotification.Type.SUCCESS);
                 updateList();
                 modal.close();
             } catch (ValidationException ex) {
@@ -97,7 +109,6 @@ public class TaxesView extends VerticalLayout {
         saveButton.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
 
         Button cancelButton = new Button("Cancelar", e -> {
-            TailwindNotification.show("Cambios descartados", TailwindNotification.Type.INFO);
             modal.close();
         });
         cancelButton.addClassNames("bg-[var(--color-bg-secondary)]", "text-[var(--color-text-main)]", "font-medium", "py-2", "px-4", "rounded-lg");

@@ -36,7 +36,7 @@ public class CurrenciesView extends VerticalLayout {
         
         Button addBtn = new Button("Nueva Moneda", VaadinIcon.PLUS.create());
         addBtn.addClassNames("bg-primary", "text-white", "text-sm", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow", "hover:shadow-md", "transition-all");
-        addBtn.addClickListener(e -> openDialog());
+        addBtn.addClickListener(e -> openDialog(new GenMoneda()));
 
         HorizontalLayout header = new HorizontalLayout(new AppLabel("Monedas"), addBtn);
         header.addClassNames("w-full", "justify-between", "items-center");
@@ -46,10 +46,18 @@ public class CurrenciesView extends VerticalLayout {
     }
 
     private void configureGrid() {
-        grid.addClassNames( "bg-bg-surface", "rounded-lg", "shadow");
+        grid.addClassNames("bg-bg-surface", "rounded-lg", "shadow");
         grid.setSizeFull();
         grid.setColumns("codigo", "nombre", "simbolo");
         grid.addColumn(m -> m.getActivo() ? "Sí" : "No").setHeader("Activo");
+        
+        grid.addComponentColumn(currency -> {
+            Button editBtn = new Button(VaadinIcon.EDIT.create());
+            editBtn.addClassNames("text-text-secondary", "hover:text-primary", "p-2");
+            editBtn.addClickListener(e -> openDialog(currency));
+            return editBtn;
+        }).setHeader("Acciones");
+
         grid.getColumns().forEach(col -> col.setAutoWidth(true));
     }
 
@@ -57,10 +65,11 @@ public class CurrenciesView extends VerticalLayout {
         grid.setItems(service.findAllMonedas());
     }
 
-    private void openDialog() {
-        TailwindModal modal = new TailwindModal("Nueva Moneda");
+    private void openDialog(GenMoneda currencyToEdit) {
+        boolean isNew = currencyToEdit.getId() == null;
+        TailwindModal modal = new TailwindModal(isNew ? "Nueva Moneda" : "Editar Moneda");
         
-        GenMoneda item = new GenMoneda();
+        GenMoneda item = currencyToEdit;
         Binder<GenMoneda> binder = new Binder<>(GenMoneda.class);
 
         FormLayout formLayout = new FormLayout();
@@ -76,7 +85,7 @@ public class CurrenciesView extends VerticalLayout {
         simbolo.addClassName("w-full");
 
         TailwindToggle activo = new TailwindToggle("Activo");
-        activo.setValue(true);
+        activo.setValue(item.getActivo() != null ? item.getActivo() : true);
 
         formLayout.add(codigo, nombre, simbolo, activo);
         
@@ -87,10 +96,13 @@ public class CurrenciesView extends VerticalLayout {
         binder.forField(simbolo).asRequired("Símbolo requerido").bind(GenMoneda::getSimbolo, GenMoneda::setSimbolo);
         binder.forField(activo).bind(GenMoneda::getActivo, GenMoneda::setActivo);
 
+        binder.readBean(item);
+
         Button saveButton = new Button("Guardar", e -> {
             try {
                 binder.writeBean(item);
-                TailwindNotification.show("Moneda guardada (Simulación)", TailwindNotification.Type.SUCCESS);
+                service.saveMoneda(item); // Real save
+                TailwindNotification.show("Moneda guardada exitosamente", TailwindNotification.Type.SUCCESS);
                 updateList();
                 modal.close();
             } catch (ValidationException ex) {
@@ -100,7 +112,6 @@ public class CurrenciesView extends VerticalLayout {
         saveButton.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
 
         Button cancelButton = new Button("Cancelar", e -> {
-            TailwindNotification.show("Cambios descartados", TailwindNotification.Type.INFO);
             modal.close();
         });
         cancelButton.addClassNames("bg-[var(--color-bg-secondary)]", "text-[var(--color-text-main)]", "font-medium", "py-2", "px-4", "rounded-lg");
