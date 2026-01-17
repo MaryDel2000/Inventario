@@ -66,7 +66,7 @@ public class ReportTopProductsView extends VerticalLayout {
              "TopProducts_Export"
         );
         
-        Anchor anchor = new Anchor(resource, "Exportar Excel");
+        Anchor anchor = new Anchor(resource, getTranslation("action.export.excel"));
         anchor.addClassNames("bg-primary", "text-white", "font-semibold", "px-4", "py-2", "rounded-md", "cursor-pointer", "hover:bg-primary-600", "no-underline", "inline-block");
         anchor.getElement().setAttribute("download", true);
         

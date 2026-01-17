@@ -66,7 +66,7 @@ public class ReportSalesUserView extends VerticalLayout {
              "UserSales_Export"
         );
         
-        Anchor anchor = new Anchor(resource, "Exportar Excel");
+        Anchor anchor = new Anchor(resource, getTranslation("action.export.excel"));
         anchor.addClassNames("bg-primary", "text-white", "font-semibold", "px-4", "py-2", "rounded-md", "cursor-pointer", "hover:bg-primary-600", "no-underline", "inline-block");
         anchor.getElement().setAttribute("download", true);
         
@@ -124,8 +124,8 @@ public class ReportSalesUserView extends VerticalLayout {
             if (!"COMPLETADA".equals(venta.getEstado())) continue;
             
             SysUsuario user = venta.getUsuarioVendedor();
-            String key = user != null ? user.getUsername() : "N/A";
-            String name = (user != null && user.getEntidad() != null) ? user.getEntidad().getNombreCompleto() : "Desconocido";
+            String key = user != null ? user.getUsername() : getTranslation("common.na");
+            String name = (user != null && user.getEntidad() != null) ? user.getEntidad().getNombreCompleto() : getTranslation("common.unknown");
             
             summaryMap.compute(key, (k, v) -> {
                 if (v == null) return new UserSalesSummary(key, name, 1, venta.getTotalNeto());

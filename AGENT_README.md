@@ -63,6 +63,9 @@
   - Implementado `ExcelExporter` (Apache POI) genérico en `ui/utils`.
   - Todos los reportes ahora incluyen un botón funcional "Exportar Excel".
   - Generación dinámica de archivos `.xlsx` basada en los datos filtrados en pantalla.
+  - **I18n Completo**:
+    - Eliminación de textos "hardcoded" en headers de tablas y etiquetas.
+    - Uso consistente de `messages.properties` para todos los títulos de columnas y acciones.
 
 ## 6. Pendientes / Próximos Pasos
 - **Impresión**: Formato de factura/ticket.

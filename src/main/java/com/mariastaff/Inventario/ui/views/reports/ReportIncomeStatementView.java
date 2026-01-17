@@ -54,8 +54,8 @@ public class ReportIncomeStatementView extends VerticalLayout {
         List<ColumnDefinition<AccountBalanceDTO>> cols = List.of(
              new ColumnDefinition<>(getTranslation("report.trial.code"), i -> i.getCuenta().getCodigo()),
              new ColumnDefinition<>(getTranslation("report.trial.account"), i -> i.getCuenta().getNombre()),
-             new ColumnDefinition<>("Tipo", i -> i.getCuenta().getTipo()),
-             new ColumnDefinition<>("Monto", i -> i.getSaldo().abs())
+             new ColumnDefinition<>(getTranslation("report.account.type"), i -> i.getCuenta().getTipo()),
+             new ColumnDefinition<>(getTranslation("report.amount"), i -> i.getSaldo().abs())
         );
         
         StreamResource resource = ExcelExporter.export(
@@ -65,7 +65,7 @@ public class ReportIncomeStatementView extends VerticalLayout {
              "IncomeStatement_Export"
         );
         
-        Anchor anchor = new Anchor(resource, "Exportar Excel");
+        Anchor anchor = new Anchor(resource, getTranslation("action.export.excel"));
         anchor.addClassNames("bg-primary", "text-white", "font-semibold", "px-4", "py-2", "rounded-md", "cursor-pointer", "hover:bg-primary-600", "no-underline", "inline-block");
         anchor.getElement().setAttribute("download", true);
         
@@ -104,8 +104,8 @@ public class ReportIncomeStatementView extends VerticalLayout {
         
         grid.addColumn(item -> item.getCuenta().getCodigo()).setHeader(getTranslation("report.trial.code"));
         grid.addColumn(item -> item.getCuenta().getNombre()).setHeader(getTranslation("report.trial.account"));
-        grid.addColumn(item -> item.getCuenta().getTipo()).setHeader("Tipo");
-        grid.addColumn(item -> "$" + item.getSaldo().abs()).setHeader("Monto"); // Show absolute value? Usually Income Statement shows columns or signed.
+        grid.addColumn(item -> item.getCuenta().getTipo()).setHeader(getTranslation("report.account.type"));
+        grid.addColumn(item -> "$" + item.getSaldo().abs()).setHeader(getTranslation("report.amount")); // Show absolute value? Usually Income Statement shows columns or signed.
         
         grid.getColumns().forEach(col -> col.setAutoWidth(true));
     }

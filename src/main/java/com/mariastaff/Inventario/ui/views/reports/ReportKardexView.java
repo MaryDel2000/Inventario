@@ -53,8 +53,8 @@ public class ReportKardexView extends VerticalLayout {
         
         List<ColumnDefinition<KardexItem>> cols = List.of(
              new ColumnDefinition<>(getTranslation("grid.header.date"), i -> i.date),
-             new ColumnDefinition<>("Tipo", i -> i.type),
-             new ColumnDefinition<>("Referencia", i -> i.ref),
+             new ColumnDefinition<>(getTranslation("report.account.type"), i -> i.type),
+             new ColumnDefinition<>(getTranslation("report.reference"), i -> i.ref),
              new ColumnDefinition<>(getTranslation("grid.header.product"), i -> i.productName),
              new ColumnDefinition<>(getTranslation("grid.header.batch"), i -> i.batch),
              new ColumnDefinition<>(getTranslation("grid.header.quantity"), i -> i.quantity),
@@ -69,7 +69,7 @@ public class ReportKardexView extends VerticalLayout {
              "Kardex_Export"
         );
         
-        Anchor anchor = new Anchor(resource, "Exportar Excel");
+        Anchor anchor = new Anchor(resource, getTranslation("action.export.excel"));
         anchor.addClassNames("bg-primary", "text-white", "font-semibold", "px-4", "py-2", "rounded-md", "cursor-pointer", "hover:bg-primary-600", "no-underline", "inline-block");
         anchor.getElement().setAttribute("download", true);
         
@@ -94,8 +94,8 @@ public class ReportKardexView extends VerticalLayout {
         grid.setSizeFull();
         
         grid.addColumn(KardexItem::date).setHeader(getTranslation("grid.header.date")).setWidth("150px").setFlexGrow(0);
-        grid.addColumn(KardexItem::type).setHeader("Tipo").setWidth("100px").setFlexGrow(0);
-        grid.addColumn(KardexItem::ref).setHeader("Referencia");
+        grid.addColumn(KardexItem::type).setHeader(getTranslation("report.account.type")).setWidth("100px").setFlexGrow(0);
+        grid.addColumn(KardexItem::ref).setHeader(getTranslation("report.reference"));
         grid.addColumn(KardexItem::productName).setHeader(getTranslation("grid.header.product"));
         grid.addColumn(KardexItem::batch).setHeader(getTranslation("grid.header.batch"));
         grid.addColumn(KardexItem::quantity).setHeader(getTranslation("grid.header.quantity"));
