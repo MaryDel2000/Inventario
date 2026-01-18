@@ -130,6 +130,15 @@ public class MainLayout extends AppLayout {
         getElement().executeJs("return window.innerWidth < 1024;").then(result -> {
             boolean isMobile = result.asBoolean();
             this.isMobileMode = isMobile;
+
+            // DEBUG: Print current authorities
+            org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null) {
+                System.out.println("DEBUG: User " + auth.getName() + " has authorities: " + auth.getAuthorities());
+            } else {
+                System.out.println("DEBUG: No auth context in setupSidebar");
+            }
+
             setupSidebarForMode(isMobile);
             updateHeader();
         });

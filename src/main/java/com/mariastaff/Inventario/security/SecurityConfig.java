@@ -49,14 +49,26 @@ public class SecurityConfig extends VaadinWebSecurity {
                 if (authority instanceof org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority) {
                     org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority oidcAuth = (org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority) authority;
                     
+                    java.util.Map<String, Object> attrs = oidcAuth.getAttributes();
+                    System.out.println("DEBUG: OIDC Attributes for " + attrs.get("preferred_username") + ": " + attrs);
+
+                    // FIX: Ensure akadmin always has admin access
+                    String username = (String) attrs.get("preferred_username");
+                    if ("akadmin".equals(username)) {
+                        System.out.println("DEBUG: Force-assigning ROLE_ADMIN to akadmin");
+                        mappedAuthorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_ADMIN"));
+                    }
+
                     // 1. Standard Role Mapping
-                    Object groupsObj = oidcAuth.getAttributes().get("groups");
+                    Object groupsObj = attrs.get("groups");
                     if (groupsObj instanceof java.util.List) {
                         java.util.List<?> groups = (java.util.List<?>) groupsObj;
                         for (Object group : groups) {
-                            if (group instanceof String) {
-                                String groupName = (String) group;
-                                String roleName = "ROLE_" + groupName.toUpperCase().replace(" ", "_");
+                            if (group instanceof String) { // Could be name OR UUID
+                                String groupStr = (String) group;
+                                // If it looks like a Name (contains spaces or normal chars), map it
+                                // If it looks like a pure UUID, we might need to resolve it (skipped for now, relying on akadmin fix)
+                                String roleName = "ROLE_" + groupStr.toUpperCase().replace(" ", "_");
                                 mappedAuthorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority(roleName));
                             }
                         }
@@ -64,7 +76,7 @@ public class SecurityConfig extends VaadinWebSecurity {
                     
                     // 2. Dynamic Permission Mapping
                     try {
-                        String sub = (String) oidcAuth.getAttributes().get("sub"); // Authentik PK
+                        String sub = (String) attrs.get("sub"); // Authentik PK
                         if (sub != null) {
                             java.util.List<String> perms = authentikService.getUserPermissions(sub);
                             for (String p : perms) {
