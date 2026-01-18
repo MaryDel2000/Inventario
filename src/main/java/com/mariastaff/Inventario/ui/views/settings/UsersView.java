@@ -29,6 +29,7 @@ import jakarta.annotation.security.PermitAll;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import com.mariastaff.Inventario.config.AppRoles;
 
 @PageTitle("Usuarios | Configuración")
 @Route(value = "settings/users", layout = MainLayout.class)
@@ -38,15 +39,6 @@ public class UsersView extends VerticalLayout {
     private final UserService service;
     private final AuthentikService authentikService;
     private final Grid<SysUsuario> grid = new Grid<>(SysUsuario.class);
-
-    // Permisos de la aplicación (Entitlements)
-    private static final Map<String, String> PERMISSIONS_MAP = Map.of(
-        "MODULE_INVENTORY", "Inventario y Compras",
-        "MODULE_SALES", "Punto de Venta y Ventas",
-        "MODULE_ACCOUNTING", "Contabilidad",
-        "MODULE_REPORTS", "Reportes",
-        "MODULE_SETTINGS", "Configuración del Sistema"
-    );
 
     public UsersView(UserService service, AuthentikService authentikService) {
         this.service = service;
@@ -58,12 +50,25 @@ public class UsersView extends VerticalLayout {
         Button addBtn = new Button("Nuevo Usuario", VaadinIcon.PLUS.create());
         addBtn.addClassNames("bg-primary", "text-white", "text-sm", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow", "hover:shadow-md", "transition-all");
         addBtn.addClickListener(e -> openDialog(new SysUsuario()));
+        
+        Button rolesBtn = new Button("Roles", VaadinIcon.KEY_O.create());
+        rolesBtn.addClassNames(
+            "bg-gray-200", "text-gray-900", "border", "border-gray-300",
+            "dark:bg-gray-700", "dark:text-white", "dark:border-gray-600",
+            "hover:bg-gray-300", "dark:hover:bg-gray-600",
+            "font-semibold", "py-2", "px-4", "rounded-lg", "shadow-sm", "ml-2"
+        );
+        rolesBtn.addClickListener(e -> openEntitlementsManager());
 
-        Button syncBtn = new Button("Sincronizar Authentik", VaadinIcon.REFRESH.create());
-        syncBtn.addClassNames("bg-blue-600", "text-white", "text-sm", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow", "hover:shadow-md", "transition-all", "ml-2");
+        Button syncBtn = new Button("Sincronizar", VaadinIcon.REFRESH.create());
+        syncBtn.addClassNames(
+            "bg-blue-600", "text-white",
+            "hover:bg-blue-700",
+            "font-semibold", "py-2", "px-4", "rounded-lg", "shadow", "transition-all", "ml-2"
+        );
         syncBtn.addClickListener(e -> syncUsers());
 
-        HorizontalLayout header = new HorizontalLayout(new AppLabel("Listado de Usuarios"), addBtn, syncBtn);
+        HorizontalLayout header = new HorizontalLayout(new AppLabel("Listado de Usuarios"), addBtn, rolesBtn, syncBtn);
         header.addClassNames("w-full", "items-center", "gap-2");
         header.setFlexGrow(1, new AppLabel("Listado de Usuarios"));
 
@@ -80,6 +85,7 @@ public class UsersView extends VerticalLayout {
         
         grid.addComponentColumn(user -> {
             Button editBtn = new Button(VaadinIcon.EDIT.create());
+            editBtn.addThemeVariants(com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY);
             editBtn.addClassNames("text-text-secondary", "hover:text-primary", "p-2");
             editBtn.addClickListener(e -> openDialog(user));
             return editBtn;
@@ -98,8 +104,24 @@ public class UsersView extends VerticalLayout {
             int createdLocal = 0;
             int createdAuth = 0;
             
-            // 1. Authentik -> Local
+            // 1. Obtener usuarios de Authentik
             List<Map<String, Object>> authUsers = authentikService.listUsers();
+            
+            // 2. Asegurar que existan los Entitlements (Roles)
+            List<Map<String, Object>> entitlements = authentikService.listEntitlements();
+            Set<String> existingEntitlements = new java.util.HashSet<>();
+            for(Map<String, Object> ent : entitlements) {
+                existingEntitlements.add((String)ent.get("name"));
+            }
+            
+            for(Map.Entry<String, String> entry : AppRoles.DEFINITIONS.entrySet()) {
+                if(!existingEntitlements.contains(entry.getKey())) {
+                    System.out.println("Creando entitlement faltante: " + entry.getKey());
+                    authentikService.createEntitlement(entry.getKey(), Map.of("description", entry.getValue()));
+                }
+            }
+            
+            // 1. Authentik -> Local
             for (Map<String, Object> u : authUsers) {
                 String username = (String) u.get("username");
                 if (username == null || username.equals("authentik admin")) continue; 
@@ -148,24 +170,7 @@ public class UsersView extends VerticalLayout {
                 }
             }
 
-            // 3. Crear entitlements estándar si no existen
-            try {
-                List<Map<String, Object>> existingEntitlements = authentikService.listEntitlements();
-                Set<String> existingNames = new java.util.HashSet<>();
-                for (Map<String, Object> ent : existingEntitlements) {
-                    existingNames.add((String) ent.get("name"));
-                }
-                
-                for (String permission : PERMISSIONS_MAP.keySet()) {
-                    if (!existingNames.contains(permission)) {
-                        Map<String, Object> attributes = new java.util.HashMap<>();
-                        attributes.put("description", PERMISSIONS_MAP.get(permission));
-                        authentikService.createEntitlement(permission, attributes);
-                    }
-                }
-            } catch (Exception e) {
-                System.err.println("Error creando entitlements: " + e.getMessage());
-            }
+
 
             TailwindNotification.show("Sincronización completa. Local creados: " + createdLocal + ", Authentik creados: " + createdAuth, TailwindNotification.Type.SUCCESS);
             updateList();
@@ -233,7 +238,7 @@ public class UsersView extends VerticalLayout {
             
             for (Map<String, Object> ent : allEntitlements) {
                 String entName = (String) ent.get("name");
-                String displayName = PERMISSIONS_MAP.getOrDefault(entName, entName);
+                String displayName = AppRoles.DEFINITIONS.getOrDefault(entName, entName);
                 
                 TailwindCheckbox cb = new TailwindCheckbox(displayName);
                 permissionCheckboxMap.put(entName, cb);
@@ -357,6 +362,120 @@ public class UsersView extends VerticalLayout {
         modal.addFooterButton(cancelButton);
         modal.addFooterButton(saveButton);
         add(modal);
+        modal.open();
+    }
+
+    // --- Entitlements Manager Logic ---
+
+    private void openEntitlementsManager() {
+        TailwindModal modal = new TailwindModal("Gestión de Roles y Permisos");
+        modal.setWidth("800px");
+        
+        Grid<Map<String, Object>> entGrid = new Grid<>();
+        entGrid.addColumn(m -> m.get("name")).setHeader("Código (Nombre)");
+        entGrid.addColumn(m -> {
+            Map attrs = (Map) m.get("attributes");
+            return attrs != null ? attrs.get("description") : "-";
+        }).setHeader("Descripción");
+        entGrid.getColumns().forEach(col -> col.setAutoWidth(true));
+        
+        Button refreshBtn = new Button(VaadinIcon.REFRESH.create(), e -> loadEntitlements(entGrid));
+        refreshBtn.addClassNames("text-gray-500", "hover:text-blue-600", "p-2", "border", "border-gray-300", "rounded", "bg-white", "dark:bg-gray-800", "dark:text-gray-300", "dark:border-gray-600");
+
+        Button createBtn = new Button("Nuevo Rol", VaadinIcon.PLUS.create());
+        createBtn.addClassNames(
+             "bg-blue-600", "text-white", 
+             "hover:bg-blue-700", 
+             "font-bold", "py-2", "px-4", "rounded", "shadow"
+        );
+        createBtn.addClickListener(e -> openEntitlementEditor(null, entGrid));
+        
+        entGrid.addComponentColumn(item -> {
+            Button edit = new Button(VaadinIcon.EDIT.create(), e -> openEntitlementEditor(item, entGrid));
+            edit.addClassNames("text-blue-600", "hover:text-blue-800", "p-2");
+            
+            Button delete = new Button(VaadinIcon.TRASH.create(), e -> {
+                deleteEntitlement((String) item.get("pk"), entGrid);
+            });
+            delete.addClassNames("text-red-600", "hover:text-red-800", "ml-2", "p-2");
+
+            return new HorizontalLayout(edit, delete);
+        }).setHeader("Acciones");
+        
+        loadEntitlements(entGrid);
+        
+        HorizontalLayout toolbar = new HorizontalLayout(createBtn, refreshBtn);
+        toolbar.addClassNames("mb-4", "gap-2", "items-center", "w-full", "justify-between");
+        
+        modal.add(toolbar, entGrid);
+        modal.open();
+    }
+
+    private void loadEntitlements(Grid<Map<String, Object>> grid) {
+        try {
+            grid.setItems(authentikService.listEntitlements());
+        } catch (Exception e) {
+            TailwindNotification.show("Error cargando roles: " + e.getMessage(), TailwindNotification.Type.ERROR);
+        }
+    }
+
+    private void deleteEntitlement(String pk, Grid<Map<String, Object>> grid) {
+        if(pk == null) return;
+        try {
+            authentikService.deleteEntitlement(pk);
+            TailwindNotification.show("Rol eliminado", TailwindNotification.Type.SUCCESS);
+            loadEntitlements(grid);
+        } catch (Exception e) {
+            TailwindNotification.show("Error eliminando: " + e.getMessage(), TailwindNotification.Type.ERROR);
+        }
+    }
+
+    private void openEntitlementEditor(Map<String, Object> item, Grid<Map<String, Object>> grid) {
+        boolean isNew = item == null;
+        TailwindModal modal = new TailwindModal(isNew ? "Nuevo Rol" : "Editar Rol");
+        
+        TextField nameField = new TextField("Código (Ej. MODULE_INVENTORY)");
+        nameField.setWidthFull();
+        TextField descField = new TextField("Descripción");
+        descField.setWidthFull();
+        
+        if (!isNew) {
+            nameField.setValue((String) item.get("name"));
+            Map attrs = (Map) item.get("attributes");
+            if (attrs != null && attrs.containsKey("description")) {
+                descField.setValue((String) attrs.get("description"));
+            }
+        }
+        
+        Button saveBtn = new Button("Guardar", e -> {
+            if (nameField.isEmpty()) {
+                TailwindNotification.show("El código es requerido", TailwindNotification.Type.ERROR);
+                return;
+            }
+            
+            Map<String, Object> attrs = Map.of("description", descField.getValue());
+            
+            try {
+                if (isNew) {
+                    authentikService.createEntitlement(nameField.getValue(), attrs);
+                    TailwindNotification.show("Rol creado", TailwindNotification.Type.SUCCESS);
+                } else {
+                    String pk = (String) item.get("pk");
+                    authentikService.updateEntitlement(pk, nameField.getValue(), attrs);
+                    TailwindNotification.show("Rol actualizado", TailwindNotification.Type.SUCCESS);
+                }
+                modal.close();
+                loadEntitlements(grid);
+            } catch (Exception ex) {
+                TailwindNotification.show("Error: " + ex.getMessage(), TailwindNotification.Type.ERROR);
+            }
+        });
+        saveBtn.addClassNames("bg-primary", "text-white", "mt-4");
+        
+        VerticalLayout form = new VerticalLayout(nameField, descField, saveBtn);
+        form.setPadding(false);
+        
+        modal.add(form);
         modal.open();
     }
 }

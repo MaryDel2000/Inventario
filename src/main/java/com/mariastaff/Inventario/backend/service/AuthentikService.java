@@ -16,6 +16,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class AuthentikService {
@@ -26,6 +27,10 @@ public class AuthentikService {
     @Value("${authentik.app.slug}")
     private String appSlug;
 
+    // Token de sistema para tareas de bootstrap (inicialización) donde no hay usuario logueado.
+    @Value("${authentik.api.token}")
+    private String systemToken;
+
     private final RestTemplate restTemplate;
     private final OAuth2AuthorizedClientManager authorizedClientManager;
 
@@ -33,10 +38,68 @@ public class AuthentikService {
         this.restTemplate = new RestTemplate();
         this.authorizedClientManager = authorizedClientManager;
     }
+    
+    /**
+     * Asegura que los entitlements requeridos existan en Authentik.
+     * Utiliza el token de sistema, ya que se ejecuta al inicio de la aplicación.
+     */
+    public void ensureEntitlementsExist(Map<String, String> requiredEntitlements) {
+        try {
+            System.out.println("Bootstrap: Verificando Entitlements en Authentik...");
+            // Usar token de sistema para listar
+            List<Map<String, Object>> existing = listEntitlementsSystem();
+            Set<String> existingNames = new java.util.HashSet<>();
+            for(Map<String, Object> ent : existing) {
+                existingNames.add((String) ent.get("name"));
+            }
+            
+            for (Map.Entry<String, String> entry : requiredEntitlements.entrySet()) {
+                if (!existingNames.contains(entry.getKey())) {
+                    System.out.println("Bootstrap: Creando entitlement faltante: " + entry.getKey());
+                    createEntitlementSystem(entry.getKey(), Map.of("description", entry.getValue()));
+                }
+            }
+            System.out.println("Bootstrap: Verificación de entitlements completada.");
+        } catch (Exception e) {
+            System.err.println("Bootstrap Error: No se pudieron sincronizar los entitlements: " + e.getMessage());
+        }
+    }
+
+    // Métodos privados usando System Token
+
+    private List<Map<String, Object>> listEntitlementsSystem() {
+        String url = apiUrl + "/api/v3/core/application_entitlements/?app__slug=" + appSlug + "&ordering=name&page_size=100";
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + systemToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
+        
+        if (response.getBody() != null && response.getBody().containsKey("results")) {
+            return (List<Map<String, Object>>) response.getBody().get("results");
+        }
+        return java.util.Collections.emptyList();
+    }
+
+    private void createEntitlementSystem(String name, Map<String, Object> attributes) {
+        String url = apiUrl + "/api/v3/core/application_entitlements/";
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + systemToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        
+        Map<String, Object> body = new java.util.HashMap<>();
+        body.put("name", name);
+        body.put("app", appSlug);
+        body.put("attributes", attributes);
+        
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+        restTemplate.postForEntity(url, entity, Map.class);
+    }
 
     /**
-     * Obtiene los headers con el token de autenticación.
-     * Solo usa el token OAuth2 del usuario autenticado.
+     * Obtiene los headers con el token de autenticación del usuario actual.
+     * Solo usa el token OAuth2 del usuario autenticado para operaciones iniciadas por usuarios.
      */
     private HttpHeaders getHeaders() {
         HttpHeaders headers = new HttpHeaders();
