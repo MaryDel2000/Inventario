@@ -52,4 +52,15 @@ public class AlmacenService {
         java.math.BigDecimal total = existenciaRepository.sumStockByProducto(productoId);
         return total != null ? total : java.math.BigDecimal.ZERO;
     }
+
+    public java.util.Map<String, java.math.BigDecimal> getStockByAlmacen() {
+        java.util.List<Object[]> results = existenciaRepository.sumStockByAlmacen();
+        java.util.Map<String, java.math.BigDecimal> map = new java.util.HashMap<>();
+        for (Object[] row : results) {
+            String almacen = (String) row[0];
+            java.math.BigDecimal total = (java.math.BigDecimal) row[1];
+            map.put(almacen, total);
+        }
+        return map;
+    }
 }

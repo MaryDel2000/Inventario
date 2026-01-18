@@ -10,7 +10,7 @@ import jakarta.validation.constraints.NotEmpty;
 @Table(name = "sys_usuario")
 public class SysUsuario extends AuditableEntity {
 
-    @ManyToOne
+    @ManyToOne(cascade = jakarta.persistence.CascadeType.ALL)
     @JoinColumn(name = "entidad_id")
     private GenEntidad entidad;
 

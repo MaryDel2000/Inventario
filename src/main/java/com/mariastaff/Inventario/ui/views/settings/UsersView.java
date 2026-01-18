@@ -6,9 +6,11 @@ import com.mariastaff.Inventario.backend.service.AuthentikService;
 import com.mariastaff.Inventario.backend.service.UserService;
 import com.mariastaff.Inventario.ui.components.base.AppLabel;
 import com.mariastaff.Inventario.ui.layouts.MainLayout;
+import com.mariastaff.Inventario.ui.components.base.TailwindCheckbox;
 import com.mariastaff.Inventario.ui.components.base.TailwindModal;
 import com.mariastaff.Inventario.ui.components.base.TailwindNotification;
 import com.mariastaff.Inventario.ui.components.base.TailwindToggle;
+
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.checkbox.CheckboxGroup;
 import com.vaadin.flow.component.checkbox.CheckboxGroupVariant;
@@ -105,7 +107,7 @@ public class UsersView extends VerticalLayout {
                 if (local == null) {
                     SysUsuario newUser = new SysUsuario();
                     newUser.setUsername(username);
-                    newUser.setAuthentikUuid((String) u.get("pk")); // PK is UUID string
+                    newUser.setAuthentikUuid(String.valueOf(u.get("pk"))); // PK is likely UUID string now. Safely convert.
                     newUser.setActivo((Boolean) u.get("is_active"));
                     
                     GenEntidad entidad = new GenEntidad();
@@ -118,7 +120,7 @@ public class UsersView extends VerticalLayout {
                     createdLocal++;
                 } else if (local.getAuthentikUuid() == null) {
                     // Link existing local to Authentik if name matches
-                    local.setAuthentikUuid((String) u.get("pk"));
+                    local.setAuthentikUuid(String.valueOf(u.get("pk")));
                     service.save(local);
                 }
             }
@@ -136,9 +138,10 @@ public class UsersView extends VerticalLayout {
                             local.getEntidad().getNombreCompleto(),
                             local.getEntidad().getEmail()
                         );
-                        String uuid = (String) result.get("uid");
-                        Integer pk = (Integer) result.get("pk");
-                        local.setAuthentikUuid(uuid);
+                        // In v3, 'pk' usually IS the UUID string. 'uid' might also exist.
+                        // We'll prioritize 'pk' as the identifier for API calls.
+                        String pk = String.valueOf(result.get("pk"));
+                        local.setAuthentikUuid(pk);
                         
                         // Set default password or try to reuse? We can't reuse hash. 
                         // Set a default temp password
@@ -157,7 +160,7 @@ public class UsersView extends VerticalLayout {
             String[] standardRoles = {"ADMIN", "USER", "CAJERO", "INVENTARIO"};
             for (String role : standardRoles) {
                 try {
-                     authentikService.createGroup(role);
+                     authentikService.createGroup(role, null);
                 } catch (Exception e) {}
             }
 
@@ -168,6 +171,14 @@ public class UsersView extends VerticalLayout {
              e.printStackTrace();
         }
     }
+
+    private static final Map<String, String> PERMISSIONS_MAP = Map.of(
+        "MODULE_INVENTORY", "Inventario y Compras",
+        "MODULE_SALES", "Punto de Venta y Ventas",
+        "MODULE_ACCOUNTING", "Contabilidad",
+        "MODULE_REPORTS", "Reportes",
+        "MODULE_SETTINGS", "Configuración del Sistema"
+    );
 
     private void openRolesDialog() {
         TailwindModal modal = new TailwindModal("Gestión de Roles (Grupos)");
@@ -190,14 +201,34 @@ public class UsersView extends VerticalLayout {
             }
         };
         
+        rolesGrid.addColumn(g -> {
+            Map<String, Object> attrs = (Map<String, Object>) g.get("attributes");
+            if (attrs != null && attrs.containsKey("app_permissions")) {
+                List<String> perms = (List<String>) attrs.get("app_permissions");
+                return perms.size() + " Permisos";
+            }
+            return getRolePermissions((String) g.get("name")); // Fallback to hardcoded
+        }).setHeader("Permisos del Sistema").setAutoWidth(true);
+
         rolesGrid.addComponentColumn(g -> {
+            HorizontalLayout actions = new HorizontalLayout();
+            
+            Button editBtn = new Button(VaadinIcon.EDIT.create());
+            editBtn.addThemeVariants(com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY);
+            editBtn.addClickListener(e -> {
+                 modal.close();
+                 openRoleEditor(g, refreshRoles);
+            });
+            
             Button delBtn = new Button(VaadinIcon.TRASH.create());
-            delBtn.addClassNames("text-red-600", "p-2", "hover:text-red-800");
+            delBtn.addThemeVariants(com.vaadin.flow.component.button.ButtonVariant.LUMO_ERROR);
             delBtn.addClickListener(e -> {
+                if (isSystemRole((String) g.get("name"))) {
+                     TailwindNotification.show("No puede eliminar roles del sistema", TailwindNotification.Type.WARNING);
+                     return;
+                }
                 try {
-                    // Authentik 'pk' is usually UUID string in list
-                    Object pkObj = g.get("pk");
-                    String pk = String.valueOf(pkObj); 
+                    String pk = String.valueOf(g.get("pk")); 
                     authentikService.deleteGroup(pk);
                     TailwindNotification.show("Rol eliminado", TailwindNotification.Type.SUCCESS);
                     refreshRoles.run();
@@ -205,7 +236,8 @@ public class UsersView extends VerticalLayout {
                      TailwindNotification.show("Error al eliminar: " + ex.getMessage(), TailwindNotification.Type.ERROR);
                 }
             });
-            return delBtn;
+            actions.add(editBtn, delBtn);
+            return actions;
         }).setHeader("Acciones");
 
         // Initial Load
@@ -224,11 +256,12 @@ public class UsersView extends VerticalLayout {
         createBtn.addClickListener(e -> {
             if (!newRoleName.isEmpty()) {
                 try {
-                    Map<String, Object> newGroup = authentikService.createGroup(newRoleName.getValue());
+                    // Create basic group first
+                    Map<String, Object> newGroup = authentikService.createGroup(newRoleName.getValue(), null);
                     if (newGroup != null) {
-                        TailwindNotification.show("Rol '" + newRoleName.getValue() + "' creado con éxito", TailwindNotification.Type.SUCCESS);
-                        newRoleName.clear();
-                        refreshRoles.run();
+                        TailwindNotification.show("Rol '" + newRoleName.getValue() + "' creado. Ahora configure los permisos.", TailwindNotification.Type.SUCCESS);
+                        modal.close();
+                        openRoleEditor(newGroup, refreshRoles);
                     } else {
                          TailwindNotification.show("No se pudo crear el rol (respuesta vacía)", TailwindNotification.Type.ERROR);
                     }
@@ -250,6 +283,100 @@ public class UsersView extends VerticalLayout {
         Button closeBtn = new Button("Cerrar", e -> modal.close());
         closeBtn.addClassNames("bg-gray-200");
         modal.addFooterButton(closeBtn);
+        
+        add(modal);
+        modal.open();
+    }
+
+    // Nested Custom Checkbox to ensure Tailwind styling works
+
+
+    private void openRoleEditor(Map<String, Object> group, Runnable feedbackCallback) {
+        String name = (String) group.get("name");
+        String pk = String.valueOf(group.get("pk"));
+        
+        TailwindModal modal = new TailwindModal("Editar Rol: " + name);
+        VerticalLayout layout = new VerticalLayout();
+        
+        TextField roleName = new TextField("Nombre del Rol");
+        roleName.setValue(name);
+        roleName.setWidthFull();
+        if (isSystemRole(name)) roleName.setReadOnly(true);
+        
+        layout.add(roleName);
+
+        // Permissions Section
+        com.vaadin.flow.component.html.H5 permLabel = new com.vaadin.flow.component.html.H5("Permisos de Acceso");
+        permLabel.addClassName("mt-4");
+        permLabel.addClassNames("text-lg", "font-semibold", "text-text-primary");
+        layout.add(permLabel);
+
+        // Container for checkboxes
+        VerticalLayout checksLayout = new VerticalLayout();
+        checksLayout.setPadding(false);
+        checksLayout.setSpacing(true);
+        
+        java.util.Map<String, TailwindCheckbox> checkboxMap = new java.util.HashMap<>();
+        
+        // Load current permissions
+        java.util.Set<String> currentPerms = new java.util.HashSet<>();
+        Map<String, Object> attrs = (Map<String, Object>) group.get("attributes");
+        if (attrs != null && attrs.containsKey("app_permissions")) {
+            List<String> perms = (List<String>) attrs.get("app_permissions");
+            currentPerms.addAll(perms);
+        } else {
+            // Fallback defaults
+             if ("ADMIN".equals(name) || "ADMINS".equals(name)) currentPerms.addAll(PERMISSIONS_MAP.keySet());
+             else if ("CAJERO".equals(name)) currentPerms.add("MODULE_SALES");
+             else if ("INVENTARIO".equals(name)) currentPerms.add("MODULE_INVENTORY");
+             else if ("CONTADOR".equals(name)) { currentPerms.add("MODULE_ACCOUNTING"); currentPerms.add("MODULE_REPORTS"); }
+        }
+
+        // Create Checkboxes in specific order
+        java.util.List<String> orderedKeys = java.util.List.of(
+            "MODULE_INVENTORY", "MODULE_SALES", "MODULE_ACCOUNTING", "MODULE_REPORTS", "MODULE_SETTINGS"
+        );
+
+        for (String key : orderedKeys) {
+            String label = PERMISSIONS_MAP.getOrDefault(key, key);
+            TailwindCheckbox cb = new TailwindCheckbox(label);
+            cb.setValue(currentPerms.contains(key));
+            checkboxMap.put(key, cb);
+            checksLayout.add(cb);
+        }
+        
+        layout.add(checksLayout);
+        modal.addContent(layout);
+        
+        Button saveBtn = new Button("Guardar Cambios", e -> {
+            try {
+                Map<String, Object> newAttrs = new java.util.HashMap<>();
+                if (attrs != null) newAttrs.putAll(attrs);
+                
+                // Collect values
+                java.util.Set<String> selected = new java.util.HashSet<>();
+                checkboxMap.forEach((k, v) -> {
+                    if (v.getValue()) selected.add(k);
+                });
+                newAttrs.put("app_permissions", selected);
+                
+                authentikService.updateGroup(pk, roleName.getValue(), newAttrs);
+                TailwindNotification.show("Rol actualizado correctamente", TailwindNotification.Type.SUCCESS);
+                modal.close();
+                // Re-open parent dialog
+                openRolesDialog(); 
+            } catch (Exception ex) {
+                 TailwindNotification.show("Error al actualizar: " + ex.getMessage(), TailwindNotification.Type.ERROR);
+                 ex.printStackTrace();
+            }
+        });
+        saveBtn.addClassNames("bg-primary", "text-white", "font-semibold");
+        
+        Button cancelBtn = new Button("Cancelar", e -> { modal.close(); openRolesDialog(); });
+        cancelBtn.addClassNames("text-text-secondary", "hover:bg-gray-100");
+        
+        modal.addFooterButton(cancelBtn);
+        modal.addFooterButton(saveBtn);
         
         add(modal);
         modal.open();
@@ -298,10 +425,14 @@ public class UsersView extends VerticalLayout {
         TailwindToggle activo = new TailwindToggle("Activo");
         activo.setValue(item.getActivo() != null ? item.getActivo() : true);
         
-        // Dynamic Roles Loading
-        CheckboxGroup<String> rolesGroup = new CheckboxGroup<>();
-        rolesGroup.setLabel("Roles (Grupos en Authentik)");
-        rolesGroup.addThemeVariants(CheckboxGroupVariant.LUMO_VERTICAL);
+        // Dynamic Roles Loading using Styled Checkbox List
+        com.vaadin.flow.component.html.Span rolesLabel = new com.vaadin.flow.component.html.Span("Roles (Grupos en Authentik)");
+        rolesLabel.addClassNames("text-sm", "font-medium", "text-gray-700", "mt-2"); // Matching label style
+        
+        com.vaadin.flow.component.html.Div rolesContainer = new com.vaadin.flow.component.html.Div();
+        rolesContainer.addClassNames("border", "border-gray-300", "rounded-md", "bg-white", "p-3", "flex", "flex-col", "gap-2", "max-h-40", "overflow-y-auto", "w-full", "shadow-sm");
+        
+        java.util.Map<String, TailwindCheckbox> roleCheckboxMap = new java.util.HashMap<>();
         
         // Fetch real groups from Authentik
         List<Map<String, Object>> groups = authentikService.listGroups();
@@ -310,27 +441,33 @@ public class UsersView extends VerticalLayout {
         }
         
         List<String> groupNames = groups.stream().map(g -> (String)g.get("name")).collect(Collectors.toList());
-        rolesGroup.setItems(groupNames);
-        rolesGroup.setEnabled(!groupNames.isEmpty());
+        
+        for (String role : groupNames) {
+            TailwindCheckbox cb = new TailwindCheckbox(role);
+            roleCheckboxMap.put(role, cb);
+            rolesContainer.add(cb);
+        }
         
         // Pre-select user groups if editing
         if (!isNew && item.getAuthentikUuid() != null) {
              try {
-                Integer pk = authentikService.getPkByUuid(item.getAuthentikUuid());
+                String pk = authentikService.getPkByUuid(item.getAuthentikUuid());
                 if (pk != null) {
                     List<String> userGroups = authentikService.getUserGroupNames(pk);
-                    // Filter only those existing in our loaded list to avoid CheckboxGroup error
-                    List<String> validGroups = userGroups.stream().filter(groupNames::contains).collect(Collectors.toList());
-                    rolesGroup.setValue(Set.copyOf(validGroups));
+                    for (String userRole : userGroups) {
+                        if (roleCheckboxMap.containsKey(userRole)) {
+                            roleCheckboxMap.get(userRole).setValue(true);
+                        }
+                    }
                 }
              } catch (Exception e) {
                  System.err.println("Error fetching user groups: " + e.getMessage());
              }
         }
-
-
-        formLayout.add(nombre, email, username, password, authentikUuid, activo, rolesGroup);
+        
+        formLayout.add(nombre, email, username, password, authentikUuid, activo, rolesLabel, rolesContainer);
         formLayout.setColspan(nombre, 2);
+        formLayout.setColspan(rolesContainer, 2); // Full width for roles
         
         modal.addContent(formLayout);
 
@@ -360,94 +497,43 @@ public class UsersView extends VerticalLayout {
                 }
 
                 try {
-                    Integer pk = null;
-                    // ... Authentik Logic (kept same structure but logic inside is fine) ...
+                    String pk = null;
                     if (isNew) {
                         Map<String, Object> result = authentikService.createUser(item.getUsername(), 
                                                                                item.getEntidad().getNombreCompleto(), 
                                                                                item.getEntidad().getEmail());
-                        String uuid = (String) result.get("uid");
-                        pk = (Integer) result.get("pk");
-                        item.setAuthentikUuid(uuid);
+                        pk = String.valueOf(result.get("pk"));
+                        item.setAuthentikUuid(pk);
+                        
                         if (!password.isEmpty()) authentikService.setPassword(pk, password.getValue());
                     } else {
                         if (item.getAuthentikUuid() != null) {
-                            pk = authentikService.getPkByUuid(item.getAuthentikUuid());
-                            if (pk != null) {
-                                System.out.println("Updating user PK: " + pk);
-                                System.out.println("Username: " + item.getUsername());
-                                System.out.println("Name: " + item.getEntidad().getNombreCompleto());
-                                System.out.println("Email: " + item.getEntidad().getEmail());
-                                
-                                authentikService.updateUser(pk, item.getUsername(), 
-                                                          item.getEntidad().getNombreCompleto(), 
-                                                          item.getEntidad().getEmail(), 
-                                                          item.getActivo());
-                                if (!password.isEmpty()) authentikService.setPassword(pk, password.getValue());
-                            }
+                            pk = item.getAuthentikUuid(); // Trust the stored UUID as PK
+                            
+                            authentikService.updateUser(pk, item.getUsername(), 
+                                                      item.getEntidad().getNombreCompleto(), 
+                                                      item.getEntidad().getEmail(), 
+                                                      item.getActivo());
+                            if (!password.isEmpty()) authentikService.setPassword(pk, password.getValue());
                         }
                     }
 
                     // Handle Role Changes (Add / Remove)
                     if (pk != null) {
-                        Set<String> selectedRoles = rolesGroup.getValue();
-                        List<String> currentRoles = authentikService.getUserGroupNames(pk); // Re-fetch to be sure
+                        // Collect selected roles from checkboxes
+                        Set<String> selectedRoles = new java.util.HashSet<>();
+                        roleCheckboxMap.forEach((k, v) -> {
+                            if (v.getValue()) selectedRoles.add(k);
+                        });
+                        
+                        List<String> currentRoles = authentikService.getUserGroupNames(pk);
                         
                         // Add new roles
                         for (String role : selectedRoles) {
                             if (!currentRoles.contains(role)) {
                                 Map<String, Object> g = groups.stream().filter(gr -> gr.get("name").equals(role)).findFirst().orElse(null);
-                                // If group doesn't exist in list (maybe new created elsewhere), create it? 
-                                // Or assume list is authority. Let's create if not found mainly if user typed it, but here it's selection.
-                                // But wait, we allowed arbitrary creation before. Here we restrict to existing groups or let's create if missing.
-                                Integer gPk;
-                                if (g == null) {
-                                     // Actually we are selecting from list, so it MUST exist unless list is stale.
-                                     // But let's support creating if we change UI back to combo with custom value.
-                                     // For now, assume it exists.
-                                     continue; 
-                                } else {
-                                     // g.get("pk") might be UUID string in list response or int. 
-                                     // In Authentik API `core/groups/`, `pk` is usually UUID string. 
-                                     // BUT `add_user_to_group` URL expects UUID or PK?
-                                     // Wait, `core/groups/{pk}/add_user/`
-                                     // Let's check `getPkByUuid` logic equivalence? 
-                                     // Authentik v3 uses UUID as primary key in URL mostly.
-                                     // Wait, `getPkByUuid` returned Integer because I cast it. But API might return String UUID as pk.
-                                     // Let's inspect `createGroup` response. It returns pk.
-                                     // Let's rely on retrieving the NUMERIC ID if Authentik uses numeric IDs for actions, or UUID.
-                                     // Authentik v3 standard is UUID. 
-                                     // Let's try to find the Numeric ID if `pk` is UUID string, maybe we need `num_pk`?
-                                     // Or the `pk` field IS the UUID.
-                                     
-                                     // My previous code in AuthentikService used `Integer pk`. If Authentik returns UUID string for `pk`, that cast will fail.
-                                     // Let's assume for `add_user_to_group` it accepts UUID in URL?
-                                     // "The Group's PK (int) or UUID (str)" usually works.
-                                     
-                                     // Let's get the ID from the group map.
-                                     Object idObj = g.get("pk");
-                                     // We need to pass it to `addUserToGroup`, but that method signature is `(Integer userPk, Integer groupPk)`.
-                                     // I should update signature to Object or String to support UUIDs if needed.
-                                     // Let's assume I catch this in AuthentikService? 
-                                     // Actually, let's fix the call here.
-                                     // I will update AuthentikService signatures to use String for Group ID to be safe, or just check type.
-                                     // But I can't change Service now without another tool call.
-                                     // I will cast to what it is.
-                                     
-                                     // Wait, UsersView cannot change Service signature.
-                                     // I must ensure I pass what `addUserToGroup` expects.
-                                     // `addUserToGroup` takes (Integer, Integer).
-                                     // If group PK is UUID (String), this will crash.
-                                     // I must check if I can fetch numeric ID.
-                                     
-                                     // Actually, looking at `authentikService.getPkByUuid`, it returns Integer.
-                                     // It seems I assumed numeric PKs.
-                                     // If Authentik uses UUIDs, I should have used String.
-                                     // Validating this: core/users returns `pk` (int) usually in Django apps, `uid` (uuid).
-                                     // Authentik documentation: `pk` is integer.
-                                     // So groups should have `pk` (int). 
-                                     
-                                     gPk = (Integer) g.get("pk");
+                                if (g != null) {
+                                     String gPk = String.valueOf(g.get("pk"));
                                      authentikService.addUserToGroup(pk, gPk);
                                 }
                             }
@@ -458,7 +544,7 @@ public class UsersView extends VerticalLayout {
                             if (!selectedRoles.contains(oldRole)) {
                                 Map<String, Object> g = groups.stream().filter(gr -> gr.get("name").equals(oldRole)).findFirst().orElse(null);
                                 if (g != null) {
-                                    Integer gPk = (Integer) g.get("pk");
+                                    String gPk = String.valueOf(g.get("pk"));
                                     authentikService.removeUserFromGroup(pk, gPk);
                                 }
                             }
@@ -479,13 +565,35 @@ public class UsersView extends VerticalLayout {
                 TailwindNotification.show("Valide los campos", TailwindNotification.Type.ERROR);
             }
         });
-        saveButton.addClassNames("bg-primary", "text-white");
+        saveButton.addThemeVariants(com.vaadin.flow.component.button.ButtonVariant.LUMO_PRIMARY);
+        
         Button cancelButton = new Button("Cancelar", e -> modal.close());
-        cancelButton.addClassNames("bg-gray-200", "text-black");
+        cancelButton.addThemeVariants(com.vaadin.flow.component.button.ButtonVariant.LUMO_CONTRAST);
         
         modal.addFooterButton(cancelButton);
         modal.addFooterButton(saveButton);
         add(modal);
         modal.open();
+    }
+
+    private String getRolePermissions(String roleName) {
+        if (roleName == null) return "-";
+        switch (roleName.toUpperCase()) {
+            case "ADMINS":
+            case "ADMIN": return "Acceso Total (Admin)";
+            case "CAJEROS":
+            case "CAJERO": return "PDV, Ventas, Clientes";
+            case "CONTADORES":
+            case "CONTADOR": return "Contabilidad, Reportes";
+            case "INVENTARIO": return "Productos, Stock, Compras";
+            case "USER": return "Acceso Básico";
+            default: return "Sin Acceso Definido (Rol Personalizado)";
+        }
+    }
+
+    private boolean isSystemRole(String roleName) {
+        if (roleName == null) return false;
+        String upper = roleName.toUpperCase();
+        return upper.equals("ADMINS") || upper.equals("ADMIN"); 
     }
 }

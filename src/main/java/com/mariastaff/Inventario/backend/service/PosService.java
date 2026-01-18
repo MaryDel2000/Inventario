@@ -131,4 +131,23 @@ public class PosService {
     public void deleteCliente(PosCliente entity) { clienteRepository.delete(entity); }
 
 
+    public java.util.Map<String, java.math.BigDecimal> getSalesByTurno() {
+        java.util.Map<String, java.math.BigDecimal> map = new java.util.LinkedHashMap<>();
+        
+        List<PosTurno> closedTurns = turnoRepository.findTop7ByEstadoOrderByFechaHoraCierreDesc("CERRADO");
+        // Process in reverse order (oldest to newest) for the chart
+        java.util.Collections.reverse(closedTurns);
+        
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM HH:mm");
+        
+        for (PosTurno turno : closedTurns) {
+            java.math.BigDecimal total = ventaRepository.sumTotalNetoByTurno(turno);
+            if (total == null) total = java.math.BigDecimal.ZERO;
+            
+            String label = (turno.getFechaHoraCierre() != null ? turno.getFechaHoraCierre().format(formatter) : "Turno " + turno.getId());
+            map.put(label, total);
+        }
+        return map;
+    }
+
 }

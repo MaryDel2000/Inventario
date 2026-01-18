@@ -149,12 +149,26 @@ public class MainLayout extends AppLayout {
     
     private void setupDesktopSidebar() {
         // Simple items - sub-navigation will appear in header
-        sidebar.addNavItem(new SidebarNavItem("nav.module.inventory", new VaadinAppIcon(VaadinIcon.STORAGE), InventoryDashboardView.class));
-        sidebar.addNavItem(new SidebarNavItem("nav.module.purchases", new VaadinAppIcon(VaadinIcon.CART), NewPurchaseView.class));
-        sidebar.addNavItem(new SidebarNavItem("nav.module.sales", new VaadinAppIcon(VaadinIcon.CASH), POSView.class));
-        sidebar.addNavItem(new SidebarNavItem("nav.module.accounting", new VaadinAppIcon(VaadinIcon.CHART), FinancialDashboardView.class));
-        sidebar.addNavItem(new SidebarNavItem("nav.module.reports", new VaadinAppIcon(VaadinIcon.FILE_TEXT), ReportSalesUserView.class));
-        sidebar.addNavItem(new SidebarNavItem("nav.module.settings", new VaadinAppIcon(VaadinIcon.COG), BranchesView.class));
+        if (hasAccess("INVENTARIO", "MODULE_INVENTORY")) {
+            sidebar.addNavItem(new SidebarNavItem("nav.module.inventory", new VaadinAppIcon(VaadinIcon.STORAGE), InventoryDashboardView.class));
+            sidebar.addNavItem(new SidebarNavItem("nav.module.purchases", new VaadinAppIcon(VaadinIcon.CART), NewPurchaseView.class));
+        }
+        
+        if (hasAccess("CAJERO", "MODULE_SALES")) {
+            sidebar.addNavItem(new SidebarNavItem("nav.module.sales", new VaadinAppIcon(VaadinIcon.CASH), POSView.class));
+        }
+        
+        if (hasAccess("CONTADOR", "MODULE_ACCOUNTING")) {
+            sidebar.addNavItem(new SidebarNavItem("nav.module.accounting", new VaadinAppIcon(VaadinIcon.CHART), FinancialDashboardView.class));
+        }
+        
+        if (hasAccess("CONTADOR", "INVENTARIO", "MODULE_REPORTS", "MODULE_ACCOUNTING", "MODULE_INVENTORY")) {
+            sidebar.addNavItem(new SidebarNavItem("nav.module.reports", new VaadinAppIcon(VaadinIcon.FILE_TEXT), ReportSalesUserView.class));
+        }
+        
+        if (hasAccess("ADMIN", "MODULE_SETTINGS")) {
+            sidebar.addNavItem(new SidebarNavItem("nav.module.settings", new VaadinAppIcon(VaadinIcon.COG), BranchesView.class));
+        }
     }
     
     private void setupMobileSidebar() {
@@ -279,14 +293,45 @@ public class MainLayout extends AppLayout {
                view.equals(LocationsView.class);
     }
 
+    private boolean hasAccess(String... rolesOrPermissions) {
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return false;
+        
+        // Default Admin Access (Always has access)
+        boolean isAdmin = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_AUTHENTIK_ADMINS"));
+        if (isAdmin) return true;
+
+        for (String target : rolesOrPermissions) {
+            // 1. Direct Authority Check (e.g. MODULE_INVENTORY)
+            if (auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(target))) return true;
+
+            // 2. Legacy Role Check (e.g. INVENTARIO -> ROLE_INVENTARIO)
+            String roleAuth = "ROLE_" + target.toUpperCase();
+            if (auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(roleAuth))) return true;
+            
+            // 3. Mapping Legacy Role Name to Permission
+            String mappedPerm = null;
+            if ("INVENTARIO".equalsIgnoreCase(target)) mappedPerm = "MODULE_INVENTORY";
+            else if ("CAJERO".equalsIgnoreCase(target)) mappedPerm = "MODULE_SALES";
+            else if ("CONTADOR".equalsIgnoreCase(target)) mappedPerm = "MODULE_ACCOUNTING";
+            else if ("SETTINGS".equalsIgnoreCase(target)) mappedPerm = "MODULE_SETTINGS";
+            else if ("REPORTS".equalsIgnoreCase(target)) mappedPerm = "MODULE_REPORTS";
+            
+            if (mappedPerm != null) {
+                String finalPerm = mappedPerm;
+                if (auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(finalPerm))) return true;
+            }
+        }
+        return false;
+    }
+
     private void addInventoryHeaderItems() {
+        if (!hasAccess("INVENTARIO", "MODULE_INVENTORY", "ADMIN")) return;
         header.addNavigationItem(new HeaderNavItem("nav.inventory.dashboard", new VaadinAppIcon(VaadinIcon.DASHBOARD), InventoryDashboardView.class));
         header.addNavigationItem(new HeaderNavItem("nav.inventory.products", new VaadinAppIcon(VaadinIcon.PACKAGE), ProductsView.class));
-
         header.addNavigationItem(new HeaderNavItem("nav.inventory.movements", new VaadinAppIcon(VaadinIcon.EXCHANGE), MovementsView.class));
         header.addNavigationItem(new HeaderNavItem("nav.inventory.warehouses", new VaadinAppIcon(VaadinIcon.BUILDING), WarehousesView.class));
         header.addNavigationItem(new HeaderNavItem("nav.inventory.locations", new VaadinAppIcon(VaadinIcon.MAP_MARKER), LocationsView.class));
-
     }
 
     private boolean isPurchaseView(Class<?> view) {
@@ -295,6 +340,7 @@ public class MainLayout extends AppLayout {
     }
 
     private void addPurchaseHeaderItems() {
+        if (!hasAccess("INVENTARIO", "MODULE_INVENTORY", "ADMIN")) return;
         header.addNavigationItem(new HeaderNavItem("nav.purchases.new", new VaadinAppIcon(VaadinIcon.PLUS_CIRCLE), NewPurchaseView.class));
         header.addNavigationItem(new HeaderNavItem("nav.purchases.history", new VaadinAppIcon(VaadinIcon.CLOCK), PurchasesHistoryView.class));
         header.addNavigationItem(new HeaderNavItem("nav.purchases.providers", new VaadinAppIcon(VaadinIcon.TRUCK), ProvidersView.class));
@@ -307,6 +353,7 @@ public class MainLayout extends AppLayout {
     }
 
     private void addSalesHeaderItems() {
+        if (!hasAccess("CAJERO", "MODULE_SALES", "ADMIN")) return;
         header.addNavigationItem(new HeaderNavItem("nav.sales.pos", new VaadinAppIcon(VaadinIcon.CASH), POSView.class));
         header.addNavigationItem(new HeaderNavItem("nav.sales.shift", new VaadinAppIcon(VaadinIcon.CLOCK), ShiftView.class));
         header.addNavigationItem(new HeaderNavItem("nav.sales.closures", new VaadinAppIcon(VaadinIcon.LOCK), ClosuresView.class));
@@ -322,6 +369,7 @@ public class MainLayout extends AppLayout {
     }
 
     private void addAccountingHeaderItems() {
+        if (!hasAccess("CONTADOR", "MODULE_ACCOUNTING", "ADMIN")) return;
         header.addNavigationItem(new HeaderNavItem("nav.accounting.dashboard", new VaadinAppIcon(VaadinIcon.CHART), FinancialDashboardView.class));
         header.addNavigationItem(new HeaderNavItem("nav.accounting.journal", new VaadinAppIcon(VaadinIcon.BOOK), JournalEntriesView.class));
         header.addNavigationItem(new HeaderNavItem("nav.accounting.chart", new VaadinAppIcon(VaadinIcon.LIST), ChartOfAccountsView.class));
@@ -337,13 +385,18 @@ public class MainLayout extends AppLayout {
     }
 
     private void addReportsHeaderItems() {
+        if (!hasAccess("CONTADOR", "MODULE_ACCOUNTING", "ADMIN", "INVENTARIO", "MODULE_INVENTORY", "REPORTS", "MODULE_REPORTS")) return;
+        
         header.addNavigationItem(new HeaderNavItem("nav.reports.sales_user", new VaadinAppIcon(VaadinIcon.USER), ReportSalesUserView.class));
         header.addNavigationItem(new HeaderNavItem("nav.reports.top_products", new VaadinAppIcon(VaadinIcon.STAR), ReportTopProductsView.class));
         header.addNavigationItem(new HeaderNavItem("nav.reports.margins", new VaadinAppIcon(VaadinIcon.TRENDING_UP), ReportMarginsView.class));
         header.addNavigationItem(new HeaderNavItem("nav.reports.kardex", new VaadinAppIcon(VaadinIcon.FILE_TEXT_O), ReportKardexView.class));
         header.addNavigationItem(new HeaderNavItem("nav.reports.inventory_value", new VaadinAppIcon(VaadinIcon.MONEY), ReportInventoryValueView.class));
-        header.addNavigationItem(new HeaderNavItem("nav.reports.income_statement", new VaadinAppIcon(VaadinIcon.PIE_CHART), ReportIncomeStatementView.class));
-        header.addNavigationItem(new HeaderNavItem("nav.reports.trial_balance", new VaadinAppIcon(VaadinIcon.SCALE), ReportTrialBalanceView.class));
+        
+        if (hasAccess("CONTADOR", "MODULE_ACCOUNTING", "ADMIN")) {
+            header.addNavigationItem(new HeaderNavItem("nav.reports.income_statement", new VaadinAppIcon(VaadinIcon.PIE_CHART), ReportIncomeStatementView.class));
+            header.addNavigationItem(new HeaderNavItem("nav.reports.trial_balance", new VaadinAppIcon(VaadinIcon.SCALE), ReportTrialBalanceView.class));
+        }
     }
 
     private boolean isSettingsView(Class<?> view) {
@@ -353,6 +406,7 @@ public class MainLayout extends AppLayout {
     }
 
     private void addSettingsHeaderItems() {
+        if (!hasAccess("ADMIN", "MODULE_SETTINGS")) return;
         header.addNavigationItem(new HeaderNavItem("nav.settings.branches", new VaadinAppIcon(VaadinIcon.BUILDING_O), BranchesView.class));
         header.addNavigationItem(new HeaderNavItem("nav.settings.users", new VaadinAppIcon(VaadinIcon.USERS), UsersView.class));
         header.addNavigationItem(new HeaderNavItem("nav.settings.currencies", new VaadinAppIcon(VaadinIcon.DOLLAR), CurrenciesView.class));

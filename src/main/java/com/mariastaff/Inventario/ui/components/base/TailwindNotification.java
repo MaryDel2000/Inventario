@@ -56,6 +56,8 @@ public class TailwindNotification extends Div {
             // 4. Remove properties to trigger fade out
             // 5. Wait 500ms for transition
             // 6. Remove element
+            int duration = (type == Type.ERROR || type == Type.WARNING) ? 8000 : 3000;
+            
             notification.getElement().executeJs(
                 "var el = this;" +
                 "setTimeout(function() {" +
@@ -68,7 +70,7 @@ public class TailwindNotification extends Div {
                 "  setTimeout(function() {" +
                 "    el.remove();" +
                 "  }, 500);" +
-                "}, 3000);"
+                "}, " + duration + ");"
             );
         }
     }

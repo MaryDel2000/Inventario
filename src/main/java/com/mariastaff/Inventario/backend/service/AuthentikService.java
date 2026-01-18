@@ -47,26 +47,41 @@ public class AuthentikService {
         body.put("username", username);
         body.put("name", name);
         body.put("email", email);
-        // Default values for mandatory fields if any
-        
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, getHeaders());
         
         try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            String jsonBody = mapper.writeValueAsString(body);
+            System.out.println("Authentik createUser Payload: " + jsonBody);
+            
+            HttpHeaders headers = getHeaders();
+            HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
+            
             return restTemplate.postForObject(url, request, Map.class);
         } catch (HttpClientErrorException e) {
-            throw new RuntimeException("Error creando usuario en Authentik: " + e.getMessage() + " - " + e.getResponseBodyAsString());
+            String resp = e.getResponseBodyAsString();
+            if (resp.contains("unique")) {
+                // User already exists (orphaned from previous failed step?)
+                System.out.println("User " + username + " already exists in Authentik. recovering...");
+                Map<String, Object> existing = searchUser(username);
+                if (existing != null) {
+                    return existing;
+                }
+            }
+            throw new RuntimeException("Error creando usuario en Authentik: " + e.getMessage() + " - " + resp);
+        } catch (Exception e) {
+            throw new RuntimeException("Error interno creando usuario: " + e.getMessage());
         }
     }
 
     /**
      * Actualiza un usuario existente.
-     * @param pk ID numérico (Primary Key) de Authentik
+     * @param pk ID (Primary Key/UUID) de Authentik
      * @param username nuevo username
      * @param name nuevo nombre
      * @param email nuevo email
      * @param isActive estado activo
      */
-    public void updateUser(Integer pk, String username, String name, String email, boolean isActive) {
+    public void updateUser(String pk, String username, String name, String email, boolean isActive) {
         String url = apiUrl + "/api/v3/core/users/" + pk + "/";
         
         Map<String, Object> body = new HashMap<>();
@@ -75,27 +90,41 @@ public class AuthentikService {
         body.put("email", email);
         body.put("is_active", isActive);
         
-        System.out.println("Authentik UpdateUser Payload: " + body);
-
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, getHeaders());
         try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            String jsonBody = mapper.writeValueAsString(body);
+            System.out.println("Authentik updateUser Payload: " + jsonBody);
+            
+            HttpHeaders headers = getHeaders();
+            HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
+            
             restTemplate.exchange(url, HttpMethod.PUT, request, Map.class);
         } catch (HttpClientErrorException e) {
             System.err.println("Authentik Update Error: " + e.getResponseBodyAsString());
             throw new RuntimeException("Error actualizando usuario Authentik: " + e.getResponseBodyAsString());
+        } catch (Exception e) {
+            throw new RuntimeException("Error interno actualizando usuario: " + e.getMessage());
         }
     }
 
-    public void setPassword(Integer pk, String password) {
+    public void setPassword(String pk, String password) {
         String url = apiUrl + "/api/v3/core/users/" + pk + "/set_password/";
         Map<String, String> body = new HashMap<>();
         body.put("password", password);
         
-        HttpEntity<Map<String, String>> request = new HttpEntity<>(body, getHeaders());
         try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            String jsonBody = mapper.writeValueAsString(body);
+            System.out.println("Authentik setPassword Payload: " + jsonBody);
+            
+            HttpHeaders headers = getHeaders();
+            HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
+            
             restTemplate.postForObject(url, request, Object.class);
         } catch (HttpClientErrorException e) {
              throw new RuntimeException("Error estableciendo password: " + e.getResponseBodyAsString());
+        } catch (Exception e) {
+            throw new RuntimeException("Error interno estableciendo password: " + e.getMessage());
         }
     }
 
@@ -120,7 +149,9 @@ public class AuthentikService {
         }
     }
 
-    public Integer getPkByUuid(String uuid) {
+    public String getPkByUuid(String uuid) {
+        // Since we are likely using UUIDs as PKs, this might just return the UUID if it exists,
+        // or fetch the user to confirm existence and return its 'pk' field (which is a string UUID in v3).
         String url = apiUrl + "/api/v3/core/users/?uuid=" + uuid;
         HttpEntity<?> request = new HttpEntity<>(getHeaders());
         try {
@@ -128,7 +159,7 @@ public class AuthentikService {
             if (response != null && response.containsKey("results")) {
                 List<Map<String, Object>> results = (List<Map<String, Object>>) response.get("results");
                 if (!results.isEmpty()) {
-                    return (Integer) results.get(0).get("pk");
+                    return String.valueOf(results.get(0).get("pk"));
                 }
             }
         } catch (Exception e) {
@@ -151,19 +182,54 @@ public class AuthentikService {
         return null;
     }
 
-    public Map<String, Object> createGroup(String name) {
+    public Map<String, Object> createGroup(String name, Map<String, Object> attributes) {
         String url = apiUrl + "/api/v3/core/groups/";
         Map<String, Object> body = new HashMap<>();
         body.put("name", name);
-        // body.put("is_superuser", false); // Removed to avoid potential API conflicts
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, getHeaders());
+        if (attributes != null) {
+            body.put("attributes", attributes);
+        }
+        
         try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            String jsonBody = mapper.writeValueAsString(body);
+            System.out.println("Authentik createGroup Payload: " + jsonBody);
+            
+            HttpHeaders headers = getHeaders();
+            HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
+            
             return restTemplate.postForObject(url, request, Map.class);
         } catch (HttpClientErrorException e) {
             // If group already exists, try to return it
              Map<String, Object> existing = getGroupByName(name);
              if(existing != null) return existing;
              throw new RuntimeException("Error creando grupo: " + e.getResponseBodyAsString());
+        } catch (Exception e) {
+            throw new RuntimeException("Error interno creando grupo: " + e.getMessage());
+        }
+    }
+
+    public void updateGroup(String pk, String name, Map<String, Object> attributes) {
+        String url = apiUrl + "/api/v3/core/groups/" + pk + "/";
+        Map<String, Object> body = new HashMap<>();
+        body.put("name", name);
+        if (attributes != null) {
+            body.put("attributes", attributes);
+        }
+        
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            String jsonBody = mapper.writeValueAsString(body);
+            System.out.println("Authentik updateGroup Payload: " + jsonBody);
+            
+            HttpHeaders headers = getHeaders();
+            HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
+            
+            restTemplate.exchange(url, HttpMethod.PUT, request, Map.class);
+        } catch (HttpClientErrorException e) {
+             throw new RuntimeException("Error actualizando grupo: " + e.getResponseBodyAsString());
+        } catch (Exception e) {
+            throw new RuntimeException("Error interno actualizando grupo: " + e.getMessage());
         }
     }
 
@@ -215,7 +281,7 @@ public class AuthentikService {
         return List.of();
     }
 
-    public List<String> getUserGroupNames(Integer userPk) {
+    public List<String> getUserGroupNames(String userPk) {
         // 1. Get User details to get group UUIDs
         String userUrl = apiUrl + "/api/v3/core/users/" + userPk + "/";
         HttpEntity<?> request = new HttpEntity<>(getHeaders());
@@ -234,7 +300,7 @@ public class AuthentikService {
         List<Map<String, Object>> allGroups = listGroups();
         List<String> names = new java.util.ArrayList<>();
         for (Map<String, Object> g : allGroups) {
-            String gUuid = (String) g.get("pk"); // In groups list, 'pk' field is usually the UUID string
+            String gUuid = String.valueOf(g.get("pk")); // Safely convert to String
             if (groupIds.contains(gUuid)) {
                 names.add((String) g.get("name"));
             }
@@ -242,27 +308,91 @@ public class AuthentikService {
         return names;
     }
     
-    public void addUserToGroup(Integer userPk, Integer groupPk) {
+    public void addUserToGroup(String userPk, String groupPk) {
          String url = apiUrl + "/api/v3/core/groups/" + groupPk + "/add_user/";
-         Map<String, Integer> body = new HashMap<>();
+         Map<String, String> body = new HashMap<>(); // Usually expects 'pk'
          body.put("pk", userPk);
-         HttpEntity<Map<String, Integer>> request = new HttpEntity<>(body, getHeaders());
+         
          try {
+             com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+             String jsonBody = mapper.writeValueAsString(body);
+             System.out.println("Authentik addUserToGroup Payload: " + jsonBody);
+             
+             HttpHeaders headers = getHeaders();
+             HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
+             
              restTemplate.postForObject(url, request, Object.class);
          } catch (HttpClientErrorException e) {
              // 204 or just success
-         } 
+             System.err.println("Error adding user to group: " + e.getResponseBodyAsString());
+         } catch (Exception e) {
+             System.err.println("Error interno adding user to group: " + e.getMessage());
+         }
     }
 
-    public void removeUserFromGroup(Integer userPk, Integer groupPk) {
+    public List<String> getUserPermissions(String userPk) {
+        // 1. Get User's Group IDs
+        String userUrl = apiUrl + "/api/v3/core/users/" + userPk + "/";
+        HttpEntity<?> request = new HttpEntity<>(getHeaders());
+        List<String> groupIds = new java.util.ArrayList<>();
+        try {
+             Map user = restTemplate.exchange(userUrl, HttpMethod.GET, request, Map.class).getBody();
+             if (user != null && user.containsKey("groups")) {
+                 groupIds = (List<String>) user.get("groups"); 
+             }
+        } catch (Exception e) { return List.of(); }
+
+        if (groupIds.isEmpty()) return List.of();
+
+        // 2. Scan Groups for Permissions
+        List<Map<String, Object>> allGroups = listGroups();
+        List<String> permissions = new java.util.ArrayList<>();
+        
+        for (Map<String, Object> g : allGroups) {
+            String gUuid = String.valueOf(g.get("pk")); // Safely convert to String
+            if (groupIds.contains(gUuid)) {
+                // Check attributes for app_permissions
+                Map<String, Object> attrs = (Map<String, Object>) g.get("attributes");
+                if (attrs != null && attrs.containsKey("app_permissions")) {
+                    List<String> perms = (List<String>) attrs.get("app_permissions");
+                    permissions.addAll(perms);
+                } else {
+                     // Fallback for system roles if not yet migrated
+                     String name = (String) g.get("name");
+                     if ("ADMIN".equalsIgnoreCase(name) || "ADMINS".equalsIgnoreCase(name)) {
+                         permissions.add("MODULE_INVENTORY"); permissions.add("MODULE_SALES");
+                         permissions.add("MODULE_ACCOUNTING"); permissions.add("MODULE_REPORTS");
+                         permissions.add("MODULE_SETTINGS");
+                     } else if ("INVENTARIO".equalsIgnoreCase(name)) permissions.add("MODULE_INVENTORY");
+                     else if ("CAJERO".equalsIgnoreCase(name)) permissions.add("MODULE_SALES");
+                     else if ("CONTADOR".equalsIgnoreCase(name)) {
+                         permissions.add("MODULE_ACCOUNTING"); permissions.add("MODULE_REPORTS");
+                     }
+                }
+            }
+        }
+        return permissions;
+    }
+
+    public void removeUserFromGroup(String userPk, String groupPk) {
          String url = apiUrl + "/api/v3/core/groups/" + groupPk + "/remove_user/";
-         Map<String, Integer> body = new HashMap<>();
+         Map<String, String> body = new HashMap<>();
          body.put("pk", userPk);
-         HttpEntity<Map<String, Integer>> request = new HttpEntity<>(body, getHeaders());
+         
          try {
+             com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+             String jsonBody = mapper.writeValueAsString(body);
+             System.out.println("Authentik removeUserFromGroup Payload: " + jsonBody);
+             
+             HttpHeaders headers = getHeaders();
+             HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
+             
              restTemplate.postForObject(url, request, Object.class);
          } catch (HttpClientErrorException e) {
              // 204 or succeed
-         } 
+             System.err.println("Error removing user from group: " + e.getResponseBodyAsString());
+         } catch (Exception e) {
+             System.err.println("Error interno removing user from group: " + e.getMessage());
+         }
     }
 }

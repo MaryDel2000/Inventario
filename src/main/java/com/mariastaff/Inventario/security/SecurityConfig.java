@@ -16,6 +16,7 @@ public class SecurityConfig extends VaadinWebSecurity {
         http.oauth2Login(oauth2 -> oauth2
             .loginPage("/oauth2/authorization/authentik") // Redirigir al provider configurado
             .defaultSuccessUrl("/ui/", true)
+            .userInfoEndpoint(userInfo -> userInfo.userAuthoritiesMapper(userAuthoritiesMapper()))
         );
         
         // Configurar Logout para redirigir a Authentik
@@ -33,9 +34,51 @@ public class SecurityConfig extends VaadinWebSecurity {
         // Aplicar la configuración de seguridad de Vaadin
         // Esto configura CSRF, ignora recursos estáticos de Vaadin, etc.
         super.configure(http);
-        
-        // No configuramos setLoginView porque usamos OAuth2 externo.
-        // Spring Security redirigirá automáticamente a /oauth2/authorization/authentik
-        // cuando se intente acceder a una ruta protegida.
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    @org.springframework.context.annotation.Lazy
+    private com.mariastaff.Inventario.backend.service.AuthentikService authentikService;
+
+    @org.springframework.context.annotation.Bean
+    public org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper userAuthoritiesMapper() {
+        return (authorities) -> {
+            java.util.Set<org.springframework.security.core.GrantedAuthority> mappedAuthorities = new java.util.HashSet<>();
+
+            authorities.forEach(authority -> {
+                if (authority instanceof org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority) {
+                    org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority oidcAuth = (org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority) authority;
+                    
+                    // 1. Standard Role Mapping
+                    Object groupsObj = oidcAuth.getAttributes().get("groups");
+                    if (groupsObj instanceof java.util.List) {
+                        java.util.List<?> groups = (java.util.List<?>) groupsObj;
+                        for (Object group : groups) {
+                            if (group instanceof String) {
+                                String groupName = (String) group;
+                                String roleName = "ROLE_" + groupName.toUpperCase().replace(" ", "_");
+                                mappedAuthorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority(roleName));
+                            }
+                        }
+                    }
+                    
+                    // 2. Dynamic Permission Mapping
+                    try {
+                        String sub = (String) oidcAuth.getAttributes().get("sub"); // Authentik PK
+                        if (sub != null) {
+                            java.util.List<String> perms = authentikService.getUserPermissions(sub);
+                            for (String p : perms) {
+                                mappedAuthorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority(p));
+                            }
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Error fetching dynamic permissions: " + e.getMessage());
+                    }
+                }
+                mappedAuthorities.add(authority);
+            });
+
+            return mappedAuthorities;
+        };
     }
 }
