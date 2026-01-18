@@ -10,6 +10,7 @@ services:
     env_file:
       - .env.${ENV_TAG}
     environment:
+      SPRING_PROFILES_ACTIVE: docker
       AUTHENTIK_BACKEND_HOST: http://authentik-server-dev:9000
       AUTHENTIK_FRONTEND_HOST: http://localhost:9000
     depends_on:

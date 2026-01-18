@@ -74,23 +74,46 @@ public class SecurityConfig extends VaadinWebSecurity {
                         }
                     }
                     
-                    // 2. Dynamic Permission Mapping
+                    // 2. Dynamic Permission Mapping (usando Entitlements de la aplicación)
+                    // NOTA: Esto no se puede llamar aquí porque el SecurityContext aún no tiene el token OAuth2 establecido.
+                    // Los entitlements se cargarán y verificarán en tiempo de ejecución en la UI o mediante anotaciones que verifiquen el token.
+                    /*
                     try {
                         String sub = (String) attrs.get("sub"); // Authentik PK
                         if (sub != null) {
-                            java.util.List<String> perms = authentikService.getUserPermissions(sub);
-                            for (String p : perms) {
-                                mappedAuthorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority(p));
+                            java.util.List<String> entitlements = authentikService.getUserEntitlements(sub);
+                            for (String ent : entitlements) {
+                                mappedAuthorities.add(new org.springframework.security.core.authority.SimpleGrantedAuthority(ent));
                             }
                         }
                     } catch (Exception e) {
-                        System.err.println("Error fetching dynamic permissions: " + e.getMessage());
+                        System.err.println("Error fetching user entitlements: " + e.getMessage());
                     }
+                    */
                 }
                 mappedAuthorities.add(authority);
             });
 
             return mappedAuthorities;
         };
+    }
+    @org.springframework.context.annotation.Bean
+    public org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager authorizedClientManager(
+            org.springframework.security.oauth2.client.registration.ClientRegistrationRepository clientRegistrationRepository,
+            org.springframework.security.oauth2.client.OAuth2AuthorizedClientService authorizedClientService) {
+
+        org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager authorizedClientManager =
+                new org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager(
+                        clientRegistrationRepository, authorizedClientService);
+
+        org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider authorizedClientProvider =
+                org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder.builder()
+                        .authorizationCode()
+                        .refreshToken()
+                        .build();
+
+        authorizedClientManager.setAuthorizedClientProvider(authorizedClientProvider);
+
+        return authorizedClientManager;
     }
 }
