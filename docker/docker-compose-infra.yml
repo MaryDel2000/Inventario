@@ -1,0 +1,8 @@
+version: "3.8"
+# Configuración de Infraestructura (Instalación Única)
+# Persistente: Base de Datos, Authentik y Servidor Tomcat
+
+include:
+  - postgres.yml
+  - authentik.yml
+  - tomcat.yml

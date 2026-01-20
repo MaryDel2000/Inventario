@@ -1,7 +1,14 @@
 version: "3.8"
-# Configuración ${ENV_TAG} de Authentik (modularizada)
+# Configuración de Despliegue (App Runner)
+# Este contenedor se ejecuta, compila el código, actualiza el WAR y se apaga.
 
-include:
-  - postgres.yml
-  - authentik.yml
-  - tomcat.yml
+services:
+  builder:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile-builder
+    volumes:
+      - ..:/app # Monta el código fuente
+      - ./deploy:/deploy # Monta la carpeta compartida donde Tomcat busca el WAR
+    # Opcional: Caché de Gradle para acelerar builds subsiguientes
+    # - gradle-cache:/root/.gradle 
