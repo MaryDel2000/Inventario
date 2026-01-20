@@ -88,7 +88,13 @@ public class UsersView extends VerticalLayout {
             editBtn.addThemeVariants(com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY);
             editBtn.addClassNames("text-text-secondary", "hover:text-primary", "p-2");
             editBtn.addClickListener(e -> openDialog(user));
-            return editBtn;
+            
+            Button deleteBtn = new Button(VaadinIcon.TRASH.create());
+            deleteBtn.addThemeVariants(com.vaadin.flow.component.button.ButtonVariant.LUMO_TERTIARY, com.vaadin.flow.component.button.ButtonVariant.LUMO_ERROR);
+            deleteBtn.addClassNames("p-2", "hover:text-red-600");
+            deleteBtn.addClickListener(e -> confirmDeleteUser(user));
+            
+            return new HorizontalLayout(editBtn, deleteBtn);
         }).setHeader("Acciones");
 
         grid.getColumns().forEach(col -> col.setAutoWidth(true));
@@ -127,6 +133,17 @@ public class UsersView extends VerticalLayout {
                 if (username == null || username.equals("authentik admin")) continue; 
                 
                 SysUsuario local = service.findByUsername(username);
+                // Try case-insensitive match if not found
+                if (local == null) {
+                    List<SysUsuario> all = service.findAll();
+                    for(SysUsuario s : all) {
+                        if(s.getUsername().equalsIgnoreCase(username)) {
+                            local = s;
+                            break;
+                        }
+                    }
+                }
+
                 if (local == null) {
                     SysUsuario newUser = new SysUsuario();
                     newUser.setUsername(username);
@@ -141,9 +158,13 @@ public class UsersView extends VerticalLayout {
                     
                     service.save(newUser);
                     createdLocal++;
-                } else if (local.getAuthentikUuid() == null) {
-                    local.setAuthentikUuid(String.valueOf(u.get("pk")));
-                    service.save(local);
+                } else {
+                    // Always update UUID matching by username
+                    if (local.getAuthentikUuid() == null || !local.getAuthentikUuid().equals(String.valueOf(u.get("pk")))) {
+                        local.setAuthentikUuid(String.valueOf(u.get("pk")));
+                        service.save(local);
+                        System.out.println("Sync: Updated UUID for user " + local.getUsername());
+                    }
                 }
             }
 
@@ -152,10 +173,33 @@ public class UsersView extends VerticalLayout {
             for (SysUsuario local : localUsers) {
                 if (local.getAuthentikUuid() == null) {
                     try {
+                        // Ensure Email
+                        String email = local.getEntidad().getEmail();
+                        if (email == null || email.trim().isEmpty()) {
+                            email = local.getUsername() + "@sistema.local";
+                            local.getEntidad().setEmail(email);
+                            service.save(local); // Save email locally
+                        }
+
+                        // Try to find existing first (Fallback)
+                        try {
+                            Map<String, Object> existing = authentikService.searchUser(local.getUsername());
+                            if (existing != null) {
+                                String pk = String.valueOf(existing.get("pk"));
+                                local.setAuthentikUuid(pk);
+                                service.save(local);
+                                System.out.println("Sync: Found existing user in Authentik: " + local.getUsername());
+                                continue;
+                            }
+                        } catch (Exception ex) { 
+                            // Ignore search error
+                        }
+
+                        // Create if not found
                         Map<String, Object> result = authentikService.createUser(
                             local.getUsername(),
                             local.getEntidad().getNombreCompleto(),
-                            local.getEntidad().getEmail()
+                            email
                         );
                         String pk = String.valueOf(result.get("pk"));
                         local.setAuthentikUuid(pk);
@@ -165,7 +209,9 @@ public class UsersView extends VerticalLayout {
                         service.save(local);
                         createdAuth++;
                     } catch (Exception e) {
-                        System.err.println("Failed to sync local user to Authentik: " + local.getUsername());
+                        System.err.println("Failed to sync local user to Authentik: " + local.getUsername() + " Error: " + e.getMessage());
+                        e.printStackTrace();
+                        TailwindNotification.show("Error sincronizando " + local.getUsername() + ": " + e.getMessage(), TailwindNotification.Type.ERROR);
                     }
                 }
             }
@@ -480,6 +526,59 @@ public class UsersView extends VerticalLayout {
         form.setPadding(false);
         
         modal.add(form);
+        modal.open();
+    }
+
+    private void confirmDeleteUser(SysUsuario user) {
+        TailwindModal modal = new TailwindModal("Eliminar Usuario");
+        
+        com.vaadin.flow.component.html.Paragraph text = new com.vaadin.flow.component.html.Paragraph(
+            "¿Estás seguro de que quieres eliminar al usuario '" + user.getUsername() + "'? Esta acción no se puede deshacer."
+        );
+        text.addClassNames("text-gray-700", "dark:text-gray-300");
+        
+        com.vaadin.flow.component.html.Paragraph subtext = new com.vaadin.flow.component.html.Paragraph(
+            "Se eliminará tanto de la base de datos local como de Authentik."
+        );
+        subtext.addClassNames("text-sm", "text-gray-500", "dark:text-gray-400", "mt-2");
+        
+        modal.addContent(text);
+        modal.addContent(subtext);
+        
+        Button confirmBtn = new Button("Eliminar", e -> {
+            try {
+                // 1. Delete from Authentik if linked
+                if (user.getAuthentikUuid() != null) {
+                    try {
+                        authentikService.deleteUser(user.getAuthentikUuid());
+                    } catch (Exception ex) {
+                        System.err.println("Warning: Failed to delete from Authentik: " + ex.getMessage());
+                        // Continue to delete locally even if Authentik fails (maybe user doesn't exist there)
+                    }
+                }
+                
+                // 2. Delete locally
+                service.delete(user);
+                
+                TailwindNotification.show("Usuario eliminado", TailwindNotification.Type.SUCCESS);
+                updateList();
+                modal.close();
+            } catch (org.springframework.dao.DataIntegrityViolationException fkEx) {
+                TailwindNotification.show("No se puede eliminar: El usuario tiene registros asociados (historial, ventas, etc).", TailwindNotification.Type.ERROR);
+            } catch (Exception ex) {
+                TailwindNotification.show("Error eliminando: " + ex.getMessage(), TailwindNotification.Type.ERROR);
+                ex.printStackTrace();
+            }
+        });
+        confirmBtn.addClassNames("bg-red-600", "text-white", "hover:bg-red-700", "font-bold");
+        
+        Button cancelBtn = new Button("Cancelar", e -> modal.close());
+        cancelBtn.addClassNames("text-gray-600", "hover:text-gray-800", "dark:text-gray-300");
+        
+        modal.addFooterButton(cancelBtn);
+        modal.addFooterButton(confirmBtn);
+        
+        add(modal);
         modal.open();
     }
 }

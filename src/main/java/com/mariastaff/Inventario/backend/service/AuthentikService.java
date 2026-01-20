@@ -35,7 +35,7 @@ public class AuthentikService {
     private final OAuth2AuthorizedClientManager authorizedClientManager;
 
     public AuthentikService(OAuth2AuthorizedClientManager authorizedClientManager) {
-        this.restTemplate = new RestTemplate();
+        this.restTemplate = new RestTemplate(new org.springframework.http.client.HttpComponentsClientHttpRequestFactory());
         this.authorizedClientManager = authorizedClientManager;
     }
     
@@ -223,6 +223,9 @@ public class AuthentikService {
      * @param isActive estado activo
      */
     public void updateUser(String pk, String username, String name, String email, boolean isActive) {
+        if (pk == null || pk.trim().isEmpty()) {
+            throw new IllegalArgumentException("PK cannot be null or empty for update");
+        }
         String url = apiUrl + "/api/v3/core/users/" + pk + "/";
         
         Map<String, Object> body = new HashMap<>();
@@ -239,7 +242,7 @@ public class AuthentikService {
             HttpHeaders headers = getHeaders();
             HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
             
-            restTemplate.exchange(url, HttpMethod.PUT, request, Map.class);
+            restTemplate.exchange(url, HttpMethod.PATCH, request, Map.class);
         } catch (HttpClientErrorException e) {
             System.err.println("Authentik Update Error: " + e.getResponseBodyAsString());
             throw new RuntimeException("Error actualizando usuario Authentik: " + e.getResponseBodyAsString());
@@ -266,6 +269,23 @@ public class AuthentikService {
              throw new RuntimeException("Error estableciendo password: " + e.getResponseBodyAsString());
         } catch (Exception e) {
             throw new RuntimeException("Error interno estableciendo password: " + e.getMessage());
+        }
+    }
+    public void deleteUser(String pk) {
+        if (pk == null || pk.trim().isEmpty()) {
+            System.err.println("Skipping Authentik delete: PK is null/empty");
+            return;
+        }
+        String url = apiUrl + "/api/v3/core/users/" + pk + "/";
+        try {
+            HttpHeaders headers = getHeaders();
+            HttpEntity<?> request = new HttpEntity<>(headers);
+            restTemplate.exchange(url, HttpMethod.DELETE, request, Void.class);
+            System.out.println("Authentik: Deleted user " + pk);
+        } catch (HttpClientErrorException e) {
+             throw new RuntimeException("Error borrando usuario Authentik: " + e.getResponseBodyAsString());
+        } catch (Exception e) {
+            throw new RuntimeException("Error interno borrando usuario: " + e.getMessage());
         }
     }
 
