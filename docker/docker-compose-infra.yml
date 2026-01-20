@@ -1,8 +1,112 @@
 version: "3.8"
 # Configuración de Infraestructura (Instalación Única)
 # Persistente: Base de Datos, Authentik y Servidor Tomcat
+# CONSOLIDADO para evitar errores con 'include' en deployments
 
-include:
-  - postgres.yml
-  - authentik.yml
-  - tomcat.yml
+services:
+  # ==========================================
+  # PostgreSQL
+  # ==========================================
+  db:
+    image: postgres:17-alpine
+    container_name: authentik-db-${ENV_TAG}
+    user: "1000:1000"
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      APP_DB_NAME: ${APP_DB_NAME}
+      APP_DB_USER: ${APP_DB_USER}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD}
+    volumes:
+      - ./init-app-db.sh:/docker-entrypoint-initdb.d/init-app-db.sh:ro
+      - ./postgresql:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  # ==========================================
+  # Authentik
+  # ==========================================
+  server:
+    image: ghcr.io/goauthentik/server:2025.10
+    container_name: authentik-server-${ENV_TAG}
+    restart: unless-stopped
+    command: server
+    depends_on:
+      - db
+    env_file:
+      - .env.${ENV_TAG}
+    environment:
+      AUTHENTIK_POSTGRESQL__HOST: db
+      AUTHENTIK_POSTGRESQL__PORT: 5432
+      AUTHENTIK_POSTGRESQL__NAME: ${POSTGRES_DB}
+      AUTHENTIK_POSTGRESQL__USER: ${POSTGRES_USER}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${POSTGRES_PASSWORD}
+      AUTHENTIK_LISTEN__HTTP: 0.0.0.0:9000
+      AUTHENTIK_LISTEN__HTTPS: 0.0.0.0:9443
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9443:9443"
+    volumes:
+      - /media
+      - /certs
+      - ./assets:/web/dist/custom
+
+  worker:
+    image: ghcr.io/goauthentik/server:2025.10
+    container_name: authentik-worker-${ENV_TAG}
+    restart: unless-stopped
+    command: worker
+    depends_on:
+      - db
+    env_file:
+      - .env.${ENV_TAG}
+    environment:
+      AUTHENTIK_POSTGRESQL__HOST: db
+      AUTHENTIK_POSTGRESQL__PORT: 5432
+      AUTHENTIK_POSTGRESQL__NAME: ${POSTGRES_DB}
+      AUTHENTIK_POSTGRESQL__USER: ${POSTGRES_USER}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - /media
+      - /certs
+
+  # ==========================================
+  # Tomcat
+  # ==========================================
+  tomcat:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      # O usamos la imagen si preferimos, pero aqui usamos Dockerfile-tomcat original modificado
+      # Espera, 'tomcat.yml' original usaba Dockerfile-tomcat.
+      # Revisando tomcat.yml... Ah, lo habiamos cambiado para apuntar a docker/Dockerfile multi-stage.
+      # Pero aqui queremos el INFRA tomcat (solo runtime).
+      # El plan "Hot-Swap" es que la Infra sea el Tomcat persistente.
+      # Usaremos la imagen base directamente o un Dockerfile minimista para infra?
+      # Para simplicidad y garantizar hot-reload, usaremos la imagen base + config volumes.
+      # PERO, el usuario tiene un Dockerfile-tomcat custom con cliente Postgres. Usemos ese.
+    build:
+      context: .
+      dockerfile: Dockerfile-tomcat # Usamos el Dockerfile-tomcat local (no el builder)
+    container_name: tomcat-${ENV_TAG}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8081:8080"
+    volumes:
+      - ./deploy:/usr/local/tomcat/webapps
+    env_file:
+      - .env.${ENV_TAG}
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      AUTHENTIK_BACKEND_HOST: http://authentik-server-dev:9000
+      AUTHENTIK_FRONTEND_HOST: http://localhost:9000
+    depends_on:
+      server:
+        condition: service_healthy
