@@ -1,6 +1,8 @@
 services:
   tomcat:
-    image: tomcat:10.1-jdk21
+    build:
+      context: .
+      dockerfile: Dockerfile-tomcat
     container_name: tomcat-${ENV_TAG}
     restart: unless-stopped
     ports:

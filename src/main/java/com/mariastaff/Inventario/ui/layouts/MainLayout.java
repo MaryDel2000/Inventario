@@ -245,6 +245,7 @@ public class MainLayout extends AppLayout {
         settingsItem.addSubItem(new SidebarNavItem("nav.settings.currencies", new VaadinAppIcon(VaadinIcon.DOLLAR), CurrenciesView.class));
         settingsItem.addSubItem(new SidebarNavItem("nav.settings.taxes", new VaadinAppIcon(VaadinIcon.FILE_ADD), TaxesView.class));
         settingsItem.addSubItem(new SidebarNavItem("nav.settings.general", new VaadinAppIcon(VaadinIcon.COG), GeneralSettingsView.class));
+        settingsItem.addSubItem(new SidebarNavItem("nav.settings.backups", new VaadinAppIcon(VaadinIcon.DATABASE), BackupView.class));
         sidebar.addExpandableItem(settingsItem);
     }
 
@@ -411,7 +412,7 @@ public class MainLayout extends AppLayout {
     private boolean isSettingsView(Class<?> view) {
         return view.equals(BranchesView.class) || view.equals(UsersView.class) || 
                view.equals(CurrenciesView.class) || view.equals(TaxesView.class) || 
-               view.equals(GeneralSettingsView.class);
+               view.equals(GeneralSettingsView.class) || view.equals(BackupView.class);
     }
 
     private void addSettingsHeaderItems() {
@@ -421,6 +422,7 @@ public class MainLayout extends AppLayout {
         header.addNavigationItem(new HeaderNavItem("nav.settings.currencies", new VaadinAppIcon(VaadinIcon.DOLLAR), CurrenciesView.class));
         header.addNavigationItem(new HeaderNavItem("nav.settings.taxes", new VaadinAppIcon(VaadinIcon.FILE_ADD), TaxesView.class));
         header.addNavigationItem(new HeaderNavItem("nav.settings.general", new VaadinAppIcon(VaadinIcon.COG), GeneralSettingsView.class));
+        header.addNavigationItem(new HeaderNavItem("nav.settings.backups", new VaadinAppIcon(VaadinIcon.DATABASE), BackupView.class));
     }
 
     private ViewInfo getViewInfo(Class<?> view) {
@@ -469,6 +471,7 @@ public class MainLayout extends AppLayout {
         if (view.equals(CurrenciesView.class)) return new ViewInfo("nav.settings.currencies", new VaadinAppIcon(VaadinIcon.DOLLAR));
         if (view.equals(TaxesView.class)) return new ViewInfo("nav.settings.taxes", new VaadinAppIcon(VaadinIcon.FILE_ADD));
         if (view.equals(GeneralSettingsView.class)) return new ViewInfo("nav.settings.general", new VaadinAppIcon(VaadinIcon.COG));
+        if (view.equals(BackupView.class)) return new ViewInfo("nav.settings.backups", new VaadinAppIcon(VaadinIcon.DATABASE));
 
         return null;
     }

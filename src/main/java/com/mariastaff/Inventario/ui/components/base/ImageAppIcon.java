@@ -19,9 +19,9 @@ public class ImageAppIcon implements AppIcon {
     @Override
     public Component create() {
         Image image = new Image(src, alt);
-        image.setWidth("100%");
-        image.setHeight("75%");
-        image.getStyle().set("object-fit", "contain");
+        // image.setWidth("100%"); // Let container control width
+        // image.setHeight("75%"); // Let container control height
+        image.addClassNames("max-w-full", "max-h-full");        image.getStyle().set("object-fit", "contain");
         return image;
     }
 }

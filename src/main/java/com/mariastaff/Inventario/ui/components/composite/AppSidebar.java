@@ -39,6 +39,11 @@ public class AppSidebar extends VerticalLayout {
         logoLayout.addClassNames("shrink-0", "transition-all", "duration-300"); // Fixed height to prevent jump
         
         logoComponent = logoIcon.create();
+        // Force strict constraints
+        logoComponent.getElement().getStyle().set("max-width", "180px"); // Less than sidebar width
+        logoComponent.getElement().getStyle().set("max-height", "80px"); // Fit in header area
+        logoComponent.getElement().getStyle().set("width", "auto");
+        logoComponent.getElement().getStyle().set("height", "auto");
         collapsedLogoComponent = collapsedLogoIcon.create();
         collapsedLogoComponent.setVisible(false);
         
