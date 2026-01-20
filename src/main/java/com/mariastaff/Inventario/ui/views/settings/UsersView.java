@@ -228,7 +228,10 @@ public class UsersView extends VerticalLayout {
         permissionsLabel.addClassNames("text-sm", "font-medium", "text-gray-700", "mt-2");
         
         com.vaadin.flow.component.html.Div permissionsContainer = new com.vaadin.flow.component.html.Div();
-        permissionsContainer.addClassNames("border", "border-gray-300", "rounded-md", "bg-white", "p-3", "flex", "flex-col", "gap-2", "max-h-40", "overflow-y-auto", "w-full", "shadow-sm");
+        permissionsContainer.addClassNames(
+            "border", "border-gray-300", "rounded-md", "bg-white", "p-3", "flex", "flex-col", "gap-2", "max-h-40", "overflow-y-auto", "w-full", "shadow-sm",
+            "dark:bg-gray-800", "dark:border-gray-600", "dark:text-gray-200"
+        );
         
         java.util.Map<String, TailwindCheckbox> permissionCheckboxMap = new java.util.HashMap<>();
         
@@ -241,6 +244,7 @@ public class UsersView extends VerticalLayout {
                 String displayName = AppRoles.DEFINITIONS.getOrDefault(entName, entName);
                 
                 TailwindCheckbox cb = new TailwindCheckbox(displayName);
+                cb.addClassNames("dark:text-gray-200");
                 permissionCheckboxMap.put(entName, cb);
                 permissionsContainer.add(cb);
             }
