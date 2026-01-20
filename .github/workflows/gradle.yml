@@ -1,0 +1,44 @@
+name: Java CI with Gradle
+
+on:
+  push:
+    branches: [ "main-deploys" ]
+  pull_request:
+    branches: [ "main-deploys" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Build with Gradle
+      run: ./gradlew clean vaadinBuildFrontend bootWar -Dvaadin.ignoreVersionChecks=true
+
+    - name: Run Tests
+      run: ./gradlew test
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Inventario-WAR
+        path: build/libs/*.war
