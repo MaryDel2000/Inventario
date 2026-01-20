@@ -82,19 +82,8 @@ services:
   # ==========================================
   tomcat:
     build:
-      context: ..
-      dockerfile: docker/Dockerfile
-      # O usamos la imagen si preferimos, pero aqui usamos Dockerfile-tomcat original modificado
-      # Espera, 'tomcat.yml' original usaba Dockerfile-tomcat.
-      # Revisando tomcat.yml... Ah, lo habiamos cambiado para apuntar a docker/Dockerfile multi-stage.
-      # Pero aqui queremos el INFRA tomcat (solo runtime).
-      # El plan "Hot-Swap" es que la Infra sea el Tomcat persistente.
-      # Usaremos la imagen base directamente o un Dockerfile minimista para infra?
-      # Para simplicidad y garantizar hot-reload, usaremos la imagen base + config volumes.
-      # PERO, el usuario tiene un Dockerfile-tomcat custom con cliente Postgres. Usemos ese.
-    build:
       context: .
-      dockerfile: Dockerfile-tomcat # Usamos el Dockerfile-tomcat local (no el builder)
+      dockerfile: Dockerfile-tomcat
     container_name: tomcat-${ENV_TAG}
     restart: unless-stopped
     ports:
