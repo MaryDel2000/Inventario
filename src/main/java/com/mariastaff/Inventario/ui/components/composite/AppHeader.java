@@ -119,7 +119,7 @@ public class AppHeader extends HorizontalLayout {
             "font-medium", "flex", "items-center", "justify-center", "gap-4", "text-base");
         logoutBtn.getStyle().set("color", "white"); // Force white text
         
-        logoutBtn.addClickListener(e -> UI.getCurrent().getPage().setLocation("/logout"));
+        logoutBtn.addClickListener(e -> UI.getCurrent().getPage().setLocation("/inventario/logout"));
 
         menuContent.add(profileIconContainer, userName, emailText, profileBtn, logoutBtn);
         userMenu.add(menuContent);

@@ -22,7 +22,7 @@ public class SecurityConfig extends VaadinWebSecurity {
         // Configurar Logout para redirigir a Authentik
         http.logout(logout -> logout
             .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
-            .logoutSuccessUrl("http://localhost:9000/application/o/inv/end-session/")
+            .logoutSuccessUrl("https://auth.mariastaff.com/application/o/inv/end-session/")
             .permitAll()
         );
 

@@ -40,7 +40,7 @@ public class MainLayout extends AppLayout {
         });
         addToNavbar(header);
 
-        sidebar = new AppSidebar(new ImageAppIcon("/images/logo-MariaStaff.png"), new ImageAppIcon("/images/icon-MariaStaff.png"), "");
+        sidebar = new AppSidebar(new ImageAppIcon("/inventario/images/logo-MariaStaff.png"), new ImageAppIcon("/inventario/images/icon-MariaStaff.png"), "");
         sidebar.setStateChangeHandler(expanded -> {
             if (!isMobileMode) {
                 String width = expanded ? "16rem" : "45px";
