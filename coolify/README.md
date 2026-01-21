@@ -31,12 +31,15 @@
 
 ### 1️⃣ Preparar Servidor
 
-```bash
-# SSH al servidor
-ssh user@your-server.com
+**¡Ya NO necesitas crear directorios!**
 
-# Crear directorios
-sudo mkdir -p /opt/mariastaff-dev/{postgresql,authentik/{media,certs},tomcat/webapps}
+Coolify gestiona automáticamente los **named volumes**. Los datos se almacenan en:
+```bash
+# Coolify crea automáticamente en:
+/var/lib/docker/volumes/<project>_postgresql_data/
+/var/lib/docker/volumes/<project>_authentik_media/
+/var/lib/docker/volumes/<project>_tomcat_webapps/
+# etc...
 ```
 
 ---
@@ -51,10 +54,9 @@ sudo mkdir -p /opt/mariastaff-dev/{postgresql,authentik/{media,certs},tomcat/web
 4. **Docker Compose Location:** `coolify/infra/docker-compose.yml`
 5. **Auto-deploy:** ❌ DESACTIVADO
 
-**Variables de Entorno (19):**
+**Variables de Entorno (18):**
 ```env
 INSTANCE_NAME=mariastaff-dev
-NETWORK_NAME=mariastaff-dev-network
 
 POSTGRES_DB=authentik_dev
 POSTGRES_USER=authentik_dev
@@ -77,6 +79,8 @@ AUTHENTIK_EMAIL__PASSWORD=
 AUTHENTIK_EMAIL__USE_TLS=true
 AUTHENTIK_EMAIL__USE_SSL=false
 ```
+
+**Nota:** La network `app-network` se crea automáticamente, no necesitas configurarla.
 
 **Dominios:**
 - `auth.mariastaff.com` → `authentik-server:9000`
@@ -103,13 +107,22 @@ DEPLOY_PATH=/deploy
 ```
 
 **Persistent Storage (¡CRÍTICO!):**
+
+**Opción 1: Usar el named volume del Proyecto 1 (RECOMENDADO):**
+```
+Name: tomcat_webapps
+Source: /deploy
+Destination: tomcat_webapps  ← Seleccionar del dropdown "Existing volumes"
+```
+
+**Opción 2: Crear bind mount (alternativo):**
 ```
 Source: /deploy
-Destination: /opt/mariastaff-dev/tomcat/webapps
+Destination: /var/lib/docker/volumes/<project1-id>_tomcat_webapps/_data
 Type: Bind mount
 ```
 
-**Nota:** El `DEPLOY_PATH` debe coincidir con el "Source" del persistent storage.
+**Nota:** Preferir Opción 1 ya que Coolify gestiona automáticamente el volumen compartido.
 
 **GitHub Webhook:** Configurar para auto-deploy
 
@@ -139,19 +152,23 @@ Type: Bind mount
 ```
 coolify/
 ├── infra/
-│   ├── docker-compose.yml    # Proyecto 1: Infraestructura
-│   └── assets/                # Assets de Authentik (custom.css, logos)
-│       ├── custom.css
-│       ├── icon-MariaStaff.png
-│       └── logo-MariaStaff.png
+│   ├── docker-compose.yml     # Stack principal (Self-contained)
+│   ├── assets/                 # Assets de Authentik
+│   │   ├── custom.css
+│   │   ├── icon-MariaStaff.png
+│   │   └── logo-MariaStaff.png
+│   └── data/                   # Datos persistentes (creado automáticamente)
 │
 ├── builder/
-│   └── Dockerfile             # Proyecto 2: Builder
+│   └── Dockerfile              # Builder (auto-build .war)
 │
-└── README.md                  # Esta guía
+└── README.md                   # Esta guía
 ```
 
-**Nota:** El script `init-app-db.sh` está **inline en docker-compose.yml**, no es necesario como archivo separado.
+**Nota:** 
+- `docker-compose.yml` contiene el script de inicialización de BD (inline).
+- No se requieren Dockerfiles extra en `infra/`.
+- Los datos se guardan en `./data/` dentro del repo (bind mounts).
 
 ---
 
@@ -226,19 +243,15 @@ docker logs -f <builder-container>
    - Se ejecuta automáticamente al crear el contenedor
 
 3. **Volumen Compartido:**
-   - **Proyecto 1 (Tomcat):** Lee de `/usr/local/tomcat/webapps` que está mapeado a `/opt/mariastaff-dev/tomcat/webapps`
-   - **Proyecto 2 (Builder):** Escribe en `${DEPLOY_PATH}` (default: `/deploy`) que Coolify mapea a `/opt/mariastaff-dev/tomcat/webapps`
-   - **En Coolify (Proyecto 2):** Configurar Persistent Storage:
-     ```
-     Source: /deploy  ← Debe coincidir con DEPLOY_PATH
-     Destination: /opt/mariastaff-dev/tomcat/webapps
-     ```
+   - **Proyecto 1 (Tomcat):** Lee de `/usr/local/tomcat/webapps` mapeado al named volume `tomcat_webapps`
+   - **Proyecto 2 (Builder):** Escribe en `${DEPLOY_PATH}` (default: `/deploy`) que Coolify mapea al mismo named volume
+   - **En Coolify (Proyecto 2):** Configurar Persistent Storage usando el named volume existente `tomcat_webapps`
    - **Flujo completo:**
      ```
-     Builder escribe: ${DEPLOY_PATH}/ROOT.war
-                         ↓ (Coolify mapea)
-     Filesystem: /opt/mariastaff-dev/tomcat/webapps/ROOT.war
-                         ↓ (Volume mount)
+     Builder escribe: ${DEPLOY_PATH}/ROOT.war (dentro del contenedor)
+                         ↓ (Coolify mapea a named volume)
+     Docker Volume: tomcat_webapps
+                         ↓ (Volume mount desde Proyecto 1)
      Tomcat lee: /usr/local/tomcat/webapps/ROOT.war
      ```
 

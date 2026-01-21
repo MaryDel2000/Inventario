@@ -1,0 +1,3 @@
+# Directorio para datos persistentes
+# Coolify montará estos directorios desde el directorio del proyecto
+data/

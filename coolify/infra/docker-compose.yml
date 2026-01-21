@@ -17,33 +17,29 @@ services:
       APP_DB_USER: ${APP_DB_USER}
       APP_DB_PASSWORD: ${APP_DB_PASSWORD}
     
-    # Init script inline - crea la base de datos de la aplicación
-    command: >
-      sh -c "
-      docker-entrypoint.sh postgres &
-      sleep 5 &&
-      if [ -n \"$$APP_DB_NAME\" ] && [ -n \"$$APP_DB_USER\" ] && [ -n \"$$APP_DB_PASSWORD\" ]; then
-        psql -v ON_ERROR_STOP=1 --username \"$$POSTGRES_USER\" --dbname \"$$POSTGRES_DB\" <<-EOSQL
-          CREATE USER $$APP_DB_USER WITH PASSWORD '$$APP_DB_PASSWORD';
-          CREATE DATABASE $$APP_DB_NAME OWNER $$APP_DB_USER;
-          GRANT ALL PRIVILEGES ON DATABASE $$APP_DB_NAME TO $$APP_DB_USER;
+    entrypoint:
+      - sh
+      - -c
+      - |
+        echo "#!/bin/sh
+        set -e
+        if [ -n \"\$$APP_DB_NAME\" ]; then
+          psql -v ON_ERROR_STOP=1 --username \"\$$POSTGRES_USER\" --dbname \"\$$POSTGRES_DB\" <<-EOSQL
+            CREATE USER \$$APP_DB_USER WITH PASSWORD '\$$APP_DB_PASSWORD';
+            CREATE DATABASE \$$APP_DB_NAME OWNER \$$APP_DB_USER;
+            GRANT ALL PRIVILEGES ON DATABASE \$$APP_DB_NAME TO \$$APP_DB_USER;
         EOSQL
-        echo 'Database $$APP_DB_NAME created successfully'
-      fi &&
-      wait
-      "
-    
+          echo \"Database \$$APP_DB_NAME created successfully\"
+        fi" > /docker-entrypoint-initdb.d/init-app-db.sh && chmod +x /docker-entrypoint-initdb.d/init-app-db.sh && exec docker-entrypoint.sh postgres
+
     volumes:
-      - /opt/${INSTANCE_NAME}/postgresql:/var/lib/postgresql/data
+      - data/postgres_data:/var/lib/postgresql/data
     
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
       timeout: 5s
       retries: 5
-    
-    networks:
-      - ${NETWORK_NAME}
 
   # ==========================================
   # Authentik Server
@@ -52,6 +48,7 @@ services:
     image: ghcr.io/goauthentik/server:2025.10
     container_name: ${INSTANCE_NAME}-authentik-server
     restart: unless-stopped
+    user: "0:0"
     command: server
     
     depends_on:
@@ -90,12 +87,10 @@ services:
       - "9443"
     
     volumes:
-      - /opt/${INSTANCE_NAME}/authentik/media:/media
-      - /opt/${INSTANCE_NAME}/authentik/certs:/certs
-      - ./assets:/web/dist/custom
+      - data/authentik/media:/media
+      - data/authentik/certs:/certs
+      - assets:/web/dist/custom
     
-    networks:
-      - ${NETWORK_NAME}
 
   # ==========================================
   # Authentik Worker
@@ -104,6 +99,7 @@ services:
     image: ghcr.io/goauthentik/server:2025.10
     container_name: ${INSTANCE_NAME}-authentik-worker
     restart: unless-stopped
+    user: "0:0"
     command: worker
     
     depends_on:
@@ -122,11 +118,9 @@ services:
       AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
     
     volumes:
-      - /opt/${INSTANCE_NAME}/authentik/media:/media
-      - /opt/${INSTANCE_NAME}/authentik/certs:/certs
+      - data/authentik/media:/media
+      - data/authentik/certs:/certs
     
-    networks:
-      - ${NETWORK_NAME}
 
   # ==========================================
   # Tomcat Application Server
@@ -160,14 +154,14 @@ services:
       - "8080"
     
     volumes:
-      - /opt/${INSTANCE_NAME}/tomcat/webapps:/usr/local/tomcat/webapps
-      - /opt/${INSTANCE_NAME}/tomcat/logs:/usr/local/tomcat/logs
+      - data/tomcat/webapps:/usr/local/tomcat/webapps
+      - data/tomcat/logs:/usr/local/tomcat/logs
     
-    networks:
-      - ${NETWORK_NAME}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    
 
-# Network interna para comunicación entre servicios
-networks:
-  app-network:
-    name: ${NETWORK_NAME}
-    driver: bridge
