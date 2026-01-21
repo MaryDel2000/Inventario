@@ -16,8 +16,12 @@ WORKDIR /app
 # Copiar archivos del proyecto
 COPY . .
 
+# Dar permisos de ejecución al wrapper
+RUN chmod +x ./gradlew
+
 # Compilar: Gradle + Vaadin Frontend + Spring Boot WAR
-RUN ./gradlew clean vaadinBuildFrontend bootWar -Dvaadin.ignoreVersionChecks=true
+# Usamos --no-daemon para evitar que el proceso quede residente y consuma memoria
+RUN ./gradlew clean vaadinBuildFrontend bootWar -Dvaadin.ignoreVersionChecks=true --no-daemon
 
 # ==============================================================
 # Stage 2: Deploy - Copiar WAR al volumen compartido de Tomcat
