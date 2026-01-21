@@ -22,14 +22,33 @@ services:
       - |
         echo "#!/bin/sh
         set -e
-        if [ -n \"\$$APP_DB_NAME\" ]; then
-          psql -v ON_ERROR_STOP=1 --username \"\$$POSTGRES_USER\" --dbname \"\$$POSTGRES_DB\" <<-EOSQL
-            CREATE USER \$$APP_DB_USER WITH PASSWORD '\$$APP_DB_PASSWORD';
-            CREATE DATABASE \$$APP_DB_NAME OWNER \$$APP_DB_USER;
-            GRANT ALL PRIVILEGES ON DATABASE \$$APP_DB_NAME TO \$$APP_DB_USER;
+        # Hardcoded values for reliability
+        APP_DB_NAME='dev_app_db'
+        APP_DB_USER='dev_app_user'
+        APP_DB_PASSWORD='F4cxO1xdCdKRx2VuHCh2gQ'
+        
+        psql -v ON_ERROR_STOP=1 --username \"\$$POSTGRES_USER\" --dbname \"\$$POSTGRES_DB\" <<-EOSQL
+            -- Check if user exists before creating to avoid errors on restart
+            DO
+            \\$\\$
+            BEGIN
+               IF NOT EXISTS (
+                  SELECT FROM pg_catalog.pg_roles
+                  WHERE  rolname = '\$APP_DB_USER') THEN
+
+                  CREATE USER \$APP_DB_USER WITH PASSWORD '\$APP_DB_PASSWORD';
+               END IF;
+            END
+            \\$\\$;
+            
+            -- Check if database exists
+            SELECT 'CREATE DATABASE \$APP_DB_NAME OWNER \$APP_DB_USER'
+            WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '\$APP_DB_NAME')\\gexec
+
+            GRANT ALL PRIVILEGES ON DATABASE \$APP_DB_NAME TO \$APP_DB_USER;
         EOSQL
-          echo \"Database \$$APP_DB_NAME created successfully\"
-        fi" > /docker-entrypoint-initdb.d/init-app-db.sh && chmod +x /docker-entrypoint-initdb.d/init-app-db.sh && exec docker-entrypoint.sh postgres
+          echo \"Database \$APP_DB_NAME check/creation completed\"
+        " > /docker-entrypoint-initdb.d/init-app-db.sh && chmod +x /docker-entrypoint-initdb.d/init-app-db.sh && exec docker-entrypoint.sh postgres
 
     volumes:
       - ./data/postgres_data:/var/lib/postgresql/data
