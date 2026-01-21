@@ -6,7 +6,6 @@ services:
   # ==========================================
   db:
     image: postgres:17-alpine
-    container_name: ${INSTANCE_NAME}-db
     restart: unless-stopped
     
     environment:
@@ -33,7 +32,7 @@ services:
         fi" > /docker-entrypoint-initdb.d/init-app-db.sh && chmod +x /docker-entrypoint-initdb.d/init-app-db.sh && exec docker-entrypoint.sh postgres
 
     volumes:
-      - data/postgres_data:/var/lib/postgresql/data
+      - ./data/postgres_data:/var/lib/postgresql/data
     
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
@@ -46,7 +45,6 @@ services:
   # ==========================================
   authentik-server:
     image: ghcr.io/goauthentik/server:2025.10
-    container_name: ${INSTANCE_NAME}-authentik-server
     restart: unless-stopped
     user: "0:0"
     command: server
@@ -87,9 +85,9 @@ services:
       - "9443"
     
     volumes:
-      - data/authentik/media:/media
-      - data/authentik/certs:/certs
-      - assets:/web/dist/custom
+      - ./data/authentik/media:/media
+      - ./data/authentik/certs:/certs
+      - ./assets:/web/dist/custom
     
 
   # ==========================================
@@ -97,7 +95,6 @@ services:
   # ==========================================
   authentik-worker:
     image: ghcr.io/goauthentik/server:2025.10
-    container_name: ${INSTANCE_NAME}-authentik-worker
     restart: unless-stopped
     user: "0:0"
     command: worker
@@ -118,50 +115,40 @@ services:
       AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
     
     volumes:
-      - data/authentik/media:/media
-      - data/authentik/certs:/certs
+      - ./data/authentik/media:/media
+      - ./data/authentik/certs:/certs
     
 
   # ==========================================
   # Tomcat Application Server
   # ==========================================
   tomcat:
-    image: tomcat:10.1-jdk21
-    container_name: ${INSTANCE_NAME}-tomcat
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM tomcat:10.1-jdk21
+
+        # Install prerequisites and PostgreSQL 17 client
+        RUN apt-get update && \
+            apt-get install -y lsb-release wget gnupg2 && \
+            sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list' && \
+            wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - && \
+            apt-get update && \
+            apt-get install -y postgresql-client-17 && \
+            rm -rf /var/lib/apt/lists/*
     restart: unless-stopped
-    
-    depends_on:
-      authentik-server:
-        condition: service_started
-      db:
-        condition: service_healthy
-    
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      
-      # Conexión a Authentik
-      AUTHENTIK_BACKEND_HOST: http://authentik-server:9000
-      AUTHENTIK_FRONTEND_HOST: ${AUTHENTIK_EXTERNAL_HOST}
-      
-      # Conexión a base de datos de aplicación
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_NAME: ${APP_DB_NAME}
-      DB_USER: ${APP_DB_USER}
-      DB_PASSWORD: ${APP_DB_PASSWORD}
-    
     expose:
       - "8080"
-    
     volumes:
-      - data/tomcat/webapps:/usr/local/tomcat/webapps
-      - data/tomcat/logs:/usr/local/tomcat/logs
-    
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
-      interval: 20s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
+      - ./data/tomcat/webapps:/usr/local/tomcat/webapps
+      - ./data/tomcat/logs:/usr/local/tomcat/logs
+
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      AUTHENTIK_BACKEND_HOST: ${SERVICE_URL_AUTHENTIKSERVER_9000}
+      AUTHENTIK_FRONTEND_HOST: https://${SERVICE_FQDN_AUTHENTIKSERVER}
+    depends_on:
+      authentik-server:
+        condition: service_healthy
     
 
