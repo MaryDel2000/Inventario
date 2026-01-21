@@ -1,0 +1,173 @@
+version: "3.8"
+
+services:
+  # ==========================================
+  # PostgreSQL - Base de datos compartida
+  # ==========================================
+  db:
+    image: postgres:17-alpine
+    container_name: ${INSTANCE_NAME}-db
+    restart: unless-stopped
+    
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      APP_DB_NAME: ${APP_DB_NAME}
+      APP_DB_USER: ${APP_DB_USER}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD}
+    
+    # Init script inline - crea la base de datos de la aplicación
+    command: >
+      sh -c "
+      docker-entrypoint.sh postgres &
+      sleep 5 &&
+      if [ -n \"$$APP_DB_NAME\" ] && [ -n \"$$APP_DB_USER\" ] && [ -n \"$$APP_DB_PASSWORD\" ]; then
+        psql -v ON_ERROR_STOP=1 --username \"$$POSTGRES_USER\" --dbname \"$$POSTGRES_DB\" <<-EOSQL
+          CREATE USER $$APP_DB_USER WITH PASSWORD '$$APP_DB_PASSWORD';
+          CREATE DATABASE $$APP_DB_NAME OWNER $$APP_DB_USER;
+          GRANT ALL PRIVILEGES ON DATABASE $$APP_DB_NAME TO $$APP_DB_USER;
+        EOSQL
+        echo 'Database $$APP_DB_NAME created successfully'
+      fi &&
+      wait
+      "
+    
+    volumes:
+      - /opt/${INSTANCE_NAME}/postgresql:/var/lib/postgresql/data
+    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+    networks:
+      - ${NETWORK_NAME}
+
+  # ==========================================
+  # Authentik Server
+  # ==========================================
+  authentik-server:
+    image: ghcr.io/goauthentik/server:2025.10
+    container_name: ${INSTANCE_NAME}-authentik-server
+    restart: unless-stopped
+    command: server
+    
+    depends_on:
+      db:
+        condition: service_healthy
+    
+    environment:
+      # Conexión a PostgreSQL
+      AUTHENTIK_POSTGRESQL__HOST: db
+      AUTHENTIK_POSTGRESQL__PORT: 5432
+      AUTHENTIK_POSTGRESQL__NAME: ${POSTGRES_DB}
+      AUTHENTIK_POSTGRESQL__USER: ${POSTGRES_USER}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${POSTGRES_PASSWORD}
+      
+      # Configuración de Authentik
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_EXTERNAL_HOST: ${AUTHENTIK_EXTERNAL_HOST}
+      AUTHENTIK_BOOTSTRAP_EMAIL: ${AUTHENTIK_BOOTSTRAP_EMAIL}
+      AUTHENTIK_BOOTSTRAP_PASSWORD: ${AUTHENTIK_BOOTSTRAP_PASSWORD}
+      
+      # Email
+      AUTHENTIK_EMAIL__FROM: ${AUTHENTIK_EMAIL__FROM:-authentik@localhost}
+      AUTHENTIK_EMAIL__HOST: ${AUTHENTIK_EMAIL__HOST:-}
+      AUTHENTIK_EMAIL__PORT: ${AUTHENTIK_EMAIL__PORT:-587}
+      AUTHENTIK_EMAIL__USERNAME: ${AUTHENTIK_EMAIL__USERNAME:-}
+      AUTHENTIK_EMAIL__PASSWORD: ${AUTHENTIK_EMAIL__PASSWORD:-}
+      AUTHENTIK_EMAIL__USE_TLS: ${AUTHENTIK_EMAIL__USE_TLS:-true}
+      AUTHENTIK_EMAIL__USE_SSL: ${AUTHENTIK_EMAIL__USE_SSL:-false}
+      
+      # Listen
+      AUTHENTIK_LISTEN__HTTP: 0.0.0.0:9000
+      AUTHENTIK_LISTEN__HTTPS: 0.0.0.0:9443
+    
+    expose:
+      - "9000"
+      - "9443"
+    
+    volumes:
+      - /opt/${INSTANCE_NAME}/authentik/media:/media
+      - /opt/${INSTANCE_NAME}/authentik/certs:/certs
+      - ./assets:/web/dist/custom
+    
+    networks:
+      - ${NETWORK_NAME}
+
+  # ==========================================
+  # Authentik Worker
+  # ==========================================
+  authentik-worker:
+    image: ghcr.io/goauthentik/server:2025.10
+    container_name: ${INSTANCE_NAME}-authentik-worker
+    restart: unless-stopped
+    command: worker
+    
+    depends_on:
+      db:
+        condition: service_healthy
+    
+    environment:
+      # Conexión a PostgreSQL
+      AUTHENTIK_POSTGRESQL__HOST: db
+      AUTHENTIK_POSTGRESQL__PORT: 5432
+      AUTHENTIK_POSTGRESQL__NAME: ${POSTGRES_DB}
+      AUTHENTIK_POSTGRESQL__USER: ${POSTGRES_USER}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${POSTGRES_PASSWORD}
+      
+      # Secret Key
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+    
+    volumes:
+      - /opt/${INSTANCE_NAME}/authentik/media:/media
+      - /opt/${INSTANCE_NAME}/authentik/certs:/certs
+    
+    networks:
+      - ${NETWORK_NAME}
+
+  # ==========================================
+  # Tomcat Application Server
+  # ==========================================
+  tomcat:
+    image: tomcat:10.1-jdk21
+    container_name: ${INSTANCE_NAME}-tomcat
+    restart: unless-stopped
+    
+    depends_on:
+      authentik-server:
+        condition: service_started
+      db:
+        condition: service_healthy
+    
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      
+      # Conexión a Authentik
+      AUTHENTIK_BACKEND_HOST: http://authentik-server:9000
+      AUTHENTIK_FRONTEND_HOST: ${AUTHENTIK_EXTERNAL_HOST}
+      
+      # Conexión a base de datos de aplicación
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${APP_DB_NAME}
+      DB_USER: ${APP_DB_USER}
+      DB_PASSWORD: ${APP_DB_PASSWORD}
+    
+    expose:
+      - "8080"
+    
+    volumes:
+      - /opt/${INSTANCE_NAME}/tomcat/webapps:/usr/local/tomcat/webapps
+      - /opt/${INSTANCE_NAME}/tomcat/logs:/usr/local/tomcat/logs
+    
+    networks:
+      - ${NETWORK_NAME}
+
+# Network interna para comunicación entre servicios
+networks:
+  app-network:
+    name: ${NETWORK_NAME}
+    driver: bridge

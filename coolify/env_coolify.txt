@@ -1,0 +1,51 @@
+# ================================================
+# VARIABLES DE ENTORNO PARA COOLIFY
+# ================================================
+# Copiar y pegar en Coolify Environment Variables
+# Estas variables son para PROYECTO 1 (Infraestructura)
+
+# ----------------------------------------
+# Identificación de Instancia
+# ----------------------------------------
+INSTANCE_NAME=mariastaff-dev
+NETWORK_NAME=mariastaff-dev-network
+
+# ----------------------------------------
+# PostgreSQL (Base de Datos de Authentik)
+# ----------------------------------------
+POSTGRES_DB=authentik_dev
+POSTGRES_USER=authentik_dev
+POSTGRES_PASSWORD=6rJ9UrArzOhwecbv5KGYw
+
+# ----------------------------------------
+# Base de Datos de Aplicación
+# ----------------------------------------
+APP_DB_NAME=dev_app_db
+APP_DB_USER=dev_app_user
+APP_DB_PASSWORD=F4cxO1xdCdKRx2VuHCh2gQ
+
+# ----------------------------------------
+# Authentik - Configuración Principal
+# ----------------------------------------
+AUTHENTIK_SECRET_KEY=XbMZhhsGtrnykAotX4pqPYU3AVNRQerrxNb0A7UY5qiVjLWcRx
+AUTHENTIK_EXTERNAL_HOST=https://auth.mariastaff.com
+AUTHENTIK_BOOTSTRAP_EMAIL=admin@dev.localhost
+AUTHENTIK_BOOTSTRAP_PASSWORD=dGURiWZoV4HTegeOxMRykw
+
+# ----------------------------------------
+# Authentik - Email (Opcional)
+# ----------------------------------------
+AUTHENTIK_EMAIL__FROM=authentik@localhost
+AUTHENTIK_EMAIL__HOST=
+AUTHENTIK_EMAIL__PORT=587
+AUTHENTIK_EMAIL__USERNAME=
+AUTHENTIK_EMAIL__PASSWORD=
+AUTHENTIK_EMAIL__USE_TLS=true
+AUTHENTIK_EMAIL__USE_SSL=false
+
+# ================================================
+# PARA PROYECTO 2 (Builder)
+# ================================================
+# Variables necesarias:
+INSTANCE_NAME=mariastaff-dev
+DEPLOY_PATH=/deploy
