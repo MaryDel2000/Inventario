@@ -31,10 +31,10 @@ FROM alpine:latest
 WORKDIR /output
 
 # Copiar el WAR generado del stage anterior
-COPY --from=builder /app/build/libs/Inventario-*.war /output/ROOT.war
+COPY --from=builder /app/build/libs/Inventario-*.war /output/inventario.war
 
 # Variable de entorno para el path de deploy (configurable en Coolify)
 ENV DEPLOY_PATH=/deploy
 
-# Script que copia el WAR al volumen compartido y mantiene el contenedor vivo
-CMD sh -c "cp /output/ROOT.war ${DEPLOY_PATH}/ROOT.war && echo \"WAR deployed to ${DEPLOY_PATH}/ROOT.war\" && tail -f /dev/null"
+# Script que copia el WAR al volumen compartido, borra el ROOT.war anterior y mantiene el contenedor vivo
+CMD sh -c "rm -f ${DEPLOY_PATH}/ROOT.war && cp /output/inventario.war ${DEPLOY_PATH}/inventario.war && echo \"WAR deployed to ${DEPLOY_PATH}/inventario.war\" && tail -f /dev/null"
