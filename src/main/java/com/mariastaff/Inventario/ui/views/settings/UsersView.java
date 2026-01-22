@@ -178,7 +178,7 @@ public class UsersView extends VerticalLayout {
                         if (email == null || email.trim().isEmpty()) {
                             email = local.getUsername() + "@sistema.local";
                             local.getEntidad().setEmail(email);
-                            service.save(local); // Save email locally
+                            local = service.save(local); // Save email locally and update reference
                         }
 
                         // Try to find existing first (Fallback)
