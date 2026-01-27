@@ -66,3 +66,5 @@ docker/postgresql/*
 target/
 docker/deploy/
 *.war
+
+deploy/deploy_key
