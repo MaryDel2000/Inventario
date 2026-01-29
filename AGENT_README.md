@@ -16,6 +16,7 @@
   - `TailwindDatePicker`: Input de fecha nativo HTML5 estilizado. Reemplaza a `vaadin-date-picker` en reportes.
 - **Global Styles (`index.css`)**: 
   - Estilos corregidos para inputs (`vaadin-big-decimal-field`), combos y grids.
+  - **Charts**: Tarjetas contenedoras estandarizadas (`bg-bg-surface`, `shadow`, `rounded-xl`) para gráficos de Dashboard.
 
 ## 3. Estado del Proyecto
 
@@ -33,6 +34,7 @@
 - **Visualización**: Grid principal muestra Stocks Totales calculados en tiempo real.
 - **Movimientos**: Kardex completo (`inv_movimiento`) poblado automáticamente con las operaciones simuladas.
 - **Productos**: Configuración compleja (Variantes, Lotes) soportada en V2.
+- **Dashboard**: Rediseño visual con tarjetas unificadas y gráficos alineados (Ventas y Stock).
 
 ### Módulo Compras y Ventas (COMPLETO)
 - **POS (Punto de Venta)**:
