@@ -36,7 +36,7 @@ public class ProductFormDialog extends TailwindModal {
     private final ProductoService service;
     private final CatalogoService catalogoService;
     private final AlmacenService almacenService;
-    
+
     private final Binder<InvProducto> binder = new Binder<>(InvProducto.class);
     private InvProducto currentProduct;
     private Runnable onSaveCallback;
@@ -62,7 +62,7 @@ public class ProductFormDialog extends TailwindModal {
 
     // Edit Product Fields
     private Grid<InvLote> lotesGrid;
-    
+
     private boolean isPurchaseMode = false;
 
     public ProductFormDialog(ProductoService service, CatalogoService catalogoService, AlmacenService almacenService) {
@@ -70,7 +70,7 @@ public class ProductFormDialog extends TailwindModal {
         this.service = service;
         this.catalogoService = catalogoService;
         this.almacenService = almacenService;
-        
+
         initFields();
     }
 
@@ -89,65 +89,70 @@ public class ProductFormDialog extends TailwindModal {
             observacionesLote.setVisible(false);
         }
     }
-    
+
     private void configureDecimalField(BigDecimalField field) {
         // Force US locale to ensure '.' is used as decimal separator
         field.setLocale(java.util.Locale.US);
-        // We can also add a value change listener to strip non-numeric if needed, 
+        // We can also add a value change listener to strip non-numeric if needed,
         // but Locale.US should handle the dot vs comma issue.
     }
 
     private void initFields() {
         nombre = new TextField(getTranslation("view.products.grid.name"));
         nombre.addClassName("w-full");
-        
+
         codigo = new TextField(getTranslation("view.products.grid.code"));
         codigo.addClassName("w-full");
-        
+
         descripcion = new TextField(getTranslation("field.description", "Descripción"));
         descripcion.addClassName("w-full");
-        
+
         costoNIO = new BigDecimalField("Costo (C$)");
         costoNIO.addClassName("w-full");
         // FIX: Allow decimals
-        // Assuming locales might use comma/dot, standard BigDecimalField handles it but step is crucial for browser validation
+        // Assuming locales might use comma/dot, standard BigDecimalField handles it but
+        // step is crucial for browser validation
         // Using a safe small step.
         // Also could add suffix div if needed but label has it.
-        // We will configure a custom formatter / step if needed in Vaadin 24+ but usually just simple config works.
-        // However, user complained "no permite agregar decimales", this strongly suggests the browser 'step' attribute default (often 1) is blocking non-integers.
-        
+        // We will configure a custom formatter / step if needed in Vaadin 24+ but
+        // usually just simple config works.
+        // However, user complained "no permite agregar decimales", this strongly
+        // suggests the browser 'step' attribute default (often 1) is blocking
+        // non-integers.
+
         configureDecimalField(costoNIO);
-        
+
         costoUSD = new BigDecimalField("Costo ($)");
         costoUSD.addClassName("w-full");
         configureDecimalField(costoUSD);
-        
+
         precioVentaNIO = new BigDecimalField("Precio Venta (C$)");
         precioVentaNIO.addClassName("w-full");
         configureDecimalField(precioVentaNIO);
-        
+
         precioVentaUSD = new BigDecimalField("Precio Venta ($)");
         precioVentaUSD.addClassName("w-full");
         configureDecimalField(precioVentaUSD);
-        
+
         categoria = new ComboBox<>(getTranslation("view.products.grid.category"));
         categoria.setItems(catalogoService.findCategoriasActivas());
         categoria.setItemLabelGenerator(InvCategoria::getNombre);
         categoria.addClassName("w-full");
         categoria.setAllowCustomValue(true);
         categoria.addCustomValueSetListener(e -> {
-             InvCategoria newCat = new InvCategoria();
-             newCat.setNombre(e.getDetail());
-             newCat.setActivo(true);
-             newCat.setDescripcion("Creada desde Productos");
-             try {
+            InvCategoria newCat = new InvCategoria();
+            newCat.setNombre(e.getDetail());
+            newCat.setActivo(true);
+            newCat.setDescripcion("Creada desde Productos");
+            try {
                 InvCategoria saved = catalogoService.saveCategoria(newCat);
                 categoria.setItems(catalogoService.findAllCategorias());
                 categoria.setValue(saved);
-                TailwindNotification.show(getTranslation("msg.category.added", "Nueva categoría añadida"), TailwindNotification.Type.SUCCESS);
-             } catch (Exception ex) {
+                TailwindNotification.show(getTranslation("msg.category.added", "Nueva categoría añadida"),
+                        TailwindNotification.Type.SUCCESS);
+            } catch (Exception ex) {
                 TailwindNotification.show(getTranslation("msg.error.save"), TailwindNotification.Type.ERROR);
-             }
+            }
         });
 
         unidadMedida = new ComboBox<>(getTranslation("view.products.grid.uom"));
@@ -156,28 +161,29 @@ public class ProductFormDialog extends TailwindModal {
         unidadMedida.addClassName("w-full");
         unidadMedida.setAllowCustomValue(true);
         unidadMedida.addCustomValueSetListener(e -> {
-             String val = e.getDetail();
-             InvUnidadMedida newUom = new InvUnidadMedida();
-             newUom.setNombre(val);
-             newUom.setAbreviatura(val.length() > 5 ? val.substring(0, 5).toUpperCase() : val.toUpperCase());
-             newUom.setActivo(true);
-             try {
-                 InvUnidadMedida saved = catalogoService.saveUnidadMedida(newUom);
-                 unidadMedida.setItems(catalogoService.findAllUnidadesMedida());
-                 unidadMedida.setValue(saved);
-                 TailwindNotification.show(getTranslation("msg.uom.added", "Nueva unidad añadida"), TailwindNotification.Type.SUCCESS);
-             } catch (Exception ex) {
-                 TailwindNotification.show(getTranslation("msg.error.save"), TailwindNotification.Type.ERROR);
-             }
+            String val = e.getDetail();
+            InvUnidadMedida newUom = new InvUnidadMedida();
+            newUom.setNombre(val);
+            newUom.setAbreviatura(val.length() > 5 ? val.substring(0, 5).toUpperCase() : val.toUpperCase());
+            newUom.setActivo(true);
+            try {
+                InvUnidadMedida saved = catalogoService.saveUnidadMedida(newUom);
+                unidadMedida.setItems(catalogoService.findAllUnidadesMedida());
+                unidadMedida.setValue(saved);
+                TailwindNotification.show(getTranslation("msg.uom.added", "Nueva unidad añadida"),
+                        TailwindNotification.Type.SUCCESS);
+            } catch (Exception ex) {
+                TailwindNotification.show(getTranslation("msg.error.save"), TailwindNotification.Type.ERROR);
+            }
         });
 
         activo = new TailwindToggle(getTranslation("field.active"));
-        
+
         ubicacion = new ComboBox<>(getTranslation("field.location.initial", "Ubicación (Inicial)"));
         ubicacion.setItems(almacenService.findAllUbicaciones());
         ubicacion.setItemLabelGenerator(u -> u.getCodigo() + " - " + u.getDescripcion());
         ubicacion.addClassName("w-full");
-        
+
         cantidadInicial = new BigDecimalField(getTranslation("field.stock.initial", "Cantidad Inicial"));
         cantidadInicial.addClassName("w-full");
 
@@ -194,20 +200,24 @@ public class ProductFormDialog extends TailwindModal {
         lotesGrid.addClassNames("bg-bg-surface", "rounded-lg", "shadow", "border", "border-gray-200");
         lotesGrid.setHeight("200px");
         lotesGrid.addColumn(l -> l.getProductoVariante() != null ? l.getProductoVariante().getNombreVariante() : "-")
-                 .setHeader(getTranslation("field.variant")).setAutoWidth(true);
+                .setHeader(getTranslation("field.variant")).setAutoWidth(true);
         lotesGrid.addColumn(InvLote::getCodigoLote).setHeader(getTranslation("field.batch.code")).setAutoWidth(true);
         lotesGrid.addColumn(l -> l.getFechaCaducidad() != null ? l.getFechaCaducidad().toLocalDate().toString() : "-")
-                 .setHeader(getTranslation("field.batch.expiry")).setAutoWidth(true);
-        lotesGrid.addComponentColumn(this::createEditLoteButton).setHeader(getTranslation("action.edit", "Editar")).setAutoWidth(true);
+                .setHeader(getTranslation("field.batch.expiry")).setAutoWidth(true);
+        lotesGrid.addComponentColumn(this::createEditLoteButton).setHeader(getTranslation("action.edit", "Editar"))
+                .setAutoWidth(true);
 
-        binder.forField(nombre).asRequired(getTranslation("msg.required.name", "El nombre es obligatorio")).bind(InvProducto::getNombre, InvProducto::setNombre);
+        binder.forField(nombre).asRequired(getTranslation("msg.required.name", "El nombre es obligatorio"))
+                .bind(InvProducto::getNombre, InvProducto::setNombre);
         binder.forField(codigo).bind(InvProducto::getCodigoInterno, InvProducto::setCodigoInterno);
-        binder.forField(categoria).asRequired(getTranslation("msg.required.category", "La categoría es obligatoria")).bind(InvProducto::getCategoria, InvProducto::setCategoria);
-        binder.forField(unidadMedida).asRequired(getTranslation("msg.required.uom", "La unidad es obligatoria")).bind(InvProducto::getUnidadMedida, InvProducto::setUnidadMedida);
+        binder.forField(categoria).asRequired(getTranslation("msg.required.category", "La categoría es obligatoria"))
+                .bind(InvProducto::getCategoria, InvProducto::setCategoria);
+        binder.forField(unidadMedida).asRequired(getTranslation("msg.required.uom", "La unidad es obligatoria"))
+                .bind(InvProducto::getUnidadMedida, InvProducto::setUnidadMedida);
         binder.forField(descripcion).bind(InvProducto::getDescripcion, InvProducto::setDescripcion);
         binder.forField(activo).bind(InvProducto::getActivo, InvProducto::setActivo);
     }
-    
+
     private Button createEditLoteButton(InvLote loteItem) {
         Button editLoteBtn = new Button(VaadinIcon.EDIT.create());
         editLoteBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
@@ -238,7 +248,8 @@ public class ProductFormDialog extends TailwindModal {
 
         TextArea obsField = new TextArea(getTranslation("field.batch.observations"));
         obsField.addClassName("w-full");
-        if (loteItem.getObservaciones() != null) obsField.setValue(loteItem.getObservaciones());
+        if (loteItem.getObservaciones() != null)
+            obsField.setValue(loteItem.getObservaciones());
 
         FormLayout layout = new FormLayout(variantField, codeField, expiryField, obsField);
         layout.addClassName("w-full");
@@ -269,14 +280,15 @@ public class ProductFormDialog extends TailwindModal {
             }
         });
         saveBtn.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
-        
+
         Button cancelBtn = new Button(getTranslation("action.cancel"), event -> editLoteModal.close());
-        cancelBtn.addClassNames("bg-[var(--color-bg-secondary)]", "text-[var(--color-text-main)]", "font-medium", "py-2", "px-4", "rounded-lg");
-        
+        cancelBtn.addClassNames("bg-[var(--color-bg-secondary)]", "text-[var(--color-text-main)]", "font-medium",
+                "py-2", "px-4", "rounded-lg");
+
         editLoteModal.addFooterButton(cancelBtn);
         editLoteModal.addFooterButton(saveBtn);
-        
-        this.add(editLoteModal); 
+
+        this.add(editLoteModal);
         editLoteModal.open();
     }
 
@@ -294,14 +306,14 @@ public class ProductFormDialog extends TailwindModal {
     public void setProduct(InvProducto product) {
         this.currentProduct = product;
         boolean isNew = product.getId() == null;
-        
+
         binder.readBean(product);
-        
+
         FormLayout formLayout = new FormLayout();
         formLayout.addClassNames("w-full");
         formLayout.setResponsiveSteps(new FormLayout.ResponsiveStep("0", 1),
-                                      new FormLayout.ResponsiveStep("600px", 2));
-                                      
+                new FormLayout.ResponsiveStep("600px", 2));
+
         if (isNew) {
             categoria.setItems(catalogoService.findCategoriasActivas());
             activo.setValue(true);
@@ -309,42 +321,22 @@ public class ProductFormDialog extends TailwindModal {
             costoUSD.clear();
             precioVentaNIO.clear();
             precioVentaUSD.clear();
-            
-            formLayout.add(nombre, codigo, categoria, unidadMedida);
-            
-            HorizontalLayout rowPrecios = new HorizontalLayout();
-            rowPrecios.addClassName("w-full");
-            rowPrecios.add(costoNIO, precioVentaNIO);
-            formLayout.add(rowPrecios);
-            formLayout.setColspan(rowPrecios, 2);
 
-            HorizontalLayout rowPreciosUSD = new HorizontalLayout();
-            rowPreciosUSD.addClassName("w-full");
-            rowPreciosUSD.add(costoUSD, precioVentaUSD);
-            formLayout.add(rowPreciosUSD);
-            formLayout.setColspan(rowPreciosUSD, 2);
-
-            if (!isPurchaseMode) {
-                formLayout.add(ubicacion, cantidadInicial, lote, fechaCaducidad, descripcion, observacionesLote, activo);
-                formLayout.setColspan(descripcion, 2);
-                formLayout.setColspan(observacionesLote, 2);
-            } else {
-                formLayout.add(descripcion, activo);
-                formLayout.setColspan(descripcion, 2);
-            }
+            formLayout.add(nombre, codigo, categoria, unidadMedida, descripcion, activo);
+            formLayout.setColspan(descripcion, 2);
         } else {
             categoria.setItems(catalogoService.findAllCategorias());
             refreshLotesGrid();
-            
+
             if (!service.findVariantesByProducto(product).isEmpty()) {
-                 InvProductoVariante v = service.findVariantesByProducto(product).get(0);
-                 
-                 precioVentaNIO.setValue(service.getPrecioVentaActual(v, "NIO"));
-                 precioVentaUSD.setValue(service.getPrecioVentaActual(v, "USD"));
-                 costoNIO.setValue(service.getCostoActual(v, "NIO"));
-                 costoUSD.setValue(service.getCostoActual(v, "USD"));
+                InvProductoVariante v = service.findVariantesByProducto(product).get(0);
+
+                precioVentaNIO.setValue(service.getPrecioVentaActual(v, "NIO"));
+                precioVentaUSD.setValue(service.getPrecioVentaActual(v, "USD"));
+                costoNIO.setValue(service.getCostoActual(v, "NIO"));
+                costoUSD.setValue(service.getCostoActual(v, "USD"));
             }
-            
+
             formLayout.add(nombre, codigo, categoria, unidadMedida);
 
             HorizontalLayout rowPrecios = new HorizontalLayout();
@@ -364,15 +356,16 @@ public class ProductFormDialog extends TailwindModal {
             formLayout.setColspan(lotesGrid, 2);
         }
         formLayout.setColspan(nombre, 2);
-        
+
         this.addContent(formLayout);
 
         Button saveButton = new Button(getTranslation("action.save"), e -> save(isNew));
         saveButton.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
 
         Button cancelButton = new Button(getTranslation("action.cancel"), e -> this.close());
-        cancelButton.addClassNames("bg-[var(--color-bg-secondary)]", "text-[var(--color-text-main)]", "font-medium", "py-2", "px-4", "rounded-lg");
-        
+        cancelButton.addClassNames("bg-[var(--color-bg-secondary)]", "text-[var(--color-text-main)]", "font-medium",
+                "py-2", "px-4", "rounded-lg");
+
         this.addFooterButton(cancelButton);
         this.addFooterButton(saveButton);
     }
@@ -380,54 +373,54 @@ public class ProductFormDialog extends TailwindModal {
     private void save(boolean isNew) {
         try {
             binder.writeBean(currentProduct);
-            
+
             if (isNew) {
-                // If Purchase Mode, we just save the product, NO initial stock (purchase handles it)
+                // If Purchase Mode, we just save the product, NO initial stock (purchase
+                // handles it)
                 if (isPurchaseMode) {
                     service.save(currentProduct);
                 } else {
-                    // Standard Mode: Create with initial batch
+                    // Standard Mode: Create without initial stock/prices as requested
                     service.createProductWithInitialBatch(
-                       currentProduct,
-                       ubicacion.getValue(),
-                       cantidadInicial.getValue(),
-                       lote.getValue(),
-                       fechaCaducidad.getValue() != null ? fechaCaducidad.getValue().atStartOfDay() : null,
-                       observacionesLote.getValue(),
-                       BigDecimal.ZERO // Placeholder
-                   );
+                            currentProduct,
+                            null, // Location
+                            null, // Initial Quantity
+                            null, // Batch
+                            null, // Expiry
+                            null, // Observations
+                            null // Initial Price
+                    );
                 }
-                
-                // Now update all prices
-                 List<InvProductoVariante> vars = service.findVariantesByProducto(currentProduct);
-                 for(InvProductoVariante v : vars) {
-                     service.updateCosto(v, costoNIO.getValue(), "NIO");
-                     service.updateCosto(v, costoUSD.getValue(), "USD");
-                     service.updatePrecioVenta(v, precioVentaNIO.getValue(), "NIO");
-                     service.updatePrecioVenta(v, precioVentaUSD.getValue(), "USD");
-                 }
-                 
+
+                // Skip price updates for new products as fields are removed
+
             } else {
                 service.save(currentProduct);
                 // Update price if changed
-                 List<InvProductoVariante> vars = service.findVariantesByProducto(currentProduct);
-                 for(InvProductoVariante v : vars) {
-                     service.updateCosto(v, costoNIO.getValue(), "NIO");
-                     service.updateCosto(v, costoUSD.getValue(), "USD");
-                     service.updatePrecioVenta(v, precioVentaNIO.getValue(), "NIO");
-                     service.updatePrecioVenta(v, precioVentaUSD.getValue(), "USD");
-                 }
+                List<InvProductoVariante> vars = service.findVariantesByProducto(currentProduct);
+                for (InvProductoVariante v : vars) {
+                    service.updateCosto(v, costoNIO.getValue(), "NIO");
+                    service.updateCosto(v, costoUSD.getValue(), "USD");
+                    service.updatePrecioVenta(v, precioVentaNIO.getValue(), "NIO");
+                    service.updatePrecioVenta(v, precioVentaUSD.getValue(), "USD");
+                }
             }
-            
-            TailwindNotification.show(isNew ? getTranslation("msg.product.created", "Producto creado") : getTranslation("msg.product.updated", "Producto actualizado"), TailwindNotification.Type.SUCCESS);
-            if (onSaveCallback != null) onSaveCallback.run();
+
+            TailwindNotification.show(
+                    isNew ? getTranslation("msg.product.created", "Producto creado")
+                            : getTranslation("msg.product.updated", "Producto actualizado"),
+                    TailwindNotification.Type.SUCCESS);
+            if (onSaveCallback != null)
+                onSaveCallback.run();
             this.close();
-            
+
         } catch (ValidationException ex) {
-            TailwindNotification.show(getTranslation("msg.error.validation", "Revise los campos requeridos"), TailwindNotification.Type.ERROR);
+            TailwindNotification.show(getTranslation("msg.error.validation", "Revise los campos requeridos"),
+                    TailwindNotification.Type.ERROR);
         } catch (Exception ex) {
             ex.printStackTrace();
-            TailwindNotification.show(getTranslation("msg.error.internal", "Error interno"), TailwindNotification.Type.ERROR);
+            TailwindNotification.show(getTranslation("msg.error.internal", "Error interno"),
+                    TailwindNotification.Type.ERROR);
         }
     }
 }

@@ -33,7 +33,7 @@
 ### Módulo Inventario (COMPLETO)
 - **Visualización**: Grid principal muestra Stocks Totales calculados en tiempo real.
 - **Movimientos**: Kardex completo (`inv_movimiento`) poblado automáticamente con las operaciones simuladas.
-- **Productos**: Configuración compleja (Variantes, Lotes) soportada en V2.
+- **Productos**: Configuración compleja (Variantes, Lotes) soportada en V2. Formulario de creación simplificado (sin carga inicial de stock/costos).
 - **Dashboard**: Rediseño visual con tarjetas unificadas y gráficos alineados (Ventas y Stock).
 
 ### Módulo Compras y Ventas (COMPLETO)
