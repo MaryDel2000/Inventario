@@ -64,6 +64,15 @@ public class AlmacenService {
         return ubicacionRepository.findByAlmacen(almacen);
     }
 
+    public List<InvAlmacen> findAlmacenesByProveedor(
+            com.mariastaff.Inventario.backend.data.entity.InvProveedor proveedor) {
+        return almacenRepository.findByProveedor(proveedor);
+    }
+
+    public List<InvAlmacen> findAlmacenesByTipo(String tipo) {
+        return almacenRepository.findByTipoAlmacen(tipo);
+    }
+
     public List<InvExistencia> findAllExistencias() {
         return existenciaRepository.findAll();
     }

@@ -14,6 +14,10 @@ public class InvAlmacen extends AuditableEntity {
     @JoinColumn(name = "sucursal_id")
     private GenSucursal sucursal;
 
+    @ManyToOne
+    @JoinColumn(name = "proveedor_id")
+    private InvProveedor proveedor;
+
     @NotEmpty
     private String nombre;
     private String codigo;
@@ -31,6 +35,14 @@ public class InvAlmacen extends AuditableEntity {
 
     public void setSucursal(GenSucursal sucursal) {
         this.sucursal = sucursal;
+    }
+
+    public InvProveedor getProveedor() {
+        return proveedor;
+    }
+
+    public void setProveedor(InvProveedor proveedor) {
+        this.proveedor = proveedor;
     }
 
     public String getNombre() {
