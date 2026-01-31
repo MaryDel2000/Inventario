@@ -36,7 +36,15 @@
 - **Productos**: Configuración compleja (Variantes, Lotes) soportada en V2. Formulario de creación simplificado (sin carga inicial de stock/costos).
 - **Dashboard**: Rediseño visual con tarjetas unificadas y gráficos alineados (Ventas y Stock).
 
-### Módulo Compras y Ventas (COMPLETO)
+### Módulo Compras (ACTUALIZADO)
+- **Nueva Compra**:
+  - **Diseño**: Diálogo "Agregar Producto" rediseñado con `FormLayout` para alineación perfecta.
+  - **Funcionalidad**: Filtrado inteligente de almacenes por proveedor (relación `InvAlmacen` -> `InvProveedor`).
+  - **I18n**: Vista totalmente traducida sin literales hardcoreados.
+  - **Sidebar**: Corrección de rutas de iconos rotos.
+- **Historial**: Vista de listado de compras (pendiente de refactorización visual similar a Nueva Compra).
+
+### Módulo Ventas (COMPLETO)
 - **POS (Punto de Venta)**:
   - **I18n**: Interfaz totalmente traducida (`messages.properties`).
   - **Turnos**: Generación automática de turnos cerrados históricos para reportes.
