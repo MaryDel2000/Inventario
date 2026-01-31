@@ -35,14 +35,15 @@ public class LocationsView extends VerticalLayout {
     public LocationsView(AlmacenService service) {
         this.service = service;
         addClassNames("w-full", "h-full", "bg-bg-secondary", "p-6");
-        
+
         configureGrid();
-        
-        Button addBtn = new Button("Nueva Ubicación", VaadinIcon.PLUS.create());
-        addBtn.addClassNames("bg-primary", "text-white", "text-sm", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow", "hover:shadow-md", "transition-all");
+
+        Button addBtn = new Button(getTranslation("view.locations.action.new"), VaadinIcon.PLUS.create());
+        addBtn.addClassNames("bg-primary", "text-white", "text-sm", "font-semibold", "py-2", "px-4", "rounded-lg",
+                "shadow", "hover:shadow-md", "transition-all");
         addBtn.addClickListener(e -> openLocationDialog(new InvUbicacion()));
 
-        HorizontalLayout header = new HorizontalLayout(new AppLabel("Ubicaciones"), addBtn);
+        HorizontalLayout header = new HorizontalLayout(new AppLabel("view.locations.title"), addBtn);
         header.addClassNames("w-full", "justify-between", "items-center");
 
         add(header, grid);
@@ -52,9 +53,16 @@ public class LocationsView extends VerticalLayout {
     private void configureGrid() {
         grid.addClassNames("bg-bg-surface", "rounded-lg", "shadow");
         grid.setSizeFull();
-        grid.setColumns("codigo", "descripcion");
-        grid.addColumn(u -> u.getAlmacen() != null ? u.getAlmacen().getNombre() : "-").setHeader("Almacén");
-        
+        grid.removeAllColumns();
+
+        grid.addColumn(InvUbicacion::getCodigo).setHeader(getTranslation("view.locations.grid.code"))
+                .setAutoWidth(true);
+        grid.addColumn(InvUbicacion::getDescripcion).setHeader(getTranslation("view.locations.grid.description"))
+                .setAutoWidth(true);
+
+        grid.addColumn(u -> u.getAlmacen() != null ? u.getAlmacen().getNombre() : "-")
+                .setHeader(getTranslation("view.locations.grid.warehouse"));
+
         // Active Toggle Column
         grid.addColumn(new ComponentRenderer<>(ubicacion -> {
             TailwindToggle toggle = new TailwindToggle("");
@@ -63,14 +71,14 @@ public class LocationsView extends VerticalLayout {
                 ubicacion.setActivo(e.getValue());
                 try {
                     service.saveUbicacion(ubicacion);
-                    TailwindNotification.show("Estado actualizado", TailwindNotification.Type.SUCCESS);
+                    TailwindNotification.show(getTranslation("msg.status.updated"), TailwindNotification.Type.SUCCESS);
                 } catch (Exception ex) {
                     toggle.setValue(e.getOldValue());
-                    TailwindNotification.show("Error al actualizar estado", TailwindNotification.Type.ERROR);
+                    TailwindNotification.show(getTranslation("msg.status.error"), TailwindNotification.Type.ERROR);
                 }
             });
             return toggle;
-        })).setHeader("Activo").setAutoWidth(true);
+        })).setHeader(getTranslation("view.products.grid.active")).setAutoWidth(true);
 
         // Actions Column
         grid.addComponentColumn(ubicacion -> {
@@ -85,7 +93,7 @@ public class LocationsView extends VerticalLayout {
             deleteBtn.addClickListener(e -> deleteUbicacion(ubicacion));
 
             return new HorizontalLayout(editBtn, deleteBtn);
-        }).setHeader("Acciones").setAutoWidth(true);
+        }).setHeader(getTranslation("view.products.grid.actions")).setAutoWidth(true);
 
         grid.getColumns().forEach(col -> col.setAutoWidth(true));
     }
@@ -98,67 +106,73 @@ public class LocationsView extends VerticalLayout {
         try {
             service.deleteUbicacion(ubicacion);
             updateList();
-            TailwindNotification.show("Ubicación eliminada", TailwindNotification.Type.SUCCESS);
+            TailwindNotification.show(getTranslation("view.locations.msg.deleted"), TailwindNotification.Type.SUCCESS);
         } catch (Exception e) {
-            TailwindNotification.show("No se puede eliminar (posiblemente en uso)", TailwindNotification.Type.ERROR);
+            TailwindNotification.show(getTranslation("msg.error.in_use"), TailwindNotification.Type.ERROR);
         }
     }
 
     private void openLocationDialog(InvUbicacion ubicacion) {
         boolean isNew = ubicacion.getId() == null;
-        TailwindModal modal = new TailwindModal(isNew ? "Nueva Ubicación" : "Editar Ubicación");
-        
+        TailwindModal modal = new TailwindModal(isNew ? getTranslation("view.locations.editor.title.new")
+                : getTranslation("view.locations.editor.title.edit"));
+
         Binder<InvUbicacion> binder = new Binder<>(InvUbicacion.class);
 
         FormLayout formLayout = new FormLayout();
         formLayout.addClassNames("w-full", "max-w-lg");
-        
-        TextField codigo = new TextField("Código");
+
+        TextField codigo = new TextField(getTranslation("view.locations.grid.code"));
         codigo.addClassName("w-full");
-        
-        TextField descripcion = new TextField("Descripción");
+
+        TextField descripcion = new TextField(getTranslation("view.locations.grid.description"));
         descripcion.addClassName("w-full");
-        
-        ComboBox<InvAlmacen> almacen = new ComboBox<>("Almacén");
+
+        ComboBox<InvAlmacen> almacen = new ComboBox<>(getTranslation("view.locations.grid.warehouse"));
         almacen.setItems(service.findAllAlmacenes());
         almacen.setItemLabelGenerator(InvAlmacen::getNombre);
         almacen.addClassName("w-full");
-        
-        TailwindToggle activo = new TailwindToggle("Activo");
-        
+
+        TailwindToggle activo = new TailwindToggle(getTranslation("view.products.grid.active"));
+
         // Binding
-        binder.forField(codigo).asRequired("Requerido").bind(InvUbicacion::getCodigo, InvUbicacion::setCodigo);
+        binder.forField(codigo).asRequired(getTranslation("field.required")).bind(InvUbicacion::getCodigo,
+                InvUbicacion::setCodigo);
         binder.forField(descripcion).bind(InvUbicacion::getDescripcion, InvUbicacion::setDescripcion);
-        binder.forField(almacen).asRequired("Requerido").bind(InvUbicacion::getAlmacen, InvUbicacion::setAlmacen);
+        binder.forField(almacen).asRequired(getTranslation("field.required")).bind(InvUbicacion::getAlmacen,
+                InvUbicacion::setAlmacen);
         binder.forField(activo).bind(InvUbicacion::getActivo, InvUbicacion::setActivo);
-        
+
         binder.readBean(ubicacion);
-        if (isNew) activo.setValue(true);
+        if (isNew)
+            activo.setValue(true);
 
         formLayout.add(codigo, descripcion, almacen, activo);
         modal.addContent(formLayout);
-        
-        Button saveButton = new Button("Guardar", e -> {
+
+        Button saveButton = new Button(getTranslation("action.save"), e -> {
             try {
                 binder.writeBean(ubicacion);
                 service.saveUbicacion(ubicacion);
                 updateList();
-                TailwindNotification.show("Ubicación guardada correctamente", TailwindNotification.Type.SUCCESS);
+                TailwindNotification.show(getTranslation("view.locations.msg.saved"),
+                        TailwindNotification.Type.SUCCESS);
                 modal.close();
             } catch (ValidationException ex) {
-                TailwindNotification.show("Revise los datos", TailwindNotification.Type.ERROR);
+                TailwindNotification.show(getTranslation("msg.error.validation"), TailwindNotification.Type.ERROR);
             } catch (Exception ex) {
-                TailwindNotification.show("Error al guardar", TailwindNotification.Type.ERROR);
+                TailwindNotification.show(getTranslation("msg.error.save"), TailwindNotification.Type.ERROR);
             }
         });
         saveButton.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
 
-        Button cancelButton = new Button("Cancelar", e -> modal.close());
-        cancelButton.addClassNames("bg-[var(--color-bg-secondary)]", "text-[var(--color-text-main)]", "font-medium", "py-2", "px-4", "rounded-lg");
+        Button cancelButton = new Button(getTranslation("action.cancel"), e -> modal.close());
+        cancelButton.addClassNames("bg-[var(--color-bg-secondary)]", "text-[var(--color-text-main)]", "font-medium",
+                "py-2", "px-4", "rounded-lg");
 
         modal.addFooterButton(cancelButton);
         modal.addFooterButton(saveButton);
-        
+
         add(modal);
         modal.open();
     }

@@ -40,12 +40,12 @@ public class WarehousesView extends VerticalLayout {
 
         configureGrid();
 
-        Button addBtn = new Button("Nuevo Almacén", VaadinIcon.PLUS.create());
+        Button addBtn = new Button(getTranslation("view.warehouses.action.new"), VaadinIcon.PLUS.create());
         addBtn.addClassNames("bg-primary", "text-white", "text-sm", "font-semibold", "py-2", "px-4", "rounded-lg",
                 "shadow", "hover:shadow-md", "transition-all");
         addBtn.addClickListener(e -> openWarehouseDialog(new InvAlmacen()));
 
-        HorizontalLayout header = new HorizontalLayout(new AppLabel("Listado de Almacenes"), addBtn);
+        HorizontalLayout header = new HorizontalLayout(new AppLabel("view.warehouses.title"), addBtn);
         header.addClassNames("w-full", "justify-between", "items-center");
 
         add(header, grid);
@@ -55,8 +55,18 @@ public class WarehousesView extends VerticalLayout {
     private void configureGrid() {
         grid.addClassNames("bg-bg-surface", "rounded-lg", "shadow");
         grid.setSizeFull();
-        grid.setColumns("nombre", "codigo", "tipoAlmacen", "direccion");
-        grid.addColumn(a -> a.getSucursal() != null ? a.getSucursal().getNombre() : "Global").setHeader("Sucursal");
+        grid.removeAllColumns();
+
+        grid.addColumn(InvAlmacen::getNombre).setHeader(getTranslation("view.warehouses.grid.name")).setAutoWidth(true);
+        grid.addColumn(InvAlmacen::getCodigo).setHeader(getTranslation("view.warehouses.grid.code")).setAutoWidth(true);
+        grid.addColumn(InvAlmacen::getTipoAlmacen).setHeader(getTranslation("view.warehouses.grid.type"))
+                .setAutoWidth(true);
+        grid.addColumn(InvAlmacen::getDireccion).setHeader(getTranslation("view.warehouses.grid.address"))
+                .setAutoWidth(true);
+
+        grid.addColumn(a -> a.getSucursal() != null ? a.getSucursal().getNombre()
+                : getTranslation("view.warehouses.grid.global"))
+                .setHeader(getTranslation("view.warehouses.grid.branch"));
 
         // Active Status Column
         grid.addColumn(new ComponentRenderer<>(almacen -> {
@@ -66,14 +76,14 @@ public class WarehousesView extends VerticalLayout {
                 almacen.setActivo(e.getValue());
                 try {
                     service.saveAlmacen(almacen);
-                    TailwindNotification.show("Estado actualizado", TailwindNotification.Type.SUCCESS);
+                    TailwindNotification.show(getTranslation("msg.status.updated"), TailwindNotification.Type.SUCCESS);
                 } catch (Exception ex) {
                     toggle.setValue(e.getOldValue());
-                    TailwindNotification.show("Error al actualizar estado", TailwindNotification.Type.ERROR);
+                    TailwindNotification.show(getTranslation("msg.status.error"), TailwindNotification.Type.ERROR);
                 }
             });
             return toggle;
-        })).setHeader("Activo").setAutoWidth(true);
+        })).setHeader(getTranslation("view.products.grid.active")).setAutoWidth(true);
 
         // Actions Column
         grid.addComponentColumn(almacen -> {
@@ -88,7 +98,7 @@ public class WarehousesView extends VerticalLayout {
             deleteBtn.addClickListener(e -> deleteAlmacen(almacen));
 
             return new HorizontalLayout(editBtn, deleteBtn);
-        }).setHeader("Acciones").setAutoWidth(true);
+        }).setHeader(getTranslation("view.products.grid.actions")).setAutoWidth(true);
 
         grid.getColumns().forEach(col -> col.setAutoWidth(true));
     }
@@ -101,22 +111,24 @@ public class WarehousesView extends VerticalLayout {
         try {
             service.deleteAlmacen(almacen);
             updateList();
-            TailwindNotification.show("Almacén eliminado", TailwindNotification.Type.SUCCESS);
+            TailwindNotification.show(getTranslation("view.warehouses.msg.deleted"), TailwindNotification.Type.SUCCESS);
         } catch (Exception e) {
-            TailwindNotification.show("No se puede eliminar (posiblemente en uso)", TailwindNotification.Type.ERROR);
+            TailwindNotification.show(getTranslation("view.warehouses.msg.delete_error"),
+                    TailwindNotification.Type.ERROR);
         }
     }
 
     private void openWarehouseDialog(InvAlmacen almacen) {
         boolean isNew = almacen.getId() == null;
-        TailwindModal modal = new TailwindModal(isNew ? "Nuevo Almacén" : "Editar Almacén");
+        TailwindModal modal = new TailwindModal(isNew ? getTranslation("view.warehouses.editor.title.new")
+                : getTranslation("view.warehouses.editor.title.edit"));
 
         Binder<InvAlmacen> binder = new Binder<>(InvAlmacen.class);
 
         FormLayout formLayout = new FormLayout();
         formLayout.addClassNames("w-full", "max-w-lg");
 
-        TextField nombre = new TextField("Nombre");
+        TextField nombre = new TextField(getTranslation("view.warehouses.grid.name"));
         nombre.addClassName("w-full");
         nombre.addValueChangeListener(e -> {
             if (e.getValue() != null && !e.getValue().equals(e.getValue().toUpperCase(Locale.ROOT))) {
@@ -124,7 +136,7 @@ public class WarehousesView extends VerticalLayout {
             }
         });
 
-        TextField codigo = new TextField("Código");
+        TextField codigo = new TextField(getTranslation("view.warehouses.grid.code"));
         codigo.addClassName("w-full");
         codigo.addValueChangeListener(e -> {
             if (e.getValue() != null && !e.getValue().equals(e.getValue().toUpperCase(Locale.ROOT))) {
@@ -133,7 +145,7 @@ public class WarehousesView extends VerticalLayout {
         });
 
         Button generateCodeBtn = new Button(VaadinIcon.MAGIC.create());
-        generateCodeBtn.setTooltipText("Generar código automáticamente");
+        generateCodeBtn.setTooltipText(getTranslation("view.warehouses.editor.generate_code"));
         generateCodeBtn.addClickListener(e -> {
             String genCode = "ALM-" + (int) (Math.random() * 10000);
             codigo.setValue(genCode);
@@ -144,22 +156,23 @@ public class WarehousesView extends VerticalLayout {
         codeLayout.setVerticalComponentAlignment(Alignment.END, generateCodeBtn);
         codeLayout.addClassName("w-full");
 
-        ComboBox<String> tipoAlmacen = new ComboBox<>("Tipo Almacén");
+        ComboBox<String> tipoAlmacen = new ComboBox<>(getTranslation("view.warehouses.grid.type"));
         tipoAlmacen.setItems("PRINCIPAL", "SUCURSAL", "TRANSITO", "DEPOSITO", "MERMA", "PROVEEDOR");
         tipoAlmacen.addClassName("w-full");
 
-        ComboBox<GenSucursal> sucursal = new ComboBox<>("Sucursal");
+        ComboBox<GenSucursal> sucursal = new ComboBox<>(getTranslation("view.warehouses.grid.branch"));
         sucursal.setItems(service.findAllSucursales());
         sucursal.setItemLabelGenerator(GenSucursal::getNombre);
         sucursal.addClassName("w-full");
 
-        TextField direccion = new TextField("Dirección");
+        TextField direccion = new TextField(getTranslation("view.warehouses.grid.address"));
         direccion.addClassName("w-full");
 
-        TailwindToggle activo = new TailwindToggle("Activo");
+        TailwindToggle activo = new TailwindToggle(getTranslation("view.products.grid.active"));
 
         // Binding
-        binder.forField(nombre).asRequired("Requerido").bind(InvAlmacen::getNombre, InvAlmacen::setNombre);
+        binder.forField(nombre).asRequired(getTranslation("field.required")).bind(InvAlmacen::getNombre,
+                InvAlmacen::setNombre);
         binder.forField(codigo).bind(InvAlmacen::getCodigo, InvAlmacen::setCodigo);
         binder.forField(tipoAlmacen).bind(InvAlmacen::getTipoAlmacen, InvAlmacen::setTipoAlmacen);
         binder.forField(sucursal).bind(InvAlmacen::getSucursal, InvAlmacen::setSucursal);
@@ -173,22 +186,23 @@ public class WarehousesView extends VerticalLayout {
         formLayout.add(nombre, codeLayout, tipoAlmacen, sucursal, direccion, activo);
         modal.addContent(formLayout);
 
-        Button saveButton = new Button("Guardar", e -> {
+        Button saveButton = new Button(getTranslation("action.save"), e -> {
             try {
                 binder.writeBean(almacen);
                 service.saveAlmacen(almacen);
                 updateList();
-                TailwindNotification.show("Almacén guardado correctamente", TailwindNotification.Type.SUCCESS);
+                TailwindNotification.show(getTranslation("view.warehouses.msg.saved"),
+                        TailwindNotification.Type.SUCCESS);
                 modal.close();
             } catch (ValidationException ex) {
-                TailwindNotification.show("Revise los datos", TailwindNotification.Type.ERROR);
+                TailwindNotification.show(getTranslation("msg.error.validation"), TailwindNotification.Type.ERROR);
             } catch (Exception ex) {
-                TailwindNotification.show("Error al guardar", TailwindNotification.Type.ERROR);
+                TailwindNotification.show(getTranslation("msg.error.save"), TailwindNotification.Type.ERROR);
             }
         });
         saveButton.addClassNames("bg-primary", "text-white", "font-semibold", "py-2", "px-4", "rounded-lg", "shadow");
 
-        Button cancelButton = new Button("Cancelar", e -> modal.close());
+        Button cancelButton = new Button(getTranslation("action.cancel"), e -> modal.close());
         cancelButton.addClassNames("bg-[var(--color-bg-secondary)]", "text-[var(--color-text-main)]", "font-medium",
                 "py-2", "px-4", "rounded-lg");
 
