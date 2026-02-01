@@ -17,6 +17,7 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.server.VaadinServlet;
 
 public class MainLayout extends AppLayout {
 
@@ -40,8 +41,9 @@ public class MainLayout extends AppLayout {
         });
         addToNavbar(header);
 
-        sidebar = new AppSidebar(new ImageAppIcon("/images/logo-MariaStaff.png"),
-                new ImageAppIcon("/images/icon-MariaStaff.png"), "");
+        String contextPath = VaadinServlet.getCurrent().getServletContext().getContextPath();
+        sidebar = new AppSidebar(new ImageAppIcon(contextPath + "/images/logo-MariaStaff.png"),
+                new ImageAppIcon(contextPath + "/images/icon-MariaStaff.png"), "");
         sidebar.setStateChangeHandler(expanded -> {
             if (!isMobileMode) {
                 String width = expanded ? "16rem" : "45px";
