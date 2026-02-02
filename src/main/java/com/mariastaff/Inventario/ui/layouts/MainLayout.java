@@ -184,7 +184,8 @@ public class MainLayout extends AppLayout {
 
         if (hasAccess("ADMIN", "MODULE_SETTINGS")) {
             sidebar.addNavItem(
-                    new SidebarNavItem("nav.module.settings", new VaadinAppIcon(VaadinIcon.COG), BranchesView.class));
+                    new SidebarNavItem("nav.module.settings", new VaadinAppIcon(VaadinIcon.COG),
+                            GeneralSettingsView.class));
         }
     }
 
@@ -205,6 +206,8 @@ public class MainLayout extends AppLayout {
                 WarehousesView.class));
         inventoryItem.addSubItem(new SidebarNavItem("nav.inventory.locations", new VaadinAppIcon(VaadinIcon.MAP_MARKER),
                 LocationsView.class));
+        inventoryItem.addSubItem(new SidebarNavItem("nav.inventory.branches", new VaadinAppIcon(VaadinIcon.BUILDING_O),
+                BranchesView.class));
 
         sidebar.addExpandableItem(inventoryItem);
 
@@ -271,9 +274,7 @@ public class MainLayout extends AppLayout {
 
         // Settings module
         com.mariastaff.Inventario.ui.components.base.ExpandableSidebarNavItem settingsItem = new com.mariastaff.Inventario.ui.components.base.ExpandableSidebarNavItem(
-                "nav.module.settings", new VaadinAppIcon(VaadinIcon.COG), BranchesView.class);
-        settingsItem.addSubItem(new SidebarNavItem("nav.settings.branches", new VaadinAppIcon(VaadinIcon.BUILDING_O),
-                BranchesView.class));
+                "nav.module.settings", new VaadinAppIcon(VaadinIcon.COG), GeneralSettingsView.class);
         settingsItem.addSubItem(
                 new SidebarNavItem("nav.settings.users", new VaadinAppIcon(VaadinIcon.USERS), UsersView.class));
         settingsItem.addSubItem(new SidebarNavItem("nav.settings.currencies", new VaadinAppIcon(VaadinIcon.DOLLAR),
@@ -338,7 +339,7 @@ public class MainLayout extends AppLayout {
     private boolean isInventoryView(Class<?> view) {
         return view.equals(InventoryDashboardView.class) || view.equals(ProductsView.class) ||
                 view.equals(MovementsView.class) || view.equals(WarehousesView.class) ||
-                view.equals(LocationsView.class);
+                view.equals(LocationsView.class) || view.equals(BranchesView.class);
     }
 
     private boolean hasAccess(String... rolesOrPermissions) {
@@ -398,6 +399,8 @@ public class MainLayout extends AppLayout {
                 WarehousesView.class));
         header.addNavigationItem(new HeaderNavItem("nav.inventory.locations", new VaadinAppIcon(VaadinIcon.MAP_MARKER),
                 LocationsView.class));
+        header.addNavigationItem(new HeaderNavItem("nav.inventory.branches", new VaadinAppIcon(VaadinIcon.BUILDING_O),
+                BranchesView.class));
     }
 
     private boolean isPurchaseView(Class<?> view) {
@@ -491,7 +494,7 @@ public class MainLayout extends AppLayout {
     }
 
     private boolean isSettingsView(Class<?> view) {
-        return view.equals(BranchesView.class) || view.equals(UsersView.class) ||
+        return view.equals(UsersView.class) ||
                 view.equals(CurrenciesView.class) || view.equals(TaxesView.class) ||
                 view.equals(GeneralSettingsView.class) || view.equals(BackupView.class);
     }
@@ -499,8 +502,6 @@ public class MainLayout extends AppLayout {
     private void addSettingsHeaderItems() {
         if (!hasAccess("ADMIN", "MODULE_SETTINGS"))
             return;
-        header.addNavigationItem(new HeaderNavItem("nav.settings.branches", new VaadinAppIcon(VaadinIcon.BUILDING_O),
-                BranchesView.class));
         header.addNavigationItem(
                 new HeaderNavItem("nav.settings.users", new VaadinAppIcon(VaadinIcon.USERS), UsersView.class));
         header.addNavigationItem(new HeaderNavItem("nav.settings.currencies", new VaadinAppIcon(VaadinIcon.DOLLAR),
@@ -526,6 +527,8 @@ public class MainLayout extends AppLayout {
             return new ViewInfo("nav.inventory.warehouses", new VaadinAppIcon(VaadinIcon.BUILDING));
         if (view.equals(LocationsView.class))
             return new ViewInfo("nav.inventory.locations", new VaadinAppIcon(VaadinIcon.MAP_MARKER));
+        if (view.equals(BranchesView.class))
+            return new ViewInfo("nav.inventory.branches", new VaadinAppIcon(VaadinIcon.BUILDING_O));
 
         // Purchases
         if (view.equals(NewPurchaseView.class))
@@ -578,8 +581,6 @@ public class MainLayout extends AppLayout {
             return new ViewInfo("nav.reports.trial_balance", new VaadinAppIcon(VaadinIcon.SCALE));
 
         // Settings
-        if (view.equals(BranchesView.class))
-            return new ViewInfo("nav.settings.branches", new VaadinAppIcon(VaadinIcon.BUILDING_O));
         if (view.equals(UsersView.class))
             return new ViewInfo("nav.settings.users", new VaadinAppIcon(VaadinIcon.USERS));
         if (view.equals(CurrenciesView.class))
