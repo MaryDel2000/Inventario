@@ -16,7 +16,7 @@ import com.mariastaff.Inventario.ui.layouts.MainLayout;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.button.ButtonVariant;
-import com.mariastaff.Inventario.ui.components.base.TailwindDatePicker;
+import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
@@ -59,7 +59,7 @@ public class NewPurchaseView extends VerticalLayout implements com.vaadin.flow.r
     // Form fields
     private final ComboBox<InvProveedor> proveedor = new ComboBox<>();
     private final ComboBox<InvAlmacen> almacen = new ComboBox<>();
-    private final TailwindDatePicker fechaCompra = new TailwindDatePicker();
+    private final DatePicker fechaCompra = new DatePicker();
     private final TextField tipoDocumento = new TextField();
     private final TextField numeroDocumento = new TextField();
 
@@ -269,7 +269,7 @@ public class NewPurchaseView extends VerticalLayout implements com.vaadin.flow.r
             costField.setLocale(java.util.Locale.US);
             costField.setWidthFull();
 
-            TailwindDatePicker expiryDate = new TailwindDatePicker(getTranslation("field.expiry.date.optional"));
+            DatePicker expiryDate = new DatePicker(getTranslation("field.expiry.date.optional"));
             expiryDate.setWidthFull();
 
             FormLayout fieldsLayout = new FormLayout();
