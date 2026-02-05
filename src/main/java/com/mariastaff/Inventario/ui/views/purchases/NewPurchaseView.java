@@ -58,8 +58,7 @@ public class NewPurchaseView extends VerticalLayout implements com.vaadin.flow.r
 
     // Form fields
     private final ComboBox<InvProveedor> proveedor = new ComboBox<>();
-    private final ComboBox<InvAlmacen> almacenProveedor = new ComboBox<>();
-    private final ComboBox<InvAlmacen> almacenDestino = new ComboBox<>();
+    private final ComboBox<InvAlmacen> almacen = new ComboBox<>();
     private final TailwindDatePicker fechaCompra = new TailwindDatePicker();
     private final TextField tipoDocumento = new TextField();
     private final TextField numeroDocumento = new TextField();
@@ -98,48 +97,25 @@ public class NewPurchaseView extends VerticalLayout implements com.vaadin.flow.r
         form.addClassNames("bg-bg-surface", "p-6", "rounded-lg", "shadow", "mb-4");
 
         proveedor.setLabel(getTranslation("field.provider"));
-        almacenProveedor.setLabel(getTranslation("field.warehouse.provider"));
-        almacenDestino.setLabel(getTranslation("field.warehouse.destination"));
+        almacen.setLabel(getTranslation("field.warehouse", "Almacén"));
         fechaCompra.setLabel(getTranslation("field.date.purchase"));
         tipoDocumento.setLabel(getTranslation("field.document.type"));
         numeroDocumento.setLabel(getTranslation("field.document.number"));
 
         proveedor.setItems(compraService.findAllProveedores());
         proveedor.setItemLabelGenerator(p -> p.getEntidad().getNombreCompleto());
-        proveedor.addValueChangeListener(e -> updateProviderWarehouses(e.getValue()));
 
-        almacenDestino.setItems(almacenService.findAllAlmacenes());
-        almacenDestino.setItemLabelGenerator(InvAlmacen::getNombre);
-
-        almacenProveedor.setItemLabelGenerator(InvAlmacen::getNombre);
+        almacen.setItems(almacenService.findAllAlmacenes());
+        almacen.setItemLabelGenerator(InvAlmacen::getNombre);
 
         fechaCompra.setValue(java.time.LocalDate.now());
 
-        form.add(proveedor, almacenProveedor, almacenDestino, fechaCompra, tipoDocumento, numeroDocumento);
+        form.add(proveedor, almacen, fechaCompra, tipoDocumento, numeroDocumento);
         form.setResponsiveSteps(
                 new FormLayout.ResponsiveStep("0", 1),
                 new FormLayout.ResponsiveStep("600px", 2),
                 new FormLayout.ResponsiveStep("1000px", 3));
         add(form);
-    }
-
-    private void updateProviderWarehouses(InvProveedor p) {
-        if (p == null) {
-            almacenProveedor.clear();
-            almacenProveedor.setItems(java.util.Collections.emptyList());
-            return;
-        }
-
-        // 1. Try to find related warehouses
-        List<InvAlmacen> related = almacenService.findAlmacenesByProveedor(p);
-
-        if (!related.isEmpty()) {
-            almacenProveedor.setItems(related);
-        } else {
-            // 2. Fallback to generic provider warehouses (type = PROVEEDOR)
-            List<InvAlmacen> generic = almacenService.findAlmacenesByTipo("PROVEEDOR");
-            almacenProveedor.setItems(generic);
-        }
     }
 
     private void createGrid() {
@@ -205,8 +181,7 @@ public class NewPurchaseView extends VerticalLayout implements com.vaadin.flow.r
     private void initializeBinder() {
         binder.forField(proveedor).asRequired(getTranslation("field.required")).bind(InvCompra::getProveedor,
                 InvCompra::setProveedor);
-        binder.forField(almacenProveedor).bind(InvCompra::getAlmacenProveedor, InvCompra::setAlmacenProveedor);
-        binder.forField(almacenDestino).asRequired(getTranslation("field.required")).bind(InvCompra::getAlmacenDestino,
+        binder.forField(almacen).asRequired(getTranslation("field.required")).bind(InvCompra::getAlmacenDestino,
                 InvCompra::setAlmacenDestino);
         binder.forField(tipoDocumento).bind(InvCompra::getTipoDocumento, InvCompra::setTipoDocumento);
         binder.forField(numeroDocumento).asRequired(getTranslation("field.required")).bind(
@@ -216,7 +191,7 @@ public class NewPurchaseView extends VerticalLayout implements com.vaadin.flow.r
     }
 
     private void openAddItemDialog() {
-        if (almacenDestino.getValue() == null) {
+        if (almacen.getValue() == null) {
             TailwindNotification.show(getTranslation("msg.error.select_warehouse"), TailwindNotification.Type.WARNING);
             return;
         }
