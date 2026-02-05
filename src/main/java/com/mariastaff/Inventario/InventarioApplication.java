@@ -6,10 +6,17 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import com.vaadin.flow.component.page.AppShellConfigurator;
 import com.vaadin.flow.theme.NoTheme;
+import jakarta.annotation.PostConstruct;
+import java.util.TimeZone;
 
 @SpringBootApplication
 @NoTheme
 public class InventarioApplication extends SpringBootServletInitializer implements AppShellConfigurator {
+
+	@PostConstruct
+	public void init() {
+		TimeZone.setDefault(TimeZone.getTimeZone("America/Managua"));
+	}
 
 	@Override
 	protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
