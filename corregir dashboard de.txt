@@ -1,0 +1,20 @@
+corregir dashboard de inventario: los graficos no estan alineados(listo)
+formulario de nuevo producto: no tendra los campos: fehca de caducidad, costos de compra, precios de venta, ubicacion, lote, cantidad inicial.(listo)
+en la pestania movimientos no aparecen el origen de los productos que ingresan.
+en el formulario almacenes: fijar si los datos seran solo mayusculas o minusculas, deben aparecer los tipos de almacenes al crear almacenes nuevos, agregar botn de crear codigo de almacen automaticamente
+
+
+
+compras
+-en la seccion de compra, agregar almacen de proveedor y cambiar almacen de destino a solo almacen, el numero de documento debe generarse automaticamente, la fecha de compra debe ir deacuerdo a la fecha actual, en el formulario de compra de producto quitar almacen de destino(estantes),en el precio del producto se debe guardar en cordoba, hay que agregar soporte para lector de codigo de barra(los campos que sean de tipo codigo)
+
+
+pestania venta-seccion turnos
+no muestra los usuarios que hicieron los turnos y tampoco muestran en caja iniciaron el turno, en cierre si estan(verificar que los datos no se esten sobreescribiendo) las cajas no pueden ser utilizadas por dis usuarios al mismo tiempo.
+pestania cobros no muestra la cantidad pendiente(no esta claro si el el monto que muestra es el total o lo que pago, ademas que meustre ambos tanto el total como lo que pago y cuanto le falta)
+
+
+las ventanas de dialogo deben ser mas amigables para el cliente.
+
+
+---------------------------NADA DE OPTIMIZAR---------------------------

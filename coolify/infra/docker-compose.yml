@@ -163,7 +163,7 @@ services:
       - ./data/tomcat/logs:/usr/local/tomcat/logs
 
     environment:
-      SPRING_PROFILES_ACTIVE: docker
+      SPRING_PROFILES_ACTIVE: docker-infra
       AUTHENTIK_BACKEND_HOST: ${SERVICE_URL_AUTHENTIKSERVER_9000}
       AUTHENTIK_FRONTEND_HOST: https://${SERVICE_FQDN_AUTHENTIKSERVER}
     depends_on:

@@ -12,14 +12,14 @@ import java.util.ResourceBundle;
 import java.util.MissingResourceException;
 
 @Component
+@SuppressWarnings("deprecation")
 public class SimpleI18NProvider implements I18NProvider {
 
     @Override
     public List<Locale> getProvidedLocales() {
         return Collections.unmodifiableList(Arrays.asList(
                 new Locale("es"),
-                new Locale("en")
-        ));
+                new Locale("en")));
     }
 
     @Override

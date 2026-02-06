@@ -43,17 +43,19 @@ public class ProductoServiceTest {
         InvProducto product = new InvProducto();
         product.setNombre("Test Product");
         product.setCodigoInterno("TEST-001");
-        
+
         String batchCode = "BATCH-001";
         LocalDateTime expiryDate = LocalDateTime.now().plusMonths(6);
         String batchObs = "Initial batch";
 
         when(productoRepository.save(any(InvProducto.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(varianteRepository.save(any(InvProductoVariante.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(varianteRepository.save(any(InvProductoVariante.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
         when(loteRepository.save(any(InvLote.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Act
-        InvProducto createdProduct = productoService.createProductWithInitialBatch(product, batchCode, expiryDate, batchObs);
+        InvProducto createdProduct = productoService.createProductWithInitialBatch(product, null, null, batchCode,
+                expiryDate, batchObs);
 
         // Assert
         assertNotNull(createdProduct);
@@ -63,6 +65,5 @@ public class ProductoServiceTest {
         verify(varianteRepository, times(1)).save(any(InvProductoVariante.class)); // Verifies variant creation
         verify(loteRepository, times(1)).save(any(InvLote.class)); // Verifies batch creation
     }
-    
 
 }

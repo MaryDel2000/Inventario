@@ -16,6 +16,7 @@
   - `TailwindDatePicker`: Input de fecha nativo HTML5 estilizado. Reemplaza a `vaadin-date-picker` en reportes.
 - **Global Styles (`index.css`)**: 
   - Estilos corregidos para inputs (`vaadin-big-decimal-field`), combos y grids.
+  - **Charts**: Tarjetas contenedoras estandarizadas (`bg-bg-surface`, `shadow`, `rounded-xl`) para gráficos de Dashboard.
 
 ## 3. Estado del Proyecto
 
@@ -32,9 +33,18 @@
 ### Módulo Inventario (COMPLETO)
 - **Visualización**: Grid principal muestra Stocks Totales calculados en tiempo real.
 - **Movimientos**: Kardex completo (`inv_movimiento`) poblado automáticamente con las operaciones simuladas.
-- **Productos**: Configuración compleja (Variantes, Lotes) soportada en V2.
+- **Productos**: Configuración compleja (Variantes, Lotes) soportada en V2. Formulario de creación simplificado (sin carga inicial de stock/costos).
+- **Dashboard**: Rediseño visual con tarjetas unificadas y gráficos alineados (Ventas y Stock).
 
-### Módulo Compras y Ventas (COMPLETO)
+### Módulo Compras (ACTUALIZADO)
+- **Nueva Compra**:
+  - **Diseño**: Diálogo "Agregar Producto" rediseñado con `FormLayout` para alineación perfecta.
+  - **Funcionalidad**: Filtrado inteligente de almacenes por proveedor (relación `InvAlmacen` -> `InvProveedor`).
+  - **I18n**: Vista totalmente traducida sin literales hardcoreados.
+  - **Sidebar**: Corrección de rutas de iconos rotos.
+- **Historial**: Vista de listado de compras (pendiente de refactorización visual similar a Nueva Compra).
+
+### Módulo Ventas (COMPLETO)
 - **POS (Punto de Venta)**:
   - **I18n**: Interfaz totalmente traducida (`messages.properties`).
   - **Turnos**: Generación automática de turnos cerrados históricos para reportes.

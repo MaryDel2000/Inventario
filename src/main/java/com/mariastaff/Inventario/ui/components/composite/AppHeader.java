@@ -13,6 +13,7 @@ import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.server.VaadinServlet;
 
 public class AppHeader extends HorizontalLayout {
 
@@ -119,7 +120,8 @@ public class AppHeader extends HorizontalLayout {
             "font-medium", "flex", "items-center", "justify-center", "gap-4", "text-base");
         logoutBtn.getStyle().set("color", "white"); // Force white text
         
-        logoutBtn.addClickListener(e -> UI.getCurrent().getPage().setLocation("/inventario/logout"));
+        String contextPath = VaadinServlet.getCurrent().getServletContext().getContextPath();
+        logoutBtn.addClickListener(e -> UI.getCurrent().getPage().setLocation(contextPath + "/logout"));
 
         menuContent.add(profileIconContainer, userName, emailText, profileBtn, logoutBtn);
         userMenu.add(menuContent);

@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 
 @Service
+@SuppressWarnings("unchecked")
 public class AuthentikService {
 
     @Value("${authentik.api.url}")
@@ -27,7 +28,8 @@ public class AuthentikService {
     @Value("${authentik.app.slug}")
     private String appSlug;
 
-    // Token de sistema para tareas de bootstrap (inicialización) donde no hay usuario logueado.
+    // Token de sistema para tareas de bootstrap (inicialización) donde no hay
+    // usuario logueado.
     @Value("${authentik.api.token}")
     private String systemToken;
 
@@ -35,10 +37,11 @@ public class AuthentikService {
     private final OAuth2AuthorizedClientManager authorizedClientManager;
 
     public AuthentikService(OAuth2AuthorizedClientManager authorizedClientManager) {
-        this.restTemplate = new RestTemplate(new org.springframework.http.client.HttpComponentsClientHttpRequestFactory());
+        this.restTemplate = new RestTemplate(
+                new org.springframework.http.client.HttpComponentsClientHttpRequestFactory());
         this.authorizedClientManager = authorizedClientManager;
     }
-    
+
     /**
      * Asegura que los entitlements requeridos existan en Authentik.
      * Utiliza el token de sistema, ya que se ejecuta al inicio de la aplicación.
@@ -49,10 +52,10 @@ public class AuthentikService {
             // Usar token de sistema para listar
             List<Map<String, Object>> existing = listEntitlementsSystem();
             Set<String> existingNames = new java.util.HashSet<>();
-            for(Map<String, Object> ent : existing) {
+            for (Map<String, Object> ent : existing) {
                 existingNames.add((String) ent.get("name"));
             }
-            
+
             for (Map.Entry<String, String> entry : requiredEntitlements.entrySet()) {
                 if (!existingNames.contains(entry.getKey())) {
                     System.out.println("Bootstrap: Creando entitlement faltante: " + entry.getKey());
@@ -68,14 +71,15 @@ public class AuthentikService {
     // Métodos privados usando System Token
 
     private List<Map<String, Object>> listEntitlementsSystem() {
-        String url = apiUrl + "/api/v3/core/application_entitlements/?app__slug=" + appSlug + "&ordering=name&page_size=100";
+        String url = apiUrl + "/api/v3/core/application_entitlements/?app__slug=" + appSlug
+                + "&ordering=name&page_size=100";
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + systemToken);
         headers.setContentType(MediaType.APPLICATION_JSON);
-        
+
         HttpEntity<String> entity = new HttpEntity<>(headers);
         ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
-        
+
         if (response.getBody() != null && response.getBody().containsKey("results")) {
             return (List<Map<String, Object>>) response.getBody().get("results");
         }
@@ -87,65 +91,72 @@ public class AuthentikService {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + systemToken);
         headers.setContentType(MediaType.APPLICATION_JSON);
-        
+
         Map<String, Object> body = new java.util.HashMap<>();
         body.put("name", name);
         body.put("app", appSlug);
         body.put("attributes", attributes);
-        
+
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
         restTemplate.postForEntity(url, entity, Map.class);
     }
 
     /**
      * Obtiene los headers con el token de autenticación del usuario actual.
-     * Solo usa el token OAuth2 del usuario autenticado para operaciones iniciadas por usuarios.
+     * Solo usa el token OAuth2 del usuario autenticado para operaciones iniciadas
+     * por usuarios.
      */
     private HttpHeaders getHeaders() {
         HttpHeaders headers = new HttpHeaders();
-        
+
         // Intentar obtener el token del usuario autenticado (con refresh automático)
         String token = getUserAccessToken();
-        
+
         if (token != null) {
             System.out.println("DEBUG: Using OAuth2 user access token for Authentik API");
             headers.set("Authorization", "Bearer " + token);
         } else {
-            throw new RuntimeException("No se pudo obtener el token de acceso del usuario. Asegúrese de haber iniciado sesión.");
+            throw new RuntimeException(
+                    "No se pudo obtener el token de acceso del usuario. Asegúrese de haber iniciado sesión.");
         }
-        
+
         headers.setContentType(MediaType.APPLICATION_JSON);
         return headers;
     }
 
     /**
-     * Obtiene el token de acceso del usuario autenticado desde el contexto de seguridad.
-     * Usa OAuth2AuthorizedClientManager que automáticamente refresca el token si ha expirado.
+     * Obtiene el token de acceso del usuario autenticado desde el contexto de
+     * seguridad.
+     * Usa OAuth2AuthorizedClientManager que automáticamente refresca el token si ha
+     * expirado.
+     * 
      * @return El access token o null si no hay usuario autenticado
      */
     private String getUserAccessToken() {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            
+
             if (authentication == null) {
-                System.out.println("DEBUG: SecurityContext Authentication is NULL. Current Thread: " + Thread.currentThread().getName());
+                System.out.println("DEBUG: SecurityContext Authentication is NULL. Current Thread: "
+                        + Thread.currentThread().getName());
                 return null;
             }
-            
-            System.out.println("DEBUG: Authentication Type: " + authentication.getClass().getName() + ", Name: " + authentication.getName() + ", Authorities: " + authentication.getAuthorities());
+
+            System.out.println("DEBUG: Authentication Type: " + authentication.getClass().getName() + ", Name: "
+                    + authentication.getName() + ", Authorities: " + authentication.getAuthorities());
 
             if (authentication instanceof OAuth2AuthenticationToken) {
                 OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
                 String clientRegistrationId = oauthToken.getAuthorizedClientRegistrationId();
                 String principalName = oauthToken.getName();
-                
+
                 // Crear request para el OAuth2AuthorizedClientManager
                 // Nota: HttpServletRequest/Response pueden ser nulos en hilos background
                 OAuth2AuthorizeRequest authorizeRequest = OAuth2AuthorizeRequest
-                    .withClientRegistrationId(clientRegistrationId)
-                    .principal(authentication)
-                    .build();
-                
+                        .withClientRegistrationId(clientRegistrationId)
+                        .principal(authentication)
+                        .build();
+
                 // El manager automáticamente refresca el token si es necesario
                 try {
                     OAuth2AuthorizedClient authorizedClient = this.authorizedClientManager.authorize(authorizeRequest);
@@ -170,33 +181,34 @@ public class AuthentikService {
             System.err.println("Error obtaining user access token: " + e.getMessage());
             e.printStackTrace();
         }
-        
+
         return null;
     }
 
     /**
      * Crea un usuario en Authentik.
+     * 
      * @param username Nombre de usuario (único)
-     * @param name Nombre completo
-     * @param email Correo electrónico
+     * @param name     Nombre completo
+     * @param email    Correo electrónico
      * @return Map con datos del usuario creado (incluyendo 'pk' y 'uid')
      */
     public Map<String, Object> createUser(String username, String name, String email) {
         String url = apiUrl + "/api/v3/core/users/";
-        
+
         Map<String, Object> body = new HashMap<>();
         body.put("username", username);
         body.put("name", name);
         body.put("email", email);
-        
+
         try {
             com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
             String jsonBody = mapper.writeValueAsString(body);
             System.out.println("Authentik createUser Payload: " + jsonBody);
-            
+
             HttpHeaders headers = getHeaders();
             HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
-            
+
             return restTemplate.postForObject(url, request, Map.class);
         } catch (HttpClientErrorException e) {
             String resp = e.getResponseBodyAsString();
@@ -216,10 +228,11 @@ public class AuthentikService {
 
     /**
      * Actualiza un usuario existente.
-     * @param pk ID (Primary Key/UUID) de Authentik
+     * 
+     * @param pk       ID (Primary Key/UUID) de Authentik
      * @param username nuevo username
-     * @param name nuevo nombre
-     * @param email nuevo email
+     * @param name     nuevo nombre
+     * @param email    nuevo email
      * @param isActive estado activo
      */
     public void updateUser(String pk, String username, String name, String email, boolean isActive) {
@@ -227,21 +240,21 @@ public class AuthentikService {
             throw new IllegalArgumentException("PK cannot be null or empty for update");
         }
         String url = apiUrl + "/api/v3/core/users/" + pk + "/";
-        
+
         Map<String, Object> body = new HashMap<>();
         body.put("username", username);
         body.put("name", name);
         body.put("email", email);
         body.put("is_active", isActive);
-        
+
         try {
             com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
             String jsonBody = mapper.writeValueAsString(body);
             System.out.println("Authentik updateUser Payload: " + jsonBody);
-            
+
             HttpHeaders headers = getHeaders();
             HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
-            
+
             restTemplate.exchange(url, HttpMethod.PATCH, request, Map.class);
         } catch (HttpClientErrorException e) {
             System.err.println("Authentik Update Error: " + e.getResponseBodyAsString());
@@ -255,22 +268,23 @@ public class AuthentikService {
         String url = apiUrl + "/api/v3/core/users/" + pk + "/set_password/";
         Map<String, String> body = new HashMap<>();
         body.put("password", password);
-        
+
         try {
             com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
             String jsonBody = mapper.writeValueAsString(body);
             System.out.println("Authentik setPassword Payload: " + jsonBody);
-            
+
             HttpHeaders headers = getHeaders();
             HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
-            
+
             restTemplate.postForObject(url, request, Object.class);
         } catch (HttpClientErrorException e) {
-             throw new RuntimeException("Error estableciendo password: " + e.getResponseBodyAsString());
+            throw new RuntimeException("Error estableciendo password: " + e.getResponseBodyAsString());
         } catch (Exception e) {
             throw new RuntimeException("Error interno estableciendo password: " + e.getMessage());
         }
     }
+
     public void deleteUser(String pk) {
         if (pk == null || pk.trim().isEmpty()) {
             System.err.println("Skipping Authentik delete: PK is null/empty");
@@ -283,7 +297,7 @@ public class AuthentikService {
             restTemplate.exchange(url, HttpMethod.DELETE, request, Void.class);
             System.out.println("Authentik: Deleted user " + pk);
         } catch (HttpClientErrorException e) {
-             throw new RuntimeException("Error borrando usuario Authentik: " + e.getResponseBodyAsString());
+            throw new RuntimeException("Error borrando usuario Authentik: " + e.getResponseBodyAsString());
         } catch (Exception e) {
             throw new RuntimeException("Error interno borrando usuario: " + e.getMessage());
         }
@@ -295,7 +309,7 @@ public class AuthentikService {
     public Map<String, Object> searchUser(String query) {
         String url = apiUrl + "/api/v3/core/users/?search=" + query;
         HttpEntity<?> request = new HttpEntity<>(getHeaders());
-        
+
         try {
             Map response = restTemplate.exchange(url, HttpMethod.GET, request, Map.class).getBody();
             if (response != null && response.containsKey("results")) {
@@ -340,7 +354,8 @@ public class AuthentikService {
                 return results;
             }
         } catch (HttpClientErrorException e) {
-             throw new RuntimeException("Error listando usuarios (Authentik " + e.getStatusCode() + "): " + e.getResponseBodyAsString());
+            throw new RuntimeException(
+                    "Error listando usuarios (Authentik " + e.getStatusCode() + "): " + e.getResponseBodyAsString());
         } catch (Exception e) {
             throw new RuntimeException("Error listando usuarios: " + e.getMessage());
         }
@@ -353,7 +368,8 @@ public class AuthentikService {
      * Lista todos los entitlements de la aplicación
      */
     public List<Map<String, Object>> listEntitlements() {
-        String url = apiUrl + "/api/v3/core/application_entitlements/?app__slug=" + appSlug + "&ordering=name&page_size=100";
+        String url = apiUrl + "/api/v3/core/application_entitlements/?app__slug=" + appSlug
+                + "&ordering=name&page_size=100";
         HttpEntity<?> request = new HttpEntity<>(getHeaders());
         try {
             System.out.println("Authentik: Fetching entitlements from " + url);
@@ -365,7 +381,8 @@ public class AuthentikService {
                 return results;
             }
         } catch (HttpClientErrorException e) {
-             throw new RuntimeException("Error listando entitlements (Authentik " + e.getStatusCode() + "): " + e.getResponseBodyAsString());
+            throw new RuntimeException("Error listando entitlements (Authentik " + e.getStatusCode() + "): "
+                    + e.getResponseBodyAsString());
         } catch (Exception e) {
             throw new RuntimeException("Error listando entitlements: " + e.getMessage());
         }
@@ -389,18 +406,18 @@ public class AuthentikService {
         if (attributes != null) {
             body.put("attributes", attributes);
         }
-        
+
         try {
             com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
             String jsonBody = mapper.writeValueAsString(body);
             System.out.println("Authentik createEntitlement Payload: " + jsonBody);
-            
+
             HttpHeaders headers = getHeaders();
             HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
-            
+
             return restTemplate.postForObject(url, request, Map.class);
         } catch (HttpClientErrorException e) {
-             throw new RuntimeException("Error creando entitlement: " + e.getResponseBodyAsString());
+            throw new RuntimeException("Error creando entitlement: " + e.getResponseBodyAsString());
         } catch (Exception e) {
             throw new RuntimeException("Error interno creando entitlement: " + e.getMessage());
         }
@@ -416,18 +433,18 @@ public class AuthentikService {
         if (attributes != null) {
             body.put("attributes", attributes);
         }
-        
+
         try {
             com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
             String jsonBody = mapper.writeValueAsString(body);
             System.out.println("Authentik updateEntitlement Payload: " + jsonBody);
-            
+
             HttpHeaders headers = getHeaders();
             HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
-            
+
             restTemplate.exchange(url, HttpMethod.PATCH, request, Map.class);
         } catch (HttpClientErrorException e) {
-             throw new RuntimeException("Error actualizando entitlement: " + e.getResponseBodyAsString());
+            throw new RuntimeException("Error actualizando entitlement: " + e.getResponseBodyAsString());
         } catch (Exception e) {
             throw new RuntimeException("Error interno actualizando entitlement: " + e.getMessage());
         }
@@ -442,7 +459,7 @@ public class AuthentikService {
         try {
             restTemplate.exchange(url, HttpMethod.DELETE, request, Void.class);
         } catch (HttpClientErrorException e) {
-             throw new RuntimeException("Error eliminando entitlement: " + e.getResponseBodyAsString());
+            throw new RuntimeException("Error eliminando entitlement: " + e.getResponseBodyAsString());
         }
     }
 
@@ -457,7 +474,8 @@ public class AuthentikService {
             return List.of();
         }
 
-        String url = apiUrl + "/api/v3/core/application_entitlements/?user=" + userPk + "&app=" + appPk + "&page_size=100";
+        String url = apiUrl + "/api/v3/core/application_entitlements/?user=" + userPk + "&app=" + appPk
+                + "&page_size=100";
         HttpEntity<?> request = new HttpEntity<>(getHeaders());
         try {
             ResponseEntity<Map> responseEntity = restTemplate.exchange(url, HttpMethod.GET, request, Map.class);
@@ -483,15 +501,15 @@ public class AuthentikService {
         String url = apiUrl + "/api/v3/core/application_entitlements/" + entitlementPk + "/set_users/";
         Map<String, Object> body = new HashMap<>();
         body.put("users", List.of(userPk));
-        
+
         try {
             com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
             String jsonBody = mapper.writeValueAsString(body);
             System.out.println("Authentik assignEntitlement Payload: " + jsonBody);
-            
+
             HttpHeaders headers = getHeaders();
             HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
-            
+
             restTemplate.postForObject(url, request, Object.class);
         } catch (HttpClientErrorException e) {
             System.err.println("Error asignando entitlement: " + e.getResponseBodyAsString());
