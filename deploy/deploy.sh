@@ -15,7 +15,7 @@ if [ $? -eq 0 ]; then
     SERVER="148.113.173.174"
     USER="root"
     PORT="2244"
-    REMOTE_PATH="/data/coolify/applications/g8k4w0w8kco884cs0gkkcgw4/data/tomcat/webapps/inventario.war"
+    REMOTE_PATH="/data/coolify/applications/gsws88wwsw408gkgwogwocks/data/tomcat/webapps/inventario.war"
     # Key is successfully located in the deploy dir relative to script execution or absolute path
     IDENTITY_FILE="$SCRIPT_DIR/deploy_key"
 
